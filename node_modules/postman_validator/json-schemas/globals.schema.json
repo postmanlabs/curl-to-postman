@@ -1,0 +1,22 @@
+{
+	"type":"array",
+	"id": "http://jsonschema.net",
+	"required":false,
+	"title": "Postman globals file",
+	"items":
+		{
+			"anyOf" : [ 
+            	{ 
+            		"type" : "object", 
+            		"properties" : { 
+            			"key" : { "type" : "string", "required": true },
+            			"value" : { "type" : "string", "required": true },
+            			"type" : { "type" : "string" },
+   						"name" : { "type" : "string" },
+   						"enabled" : { "type" : "boolean" }
+   					}
+   				}
+        	]
+        }
+    
+}

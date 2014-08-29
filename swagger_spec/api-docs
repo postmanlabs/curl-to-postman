@@ -1,0 +1,9 @@
+{
+  "swaggerVersion": "1.2",
+  "apis": [
+    {
+      "path": "/listings/greetings",
+      "description": "Generating greetings in our application."
+    }
+  ]
+}

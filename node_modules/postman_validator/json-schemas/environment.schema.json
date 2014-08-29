@@ -1,0 +1,74 @@
+{
+	"type":"object",
+	"$schema": "http://json-schema.org/draft-03/schema",
+	"id": "http://jsonschema.net",
+	"title": "Postman environment",
+	"required":false,
+	"properties":{
+		"id": {
+			"type":"string",
+			"id": "http://jsonschema.net/id",
+			"required":true
+		},
+		"name": {
+			"type":"string",
+			"id": "http://jsonschema.net/name",
+			"required":true
+		},
+		"syncedFilename": {
+			"type":"string",
+			"id": "http://jsonschema.net/syncedFilename",
+			"required":false
+		},
+		"synced": {
+			"type":"boolean",
+			"id": "http://jsonschema.net/synced",
+			"required":false
+		},
+		"timestamp": {
+			"type":"number",
+			"id": "http://jsonschema.net/timestamp",
+			"required":false
+		},
+		"values": {
+			"type":"array",
+			"id": "http://jsonschema.net/values",
+			"required":true,
+			"items":
+				{
+					"type":"object",
+					"id": "http://jsonschema.net/values/0",
+					"required":true,
+					"properties":{
+						"enabled": {
+							"type":"boolean",
+							"id": "http://jsonschema.net/values/0/enabled",
+							"required":false
+						},
+						"key": {
+							"type":"string",
+							"id": "http://jsonschema.net/values/0/key",
+							"required":true
+						},
+						"name": {
+							"type":"string",
+							"id": "http://jsonschema.net/values/0/name",
+							"required":false
+						},
+						"type": {
+							"type":"string",
+							"id": "http://jsonschema.net/values/0/type",
+							"required":false
+						},
+						"value": {
+							"type":"string",
+							"id": "http://jsonschema.net/values/0/value",
+							"required":true
+						}
+					}
+				}
+			
+
+		}
+	}
+}

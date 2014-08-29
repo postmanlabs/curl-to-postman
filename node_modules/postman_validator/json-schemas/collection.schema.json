@@ -1,0 +1,154 @@
+{
+    "type":"object",
+    "$schema": "http://json-schema.org/draft-03/schema",
+    "id": "http://jsonschema.net",
+    "title": "Postman collection",
+    "required":false,
+    "extends":[
+        {
+            "required":false
+        },
+        {
+            "required":false
+        }
+    ],
+    "properties":{
+        "id": {
+            "type":"string",
+            "id": "http://jsonschema.net/id",
+            "required":true
+        },
+        "name": {
+            "type":"string",
+            "id": "http://jsonschema.net/name",
+            "required":true
+        },
+        "order": {
+            "type":"array",
+            "id": "http://jsonschema.net/order",
+            "required":true,
+            "items":
+                {
+                    "type":"string",
+                    "id": "http://jsonschema.net/order/0",
+                    "required":true
+                }
+        },
+        "requests": {
+            "type":"array",
+            "id": "http://jsonschema.net/requests",
+            "required":true,
+            "items":
+                {
+                    "type":"object",
+                    "id": "http://jsonschema.net/requests/0",
+                    "required":true,
+                    "properties":{
+                        "collectionId": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/collectionId",
+                            "required":true
+                        },
+                        "dataMode": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/dataMode",
+                            "required":true
+                        },
+                        "data": {
+                            "type":"array",
+                            "id": "http://jsonschema.net/requests/0/data",
+                            "required":false
+                        },
+                        "descriptionFormat": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/descriptionFormat",
+                            "required":false
+                        },
+                        "description": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/description",
+                            "required":false
+                        },
+                        "headers": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/headers",
+                            "required":false
+                        },
+                        "id": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/id",
+                            "required":true
+                        },
+                        "method": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/method",
+                            "required":true
+                        },
+                        "name": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/name",
+                            "required":false
+                        },
+                        "pathVariables": {
+                            "type":"object",
+                            "id": "http://jsonschema.net/requests/0/pathVariables",
+                            "required":false
+                        },
+                        "preRequestScript": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/preRequestScript",
+                            "required":false
+                        },
+                        "responses": {
+                            "type":"array",
+                            "id": "http://jsonschema.net/requests/0/responses",
+                            "required":false
+                        },
+                        "synced": {
+                            "type":"boolean",
+                            "id": "http://jsonschema.net/requests/0/synced",
+                            "required":false
+                        },
+                        "tests": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/tests",
+                            "required":false
+                        },
+                        "time": {
+                            "type":"number",
+                            "id": "http://jsonschema.net/requests/0/time",
+                            "required":false
+                        },
+                        "url": {
+                            "type":"string",
+                            "id": "http://jsonschema.net/requests/0/url",
+                            "required":true
+                        },
+                        "version": {
+                            "type":"number",
+                            "id": "http://jsonschema.net/requests/0/version",
+                            "required":false
+                        }
+                    }
+                }
+            
+
+        },
+        "synced": {
+            "type":"boolean",
+            "id": "http://jsonschema.net/synced",
+            "required":true
+        },
+        "timestamp": {
+            "type":"number",
+            "id": "http://jsonschema.net/timestamp",
+            "required":true
+        }
+    },
+    "items":
+        {
+            "required":false
+        }
+    
+
+}
