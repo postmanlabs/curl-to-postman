@@ -1,0 +1,14 @@
+{
+    "name": "Swagger2Postman",
+    "version": "0.0.1",
+    "private": true,
+    "description": "Convert a given Swagger spec to POSTMan spec",
+    "main": "convert.js",
+    "dependencies": {
+    	"node-uuid": "1.4.1",
+    	"clone": "0.1.18",
+    	"postman_validator": "0.0.4"
+    },
+    "author": "Surya Pappoppula",
+    "license": "Apache"
+}

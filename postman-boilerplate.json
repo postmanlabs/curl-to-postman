@@ -1,0 +1,33 @@
+{
+    "folders": [{
+        "id": "",
+        "name": "",
+        "description": "",
+        "order": [],
+        "collection_name": "",
+        "collection_id": ""
+    }],
+    "id": "",
+    "name": "Postman Barebones",
+    "order": [],
+    "requests": [{
+        "collectionId": "",
+        "dataMode": "",
+        "descriptionFormat": "html",
+        "description": "",
+        "data": [],
+        "headers": "",
+        "id": "",
+        "method": "",
+        "name": "",
+        "preRequestScript": "",
+        "pathVariables": {},
+        "responses": [],
+        "synced": false,
+        "tests": "",
+        "time": 0,
+        "url": ""
+    }],
+    "synced": false,
+    "timestamp": 0
+}
