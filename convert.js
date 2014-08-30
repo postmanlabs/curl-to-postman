@@ -87,10 +87,10 @@ var converter = {
     },
     
     convert : function(inputFile) {
-        var resourceList,
-            title,
-            file = path.resolve(__dirname, inputFile),
-            dir = path.dirname(inputFile);
+        var resourceList;
+        var title;
+        var file = path.resolve(__dirname, inputFile);
+        var dir = path.dirname(inputFile);
 
         resourceList = this.read(file);
 
@@ -109,8 +109,8 @@ var converter = {
             this.sampleFile.name = title;
         }
 
-        var len = resourceList.apis.length,
-            apis = resourceList.apis;
+        var len = resourceList.apis.length;
+        var apis = resourceList.apis;
 
         this.sampleRequest = this.sampleFile.requests[0];
 
