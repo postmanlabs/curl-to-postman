@@ -1,4 +1,10 @@
 {
+    "environment":{
+        "values": [],
+        "name": "",
+        "id": "",
+        "timestamp": 0
+    },
     "folders": [{
         "id": "",
         "name": "",
@@ -12,7 +18,7 @@
     "order": [],
     "requests": [{
         "collectionId": "",
-        "dataMode": "",
+        "dataMode": "params",
         "descriptionFormat": "html",
         "description": "",
         "data": [],

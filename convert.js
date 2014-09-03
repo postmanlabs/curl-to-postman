@@ -13,30 +13,41 @@ var fs = require('fs'),
     validator = require('postman_validator');
 
 var converter = {
-    convertAPI : function(res, dir) {
+    sampleFile: {},
+    convertAPI: function(res, dir) {
 
-        // resolve the apiFile location
+        // Resolve the apiFile location.
         // res.path has a leading /
         var apiFile = this.read(path.join(dir, "." + res.path));
-
         var that = this;
+        var envObj = this.sampleFile.environment;
+
+        // Initialize the envObj for the collection.
+        envObj.name = this.sampleFile.name + "'s Environment";
+        envObj.id = uuid.v4();
+
         apiFile.apis.forEach(function(api) {
             api.operations.forEach(function(operation) {
 
-                // make a deep copy of the the sampleRequest
+                // operation variables
+                var header = '';
+                var query = '';
+                var queryFlag = false;
+
+                // Make a deep copy of the the sampleRequest.
                 var request = clone(that.sampleRequest, false);
                 request.collectionId = that.sampleFile.id;
 
-                // No specification found for other modes
+                // No specification found for other modes.
                 request.dataMode = "params";
                 request.description = operation.summary;
-
-                var header = '',
-                    query = '',
-                    queryFlag = false;
+                request.id = uuid.v4();
+                request.method = operation.method;
+                request.name = operation.nickname;
+                request.time = Date.now();
 
                 operation.parameters.forEach(function(param) {
-                    switch (param) {
+                    switch (param.paramType) {
                         case 'header':
                             header += param.name + ": \n";
                             break;
@@ -55,27 +66,58 @@ var converter = {
                                 "type": "text"
                             });
                             break;
+                        case 'path':
+                            if(!that.keyExists(envObj.values, param.name)){
+                                
+                                // Should it be enabled?
+                                // Could not find a suitable map 
+                                // for the env variable name
+                                envObj.values.push({
+                                    "enabled": false,
+                                    "key": param.name,
+                                    "name": param.name,
+                                    "type": param.type,
+                                    "value": ""
+                                });
+                            }
+                            
+                            // Modify the url to suit POSTMan
+                            api.path = api.path.replace('{' + param.name + '}', ':' + param.name);
+                            break;
                         default:
                             break;
                     }
                 });
 
-                request.id = uuid.v4();
-                request.method = operation.method;
-                request.name = operation.nickname;
-
                 // No POSTMAN schema specified for responses
                 request.responses = operation.responseMessages;
-                request.time = Date.now();
 
                 // api.path begins with a /
                 request.url = apiFile.basePath + api.path;
+
+                request.header = header;
+                request.url += query;
 
                 that.sampleFile.requests.push(request);
             });
         });
     },
-    read : function(location) {
+
+    // Helper to check if the key already exists in the environment
+    // variables set.
+    keyExists: function(array, key){
+        var ret = false;
+        
+        array.forEach(function(param){
+            if(param.key === key){
+                ret = true;
+            }
+        });
+        
+        return ret;
+    },
+
+    read: function(location) {
         var data;
         try {
             data = fs.readFileSync(location, 'utf-8');
@@ -85,8 +127,8 @@ var converter = {
             process.exit(1);
         }
     },
-    
-    convert : function(inputFile) {
+
+    convert: function(inputFile) {
         var resourceList;
         var title;
         var file = path.resolve(__dirname, inputFile);
@@ -130,7 +172,7 @@ var converter = {
 
         if (validator.validateJSON('c', this.sampleFile).status) {
             console.log('The conversion was successful');
-            fs.writeFile('./out.json', JSON.stringify(this.sampleFile), function(err) {
+            fs.writeFile('./out.json', JSON.stringify(this.sampleFile, null, 4), function(err) {
                 if (err) {
                     console.error("Could not write to file");
                 }
