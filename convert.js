@@ -6,11 +6,11 @@
 // ...
 // 
 
-var fs = require('fs'),
-    uuid = require('node-uuid'),
-    path = require('path'),
-    clone = require('clone'),
-    validator = require('postman_validator');
+var fs = require('fs');
+var uuid = require('node-uuid')
+var path = require('path');
+var validator = require('postman_validator');
+var _ = require('lodash');
 
 var converter = {
     sampleFile: {},
@@ -19,15 +19,14 @@ var converter = {
         // Resolve the apiFile location.
         // res.path has a leading /
         var apiFile = this.read(path.join(dir, "." + res.path));
-        var that = this;
         var envObj = this.sampleFile.environment;
 
         // Initialize the envObj for the collection.
         envObj.name = this.sampleFile.name + "'s Environment";
         envObj.id = uuid.v4();
 
-        apiFile.apis.forEach(function(api) {
-            api.operations.forEach(function(operation) {
+        _.forEach(apiFile.apis, function(api) {
+            _.forEach(api.operations, function(operation) {
 
                 // operation variables
                 var header = '';
@@ -35,8 +34,8 @@ var converter = {
                 var queryFlag = false;
 
                 // Make a deep copy of the the sampleRequest.
-                var request = clone(that.sampleRequest, false);
-                request.collectionId = that.sampleFile.id;
+                var request = _.clone(this.sampleRequest, true);
+                request.collectionId = this.sampleFile.id;
 
                 // No specification found for other modes.
                 request.dataMode = "params";
@@ -46,7 +45,7 @@ var converter = {
                 request.name = operation.nickname;
                 request.time = Date.now();
 
-                operation.parameters.forEach(function(param) {
+                _.forEach(operation.parameters, function(param) {
                     switch (param.paramType) {
                         case 'header':
                             header += param.name + ": \n";
@@ -67,7 +66,7 @@ var converter = {
                             });
                             break;
                         case 'path':
-                            if(!that.keyExists(envObj.values, param.name)){
+                            if(!this.keyExists(envObj.values, param.name)){
                                 
                                 // Should it be enabled?
                                 // Could not find a suitable map 
@@ -87,7 +86,7 @@ var converter = {
                         default:
                             break;
                     }
-                });
+                }, this);
 
                 // No POSTMAN schema specified for responses
                 request.responses = operation.responseMessages;
@@ -98,9 +97,9 @@ var converter = {
                 request.header = header;
                 request.url += query;
 
-                that.sampleFile.requests.push(request);
-            });
-        });
+                this.sampleFile.requests.push(request);
+            }, this);
+        }, this);
     },
 
     // Helper to check if the key already exists in the environment
@@ -143,14 +142,10 @@ var converter = {
         this.sampleFile.id = uuid.v4();
         this.sampleFile.timestamp = Date.now();
 
-        if (resourceList.hasOwnProperty('info')) {
-            title = resourceList.info.title;
+        if (_.has(resourceList, 'info') && _.has(resourceList.info, 'title')) {
+            this.sampleFile.name = resourceList.info.title;
         }
-
-        if (title) {
-            this.sampleFile.name = title;
-        }
-
+        
         var len = resourceList.apis.length;
         var apis = resourceList.apis;
 
@@ -166,10 +161,10 @@ var converter = {
         // Temporary, will be populated later.
         this.sampleFile.folders = [];
 
-        for (var i = 0; i < len; i++) {
-            this.convertAPI(apis[i], dir);
-        }
-
+        _.forEach(apis, function(api){
+            this.convertAPI(api, dir);
+        }, this);
+        
         if (validator.validateJSON('c', this.sampleFile).status) {
             console.log('The conversion was successful');
             fs.writeFile('./out.json', JSON.stringify(this.sampleFile, null, 4), function(err) {
