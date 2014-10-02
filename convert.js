@@ -1,34 +1,33 @@
-// To Do: 
-// Integrate commander
-// Refactor
-// Include a convertJSON method
-// Add tests/setup npm files and such
-// ...
-// 
-
 var fs = require('fs');
-var uuid = require('node-uuid')
+var uuid = require('node-uuid');
 var path = require('path');
 var validator = require('postman_validator');
 var _ = require('lodash');
 
 var converter = {
+
     sampleFile: {},
-    convertAPI: function(res, dir) {
+    env: {},
+
+    convertAPI: function(res, dir, description) {
 
         // Resolve the apiFile location.
         // res.path has a leading /
         var apiFile = this.read(path.join(dir, "." + res.path));
-        var envObj = this.sampleFile.environment;
 
-        // Initialize the envObj for the collection.
-        envObj.name = this.sampleFile.name + "'s Environment";
-        envObj.id = uuid.v4();
+        var folderItem = {};
+
+        folderItem.name = apiFile.resourcePath;
+        folderItem.description = description;
+        folderItem.collectionName = this.sampleFile.name;
+        folderItem.collectionId = this.sampleFile.id;
+        folderItem.order = [];
+        folderItem.id = this.generateId();
 
         _.forEach(apiFile.apis, function(api) {
             _.forEach(api.operations, function(operation) {
 
-                // operation variables
+                // Operation variables.
                 var header = '';
                 var query = '';
                 var queryFlag = false;
@@ -40,10 +39,10 @@ var converter = {
                 // No specification found for other modes.
                 request.dataMode = "params";
                 request.description = operation.summary;
-                request.id = uuid.v4();
+                request.id = this.generateId();
                 request.method = operation.method;
                 request.name = operation.nickname;
-                request.time = Date.now();
+                request.time = this.generateTimestamp();
 
                 _.forEach(operation.parameters, function(param) {
                     switch (param.paramType) {
@@ -66,54 +65,35 @@ var converter = {
                             });
                             break;
                         case 'path':
-                            if(!this.keyExists(envObj.values, param.name)){
-                                
-                                // Should it be enabled?
-                                // Could not find a suitable map 
-                                // for the env variable name
-                                envObj.values.push({
-                                    "enabled": false,
-                                    "key": param.name,
-                                    "name": param.name,
-                                    "type": param.type,
-                                    "value": ""
-                                });
-                            }
-                            
+                            this.addEnvKey(param.name, param.type, false);
+
                             // Modify the url to suit POSTMan
                             api.path = api.path.replace('{' + param.name + '}', ':' + param.name);
                             break;
+
+                            // Need to handle body paramType
+                            // Need to parse the models and account for inheritance
+                        case 'body':
+                            break;
+
                         default:
                             break;
                     }
                 }, this);
 
-                // No POSTMAN schema specified for responses
-                request.responses = operation.responseMessages;
+                folderItem.order.push(request.id);
 
                 // api.path begins with a /
                 request.url = apiFile.basePath + api.path;
 
-                request.header = header;
+                request.headers = header;
                 request.url += query;
 
                 this.sampleFile.requests.push(request);
             }, this);
         }, this);
-    },
 
-    // Helper to check if the key already exists in the environment
-    // variables set.
-    keyExists: function(array, key){
-        var ret = false;
-        
-        array.forEach(function(param){
-            if(param.key === key){
-                ret = true;
-            }
-        });
-        
-        return ret;
+        this.sampleFile.folders.push(folderItem);
     },
 
     read: function(location) {
@@ -127,9 +107,41 @@ var converter = {
         }
     },
 
-    convert: function(inputFile) {
+    addEnvKey: function(key, type, displayName) {
+        if (!_.has(this.env, key)) {
+            var envObj = {};
+            envObj.name = displayName || key;
+            envObj.enabled = true;
+            envObj.value = "";
+            envObj.type = type || "string";
+            envObj.key = key;
+
+            this.env[key] = envObj;
+        }
+    },
+
+    generateId: function() {
+        if (this.test) {
+            return "";
+        } else {
+            return uuid.v4();
+        }
+    },
+
+    generateTimestamp: function() {
+        if (this.test) {
+            return 0;
+        } else {
+            return Date.now();
+        }
+    },
+
+    convert: function(inputFile, options, cb) {
+
+        this.group = options.group;
+        this.test = options.test;
+
         var resourceList;
-        var title;
         var file = path.resolve(__dirname, inputFile);
         var dir = path.dirname(inputFile);
 
@@ -138,55 +150,60 @@ var converter = {
         file = './postman-boilerplate.json';
         this.sampleFile = this.read(file);
 
+        var sf = this.sampleFile;
+
         // Collection trivia
-        this.sampleFile.id = uuid.v4();
-        this.sampleFile.timestamp = Date.now();
+        sf.id = this.generateId();
+        sf.timestamp = this.generateTimestamp();
 
         if (_.has(resourceList, 'info') && _.has(resourceList.info, 'title')) {
-            this.sampleFile.name = resourceList.info.title;
+            sf.name = resourceList.info.title;
         }
-        
+
         var len = resourceList.apis.length;
         var apis = resourceList.apis;
 
-        this.sampleRequest = this.sampleFile.requests[0];
+        this.sampleRequest = sf.requests[0];
 
         if (len < 1) {
             console.error("No requests are specificed in the spec.");
             process.exit(1);
         }
 
-        this.sampleFile.requests = [];
+        sf.requests = [];
+        sf.folders = [];
 
-        // Temporary, will be populated later.
-        this.sampleFile.folders = [];
+        sf.environment.name = sf.name + "'s Environment";
+        sf.environment.timestamp = this.generateTimestamp();
+        sf.environment.id = this.generateId();
 
-        _.forEach(apis, function(api){
-            this.convertAPI(api, dir);
+        _.forEach(apis, function(api) {
+            this.convertAPI(api, dir, api.description);
         }, this);
-        
+
+        // Add the environment variables.
+        _.forOwn(this.env, function(val) {
+            sf.environment.values.push(val);
+        }, this);
+
+        if (!this.group) {
+            // If grouping is disabled, reset the folders.
+            sf.folders = [];
+        }
+
+        this.validate();
+        cb(this.sampleFile);
+    },
+
+    validate: function() {
         if (validator.validateJSON('c', this.sampleFile).status) {
             console.log('The conversion was successful');
-            fs.writeFile('./out.json', JSON.stringify(this.sampleFile, null, 4), function(err) {
-                if (err) {
-                    console.error("Could not write to file");
-                }
-            });
-            return this.sampleFile;
+            return true;
         } else {
             console.log("Could not validate generated file");
-            return {};
+            return false;
         }
     }
 };
 
-if (process.argv.length < 3) {
-    console.error("Expected usage : node convert.js path_to_resource_listing");
-    process.exit(1);
-} else {
-    converter.convert(process.argv[2]);
-}
-
-module.exports = {
-    convert: converter.convert
-};
+module.exports = converter;

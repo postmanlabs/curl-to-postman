@@ -1,5 +1,13 @@
 A Swagger to POSTMan converter.
 
-Usage: node convert.js "path/to/resource/listing"
+Usage examples:
 
-Example: node convert.js main.json
+    Read spec.json and store the output in output.json after grouping the requests into folders
+        ./swagger2postman -s spec.json -o output.json -g
+
+    Read spec.json and print the output to the console
+        ./swagger2postman -s spec.json
+
+    Read spec.json and print the prettified output to the console
+        ./swagger2postman -s spec.json -p
+        

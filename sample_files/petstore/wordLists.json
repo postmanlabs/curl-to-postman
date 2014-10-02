@@ -1,0 +1,105 @@
+{
+    "resourcePath": "/wordLists",
+    "apis": [{
+        "path": "/wordLists",
+        "description": "",
+        "operations": [{
+            "parameters": [{
+                "description": "WordList to create",
+                "required": false,
+                "dataType": "wordList",
+                "allowMultiple": false,
+                "paramType": "body"
+            }, {
+                "name": "auth_token",
+                "description": "The auth token of the logged-in user, obtained by calling /account/authenticate/{username} (described above)",
+                "required": true,
+                "dataType": "string",
+                "allowMultiple": false,
+                "paramType": "header"
+            }],
+            "summary": "Creates a WordList.",
+            "method": "POST",
+            "nickname": "createWordList",
+            "responseClass": "wordList",
+            "errorResponses": [{
+                "reason": "Invalid WordList supplied or mandatory fields are missing",
+                "code": 400
+            }, {
+                "reason": "Not authenticated",
+                "code": 403
+            }, {
+                "reason": "WordList owner not found",
+                "code": 404
+            }]
+        }]
+    }],
+    "models": {
+        "WordList": {
+            "uniqueItems": false,
+            "properties": {
+                "updatedAt": {
+                    "uniqueItems": false,
+                    "type": "Date",
+                    "required": false
+                },
+                "id": {
+                    "uniqueItems": false,
+                    "type": "long",
+                    "required": true
+                },
+                "username": {
+                    "uniqueItems": false,
+                    "type": "string",
+                    "required": false
+                },
+                "permalink": {
+                    "uniqueItems": false,
+                    "type": "string",
+                    "required": false
+                },
+                "lastActivityAt": {
+                    "uniqueItems": false,
+                    "type": "Date",
+                    "required": false
+                },
+                "createdAt": {
+                    "uniqueItems": false,
+                    "type": "Date",
+                    "required": false
+                },
+                "description": {
+                    "uniqueItems": false,
+                    "type": "string",
+                    "required": false
+                },
+                "userId": {
+                    "uniqueItems": false,
+                    "type": "long",
+                    "required": false
+                },
+                "name": {
+                    "uniqueItems": false,
+                    "type": "string",
+                    "required": false
+                },
+                "numberWordsInList": {
+                    "uniqueItems": false,
+                    "type": "long",
+                    "required": false
+                },
+                "type": {
+                    "uniqueItems": false,
+                    "type": "string",
+                    "required": false
+                }
+            },
+            "id": "wordList",
+            "type": "any",
+            "required": false
+        }
+    },
+    "apiVersion": "4.0",
+    "swaggerVersion": "1.0",
+    "basePath": "http://api.wordnik.com/v4"
+}

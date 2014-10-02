@@ -4,11 +4,19 @@
     "private": true,
     "description": "Convert a given Swagger spec to POSTMan spec",
     "main": "convert.js",
+    "bin": {
+        "swagger2postman": "./bin/swagger2postman"
+    },
     "dependencies": {
-    	"node-uuid": "1.4.1",
-    	"postman_validator": ">=0.0.4",
-        "lodash": ">=2.4.1"
+        "node-uuid": "1.4.1",
+        "postman_validator": ">=0.0.4",
+        "lodash": ">=2.4.1",
+        "commander": ">=2.3.0"
     },
     "author": "Surya Pappoppula",
-    "license": "Apache"
+    "license": "Apache",
+    "devDependencies": {},
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    }
 }

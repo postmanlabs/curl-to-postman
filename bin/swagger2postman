@@ -1,0 +1,102 @@
+#!/usr/bin/env node
+
+var program = require('commander');
+var Converter = require('../convert.js');
+var fs = require('fs');
+var path = require('path');
+var _ = require('lodash');
+
+function parseArguments() {
+    program
+        .version('0.0.1')
+        .usage('[option]')
+        .option('-s, --spec <file>', 'Convert a given Swagger spec to a Postman collection')
+        .option('-o, --output <file>', 'Store the collection in a file')
+        .option('-g, --group', 'Group the requests into folders')
+        .option('-t, --test', 'Test the converter')
+        .option('-p, --pretty', 'Pretty print the json file');
+
+    program.on('--help', function() {
+        console.log('   Converts a Swagger API spec to a POSTMan collection');
+        console.log('');
+        console.log('   Examples:');
+        console.log('       Read spec.json and store the output in output.json after grouping the requests into folders');
+        console.log('           ./swagger2postman -s spec.json -o output.json -g');
+        console.log('');
+        console.log('       Read spec.json and print the output to the console');
+        console.log('           ./swagger2postman -s spec.json');
+        console.log('');
+        console.log('       Read spec.json and print the prettified output to the console');
+        console.log('           ./swagger2postman -s spec.json -p');
+        console.log('');
+    });
+
+    program.parse(process.argv);
+
+    var inputFile = program.spec;
+    var outputFile = program.output || false;
+    var group = program.group || false;
+    var prettyPrint = program.pretty || false;
+    var test = program.test || false;
+
+    if (test) {
+        // file, options, callback
+        Converter.convert('sample_files/petstore/resources.json', {
+            group: true,
+            test: true,
+        }, function(output) {
+            var data;
+            try {
+                data = JSON.parse(fs.readFileSync('sample_files/petstore/out.json', 'utf-8'));
+            } catch (err) {
+                console.log(err);
+                process.exit(1);
+            }
+
+            if (_.isEqual(output, data)) {
+                console.log('Test has passed');
+            } else {
+                console.log('Generated collection does not match expected collection, test has failed');
+            }
+            process.exit(0);
+        });
+    }
+
+    function callback(output) {
+        if (outputFile) {
+
+            var file = path.resolve(outputFile);
+
+            try {
+                if (prettyPrint) {
+                    fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
+                } else {
+                    fs.writeFileSync(outputFile, JSON.stringify(output));
+                }
+                console.log("Output written to " + file);
+            } catch (err) {
+                console.log("Could not write to file");
+                console.log(err);
+                process.exit(1);
+            }
+        } else {
+            console.log(output);
+            process.exit(0);
+        }
+    }
+
+    if (!test) {
+        if (inputFile) {
+            // file, options, callback
+            Converter.convert(inputFile, {
+                group: group,
+                test: false
+            }, callback);
+        } else {
+            program.emit('--help');
+            process.exit(1);
+        }
+    }
+}
+
+parseArguments();
