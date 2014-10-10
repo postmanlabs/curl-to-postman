@@ -67,12 +67,37 @@ function parseArguments() {
 
             var file = path.resolve(outputFile);
 
+            // Write the environment data in a separate file.
+            var env = output.environment;
+            
+            var envFileName = path.basename(file, '.json') + "-environment.json"
+            var envFile = path.join(path.dirname(file), envFileName);
+
+            try {
+                fs.writeFileSync(envFile, JSON.stringify(output.environment, null, 4));
+
+                // Reset the env object.
+                env.values = [];
+                env.id = env.name = "";
+                env.timestamp = 0;
+
+            } catch (err) {
+                console.log("Could not write to environment file");
+                console.log(err);
+                process.exit(1);
+            }
+
+            if(path.extname(file) !== '.json'){
+                file += '.json';
+            }
+
             try {
                 if (prettyPrint) {
-                    fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
+                    fs.writeFileSync(file, JSON.stringify(output, null, 4));
                 } else {
-                    fs.writeFileSync(outputFile, JSON.stringify(output));
+                    fs.writeFileSync(file, JSON.stringify(output));
                 }
+                
                 console.log("Output written to " + file);
             } catch (err) {
                 console.log("Could not write to file");

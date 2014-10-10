@@ -173,7 +173,7 @@ var converter = {
         sf.requests = [];
         sf.folders = [];
 
-        sf.environment.name = sf.name + "'s Environment";
+        sf.environment.name = ( sf.name || "Default" ) + "'s Environment";
         sf.environment.timestamp = this.generateTimestamp();
         sf.environment.id = this.generateId();
 
