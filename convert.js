@@ -74,8 +74,9 @@ var converter = {
                             
                             this.addEnvKey(param.name, param.type, false);
 
-                            request.description += param.name + ': ' + param.description + " \n\n";
-
+                            param.description = param.description || "";
+                            request.description += param.name + ': ' + param.description + " \n\n";    
+                            
                             // Modify the url to suit POSTMan
                             api.path = api.path.replace('{' + param.name + '}', ':' + param.name);
                             break;
@@ -204,9 +205,7 @@ var converter = {
 
         var env = _.clone(this.sampleFile.environment, true);
         
-        sf.environment.values = [];
-        sf.environment.id = sf.environment.name = "";
-        sf.environment.timestamp = 0;
+        delete sf.environment;
 
         cb(sf, env);
     },

@@ -46,6 +46,7 @@ function parseArguments() {
             test: true,
         }, function(output, environment) {
             var data;
+            var env;
             
             try {
                 data = JSON.parse(fs.readFileSync('sample_files/petstore/out.json', 'utf-8'));
@@ -73,7 +74,7 @@ function parseArguments() {
         if (outputFile) {
 
             var file = path.resolve(outputFile);
-                
+
             var envFileName = path.basename(file, '.json') + "-environment.json"
             var envFile = path.join(path.dirname(file), envFileName);
 
