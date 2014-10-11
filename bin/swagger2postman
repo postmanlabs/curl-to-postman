@@ -44,17 +44,24 @@ function parseArguments() {
         Converter.convert('sample_files/petstore/resources.json', {
             group: true,
             test: true,
-        }, function(output) {
+        }, function(output, environment) {
             var data;
+            
             try {
                 data = JSON.parse(fs.readFileSync('sample_files/petstore/out.json', 'utf-8'));
+                env = JSON.parse(fs.readFileSync('sample_files/petstore/out-environment.json'), 'utf-8');
             } catch (err) {
                 console.log(err);
                 process.exit(1);
             }
 
             if (_.isEqual(output, data)) {
-                console.log('Test has passed');
+
+                if(_.isEqual(environment, env)){
+                    console.log('Test has passed');    
+                }else{
+                    console.log('Generated environment file does not match expected environment, test has failed');
+                }
             } else {
                 console.log('Generated collection does not match expected collection, test has failed');
             }
@@ -62,25 +69,16 @@ function parseArguments() {
         });
     }
 
-    function callback(output) {
+    function callback(output, environment) {
         if (outputFile) {
 
             var file = path.resolve(outputFile);
-
-            // Write the environment data in a separate file.
-            var env = output.environment;
-            
+                
             var envFileName = path.basename(file, '.json') + "-environment.json"
             var envFile = path.join(path.dirname(file), envFileName);
 
             try {
-                fs.writeFileSync(envFile, JSON.stringify(output.environment, null, 4));
-
-                // Reset the env object.
-                env.values = [];
-                env.id = env.name = "";
-                env.timestamp = 0;
-
+                fs.writeFileSync(envFile, JSON.stringify(environment, null, 4));
             } catch (err) {
                 console.log("Could not write to environment file");
                 console.log(err);

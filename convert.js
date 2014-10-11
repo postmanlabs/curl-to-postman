@@ -34,6 +34,7 @@ var converter = {
 
                 // Make a deep copy of the the sampleRequest.
                 var request = _.clone(this.sampleRequest, true);
+                var params = false;
                 request.collectionId = this.sampleFile.id;
 
                 // No specification found for other modes.
@@ -65,7 +66,15 @@ var converter = {
                             });
                             break;
                         case 'path':
+
+                            if(!params){
+                                request.description += "\n\nParameters:\n\n";
+                                params = true;
+                            }
+                            
                             this.addEnvKey(param.name, param.type, false);
+
+                            request.description += param.name + ': ' + param.description + " \n\n";
 
                             // Modify the url to suit POSTMan
                             api.path = api.path.replace('{' + param.name + '}', ':' + param.name);
@@ -192,7 +201,14 @@ var converter = {
         }
 
         this.validate();
-        cb(this.sampleFile);
+
+        var env = _.clone(this.sampleFile.environment, true);
+        
+        sf.environment.values = [];
+        sf.environment.id = sf.environment.name = "";
+        sf.environment.timestamp = 0;
+
+        cb(sf, env);
     },
 
     validate: function() {
