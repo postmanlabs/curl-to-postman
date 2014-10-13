@@ -7,6 +7,9 @@ var path = require('path');
 var _ = require('lodash');
 
 function parseArguments() {
+    Converter.convertCurlToRequest('curl -G -A browser1 -X "POST" -H "Cache-Control:no-cache" -H "Postman-Token:0b95f584-a63e-73f2-3b0c-d3e07856ada9" -H "Content-Type:multipart/form-data; ' +
+        'boundary=----WebKitFormBoundaryp7MA4YWxkTrZu0gW" -F "type=t1" -F "id=id1" http://localhost:1337/follows ');
+    return;
     program
         .version('0.0.1')
         .usage('[option]')

@@ -1,223 +1,145 @@
 var fs = require('fs');
 var uuid = require('node-uuid');
 var path = require('path');
+var program = require('commander');
 var validator = require('postman_validator');
 var _ = require('lodash');
+var argsplit = require('argsplit');
 
 var converter = {
-
-    sampleFile: {},
-    env: {},
-
-    convertAPI: function(res, dir, description) {
-
-        // Resolve the apiFile location.
-        // res.path has a leading /
-        var apiFile = this.read(path.join(dir, "." + res.path));
-
-        var folderItem = {};
-
-        folderItem.name = apiFile.resourcePath;
-        folderItem.description = description;
-        folderItem.collectionName = this.sampleFile.name;
-        folderItem.collectionId = this.sampleFile.id;
-        folderItem.order = [];
-        folderItem.id = this.generateId();
-
-        _.forEach(apiFile.apis, function(api) {
-            _.forEach(api.operations, function(operation) {
-
-                // Operation variables.
-                var header = '';
-                var query = '';
-                var queryFlag = false;
-
-                // Make a deep copy of the the sampleRequest.
-                var request = _.clone(this.sampleRequest, true);
-                var params = false;
-                request.collectionId = this.sampleFile.id;
-
-                // No specification found for other modes.
-                request.dataMode = "params";
-                request.description = operation.summary;
-                request.id = this.generateId();
-                request.method = operation.method;
-                request.name = operation.nickname;
-                request.time = this.generateTimestamp();
-
-                _.forEach(operation.parameters, function(param) {
-                    switch (param.paramType) {
-                        case 'header':
-                            header += param.name + ": \n";
-                            break;
-                        case 'query':
-                            if (queryFlag) {
-                                query += '&' + param.name + '=';
-                            } else {
-                                queryFlag = true;
-                                query += '?' + param.name + '=';
-                            }
-                            break;
-                        case 'form':
-                            request.data.push({
-                                "key": param.name,
-                                "value": "",
-                                "type": "text"
-                            });
-                            break;
-                        case 'path':
-
-                            if(!params){
-                                request.description += "\n\nParameters:\n\n";
-                                params = true;
-                            }
-                            
-                            this.addEnvKey(param.name, param.type, false);
-
-                            param.description = param.description || "";
-                            request.description += param.name + ': ' + param.description + " \n\n";    
-                            
-                            // Modify the url to suit POSTMan
-                            api.path = api.path.replace('{' + param.name + '}', ':' + param.name);
-                            break;
-
-                            // Need to handle body paramType
-                            // Need to parse the models and account for inheritance
-                        case 'body':
-                            break;
-
-                        default:
-                            break;
-                    }
-                }, this);
-
-                folderItem.order.push(request.id);
-
-                // api.path begins with a /
-                request.url = apiFile.basePath + api.path;
-
-                request.headers = header;
-                request.url += query;
-
-                this.sampleFile.requests.push(request);
-            }, this);
-        }, this);
-
-        this.sampleFile.folders.push(folderItem);
+    trimQuotesFromString: function(str) {
+        if(str[0]==='"') str = str.substring(1);
+        var len = str.length;
+        if(str[len-1]=='"') str = str.substring(0,len-1);
+        return str;
     },
 
-    read: function(location) {
-        var data;
-        try {
-            data = fs.readFileSync(location, 'utf-8');
-            return JSON.parse(data);
-        } catch (err) {
-            console.log(err);
-            process.exit(1);
+    validateCurlRequest: function(curlObj) {
+        //Must have a request
+        if(!curlObj.request) {
+            throw "A -X/--request option must be specified";
+        }
+
+        //must be a valid method
+        var validMethods = ["GET","POST","PUT","PATCH","DELETE","COPY","HEAD","OPTIONS","LINK","UNLINK","PURGE","LOCK","UNLOCK","PROPFIND"];
+        if(validMethods.indexOf(curlObj.request.toUpperCase())===-1) {
+            throw "The method "+ curlObj.request + " is not supported";
+        }
+
+        //must have a URL
+        if(curlObj.args.length!==1) {
+            throw "Zero or Multiple option-less arguments. Only one is supported (the URL)";
         }
     },
 
-    addEnvKey: function(key, type, displayName) {
-        if (!_.has(this.env, key)) {
-            var envObj = {};
-            envObj.name = displayName || key;
-            envObj.enabled = true;
-            envObj.value = "";
-            envObj.type = type || "string";
-            envObj.key = key;
-
-            this.env[key] = envObj;
-        }
-    },
-
-    generateId: function() {
-        if (this.test) {
+    getHeaders: function(curlObj) {
+        var headerArray = curlObj.header;
+        if(headerArray==null || headerArray.length==0) {
             return "";
-        } else {
-            return uuid.v4();
         }
+        var numHeaders = headerArray.length;
+        var str = "";
+        for(var i=0;i<numHeaders;i++) {
+            var thisHeader = headerArray[i];
+
+            //remove leading and trailing quotes
+            thisHeader = this.trimQuotesFromString(thisHeader);
+
+            var keyIndex = thisHeader.indexOf(":");
+            if(keyIndex===-1) {
+                continue;
+            }
+
+            str += thisHeader+"\\n";
+        }
+        return str;
     },
 
-    generateTimestamp: function() {
-        if (this.test) {
-            return 0;
-        } else {
-            return Date.now();
-        }
+    setDefaultPostmanFields: function(request, curlstring) {
+        request.collectionId = "";
+        request.description = 'Generated from a curl request: \\n' +  curlstring.split('"').join('\\\"');
+        request.descriptionFormat = "html";
+        request.preRequestScript="";
+        request.tests="";
+        request.synced=false;
+        request.pathVariables={};
     },
 
-    convert: function(inputFile, options, cb) {
+    getDataForForm: function(dataArray) {
+        var numElems = dataArray.length;
+        var retVal = [];
+        for(var i=0;i<numElems;i++) {
+            var thisElem = dataArray[i];
 
-        this.group = options.group;
-        this.test = options.test;
+            thisElem = this.trimQuotesFromString(thisElem);
 
-        var resourceList;
-        var file = path.resolve(__dirname, inputFile);
-        var dir = path.dirname(inputFile);
+            var equalIndex = thisElem.indexOf("=");
+            if(equalIndex===-1) {
+                throw "Invalid CURL request. Each -F/--form argument must be of the form name=value";
+            }
+            var key = thisElem.substring(0,equalIndex);
+            var val = thisElem.substring(equalIndex+1, thisElem.length-1);
 
-        resourceList = this.read(file);
-
-        file = './postman-boilerplate.json';
-        this.sampleFile = this.read(file);
-
-        var sf = this.sampleFile;
-
-        // Collection trivia
-        sf.id = this.generateId();
-        sf.timestamp = this.generateTimestamp();
-
-        if (_.has(resourceList, 'info') && _.has(resourceList.info, 'title')) {
-            sf.name = resourceList.info.title;
+            retVal.push({
+                key: key,
+                value: val,
+                type: "text"
+            });
         }
 
-        var len = resourceList.apis.length;
-        var apis = resourceList.apis;
-
-        this.sampleRequest = sf.requests[0];
-
-        if (len < 1) {
-            console.error("No requests are specificed in the spec.");
-            process.exit(1);
-        }
-
-        sf.requests = [];
-        sf.folders = [];
-
-        sf.environment.name = ( sf.name || "Default" ) + "'s Environment";
-        sf.environment.timestamp = this.generateTimestamp();
-        sf.environment.id = this.generateId();
-
-        _.forEach(apis, function(api) {
-            this.convertAPI(api, dir, api.description);
-        }, this);
-
-        // Add the environment variables.
-        _.forOwn(this.env, function(val) {
-            sf.environment.values.push(val);
-        }, this);
-
-        if (!this.group) {
-            // If grouping is disabled, reset the folders.
-            sf.folders = [];
-        }
-
-        this.validate();
-
-        var env = _.clone(this.sampleFile.environment, true);
-        
-        delete sf.environment;
-
-        cb(sf, env);
+        return retVal;
     },
 
-    validate: function() {
-        if (validator.validateJSON('c', this.sampleFile).status) {
-            console.log('The conversion was successful');
-            return true;
-        } else {
-            console.log("Could not validate generated file");
-            return false;
+    convertCurlToRequest: function(curlString) {
+        function collectValues(str, memo) {
+            memo.push(str);
+            return memo;
         }
+
+        program.version('0.0.1')
+            .usage('[options] <URL ...>')
+            .option('-A, --user-agent <string>', 'An optional user-agent string', null)
+            .option('-d, --data <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
+            .option('--data-binary <string>', 'Data send as-is', null)
+            .option('-F, --form <name=content>', 'A single form-data field', collectValues, [])
+            .option('-G, --get', 'Forces the request to be sent as GET, with the --data parameters appended to the query string', null)
+            .option('-H, --header <string>', 'Add a headerg (can be used multiple times)', collectValues, [])
+            .option('-X, --request <string>', 'Specify a custom request mehod to be used', null);
+        var argv = argsplit("node "+curlString);
+        var curlObj = program.parse(argv);
+
+        curlObj.request = this.trimQuotesFromString(curlObj.request);
+
+        this.validateCurlRequest(curlObj);
+
+        var request = {};
+
+        request.method= curlObj.request;
+        request.url = request.name = curlObj.args[0];
+
+        request.headers = this.getHeaders(curlObj);
+        request.time = (new Date()).getTime();
+        request.id = uuid.v4();
+
+        if(curlObj["data-binary"]) {
+            request.dataMode="raw";
+            request.data=[];
+            request.rawModeData = request["data-binary"];
+        }
+        else if(curlObj.form) {
+            request.rawModeData="";
+            request.data = this.getDataForForm(curlObj.form);
+            request.dataMode = "params";
+        }
+        else if(curlObj.data) {
+            request.rawModeData="";
+            request.data = this.getDataForForm(curlObj.data);
+            request.dataMode = "urlencoded";
+        }
+
+        this.setDefaultPostmanFields(request, curlString);
+
+        console.log(JSON.stringify(request,null));
     }
 };
 

@@ -1,19 +1,20 @@
 {
-    "name": "Swagger2Postman",
+    "name": "Curl2Postman",
     "version": "0.0.1",
     "private": true,
-    "description": "Convert a given Swagger spec to POSTMan spec",
+    "description": "Convert a given CURL command to a Postman request",
     "main": "convert.js",
     "bin": {
-        "swagger2postman": "./bin/swagger2postman"
+        "swagger2postman": "./bin/curl2postman"
     },
     "dependencies": {
         "node-uuid": "1.4.1",
         "postman_validator": ">=0.0.4",
         "lodash": ">=2.4.1",
-        "commander": ">=2.3.0"
+        "commander": ">=2.3.0",
+        "argsplit": "0.0.1"
     },
-    "author": "Surya Pappoppula",
+    "author": "Abhijit Kane",
     "license": "Apache",
     "devDependencies": {},
     "scripts": {
