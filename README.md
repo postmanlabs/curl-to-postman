@@ -1,6 +1,7 @@
 A cURL to POSTMan converter.
 
 Current CURL options that are supported are:
+
     -A, --user-agent
     -d, --data
     --data-binary
@@ -19,4 +20,3 @@ Usage examples:
 
     Read spec.json and print the prettified output to the console
         ./curl2postman -s spec.json -p
-        
