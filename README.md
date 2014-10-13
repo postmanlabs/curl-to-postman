@@ -1,5 +1,14 @@
 A cURL to POSTMan converter.
 
+Current CURL options that are supported are:
+    -A, --user-agent
+    -d, --data
+    --data-binary
+    -F, --form
+    -G, --get
+    -H, --header
+    -X, --request
+
 Usage examples:
 
     Read spec.json and store the output in output.json after grouping the requests into folders
