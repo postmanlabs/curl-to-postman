@@ -78,7 +78,7 @@ var curlConverter = {
     },
 
     trimQuotesFromString: function(str) {
-        if(!str) return null;
+        if(str === null) return null;
         var strlen = str.length;
         if((str[0]==='"' && str[strlen-1]==='"') || (str[0]==="'" && str[strlen-1]==="'"))  {
         	return str.substring(1,strlen-1);
@@ -188,7 +188,10 @@ var curlConverter = {
     },
 
     getDataForUrlEncoded: function(dataArray, enableDecoding) {
-        dataArray = dataArray.join("&").trim().split("&");
+        var concatString = dataArray.join("&").trim();
+        if(concatString === null) return null;
+
+        dataArray = this.trimQuotesFromString(concatString).split("&");
         return this.getDataForForm(dataArray, enableDecoding);
     },
 
@@ -213,95 +216,99 @@ var curlConverter = {
     },
 
     convertCurlToRequest: function(curlString) {
-        if(this.loaded===false) {
-            this.initialize();
-            this.loaded=true;
-        }
+        try {
+            if(this.loaded===false) {
+                this.initialize();
+                this.loaded=true;
+            }
 
-        this.resetProgram();
+            this.resetProgram();
 
-        var argv = this.argsplit("node "+curlString);
-        var curlObj = program.parse(argv);
-        this.headerPairs = {};
+            var argv = this.argsplit("node "+curlString);
+            var curlObj = program.parse(argv);
+            this.headerPairs = {};
 
-        if(!curlObj.request) {
-        	curlObj.request = "GET";
-        }
+            if(!curlObj.request) {
+            	curlObj.request = "GET";
+            }
 
-        curlObj.request = this.trimQuotesFromString(curlObj.request);
+            curlObj.request = this.trimQuotesFromString(curlObj.request);
 
-        this.validateCurlRequest(curlObj);
+            this.validateCurlRequest(curlObj);
 
-        var request = {};
+            var request = {};
 
-        request.method= 'GET';//curlObj.request;
-        if(curlObj.request && curlObj.request.length!==0) {
-            request.method = curlObj.request;
-        }
+            request.method= 'GET';//curlObj.request;
+            if(curlObj.request && curlObj.request.length!==0) {
+                request.method = curlObj.request;
+            }
 
-        request.url = request.name = this.trimQuotesFromString(curlObj.args[0]);
+            request.url = request.name = this.trimQuotesFromString(curlObj.args[0]);
 
-        request.headers = this.getHeaders(curlObj);
-        request.time = (new Date()).getTime();
-        request.id = request.collectionRequestId = uuid.v4();
+            request.headers = this.getHeaders(curlObj);
+            request.time = (new Date()).getTime();
+            request.id = request.collectionRequestId = uuid.v4();
 
-        var content_type = this.getLowerCaseHeader("content-type", this.headerPairs);
-        var urlData = "";
+            var content_type = this.getLowerCaseHeader("content-type", this.headerPairs);
+            var urlData = "";
 
-        request.data = [];
-        
-        request.dataMode = "params";
-
-
-        if(curlObj["dataBinary"]!==null) {
-            request.dataMode="raw";
-            request.data = request.rawModeData = curlObj["dataBinary"];
-            urlData = request.rawModeData;
-            request.method="POST";
-        }
-        if(curlObj.form && curlObj.form.length!==0) {
-            request.data = request.data.concat(this.getDataForForm(curlObj.form, false));
+            request.data = [];
+            
             request.dataMode = "params";
-            request.method="POST";
-        }
-        if((curlObj.data && curlObj.data.length!==0) || (curlObj.dataAscii && curlObj.dataAscii.length!==0)) {
-        	if(content_type==="") {
-        		//No content-type set
-        		//set to urlencoded
-        		request.data = request.data.concat(this.getDataForUrlEncoded(curlObj.data, false)).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
-        		request.dataMode = "urlencoded";
-            	request.method="POST";
-            	urlData = this.convertArrayToAmpersandString(curlObj.data) + "&" + this.convertArrayToAmpersandString(curlObj.dataAscii);
-        	}
-            else {
-            	var dataString = this.convertArrayToAmpersandString(curlObj.data);
-            	var dataAsciiString = this.convertArrayToAmpersandString(curlObj.dataAscii);
 
-                request.data = this.trimQuotesFromString(dataString) + "&" + this.trimQuotesFromString(dataAsciiString);
-                request.dataMode = "raw";
+
+            if(curlObj["dataBinary"]!==null) {
+                request.dataMode="raw";
+                request.data = request.rawModeData = curlObj["dataBinary"];
+                urlData = request.rawModeData;
                 request.method="POST";
-                urlData = request.data;
             }
-        }
-        if(curlObj['dataUrlencode'] && curlObj['dataUrlencode'].length!==0) {
-            request.data = request.data.concat(this.getDataForUrlEncoded(curlObj['dataUrlencode'], true));
-            request.dataMode = "urlencoded";
-            request.method="POST";
-            urlData = curlObj['dataUrlencode'];
-        }
-
-        if(!!curlObj.get) {
-            request.method="GET";
-            if(request.method.toLowerCase()==="get" && urlData!=="") {
-            	request.url+="?" + urlData;
+            if(curlObj.form && curlObj.form.length!==0) {
+                request.data = request.data.concat(this.getDataForForm(curlObj.form, false));
+                request.dataMode = "params";
+                request.method="POST";
             }
+            if((curlObj.data && curlObj.data.length!==0) || (curlObj.dataAscii && curlObj.dataAscii.length!==0)) {
+            	if(content_type==="") {
+            		//No content-type set
+            		//set to urlencoded
+            		request.data = request.data.concat(this.getDataForUrlEncoded(curlObj.data, false)).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
+            		request.dataMode = "urlencoded";
+                	request.method="POST";
+                	urlData = this.convertArrayToAmpersandString(curlObj.data) + "&" + this.convertArrayToAmpersandString(curlObj.dataAscii);
+            	}
+                else {
+                	var dataString = this.convertArrayToAmpersandString(curlObj.data);
+                	var dataAsciiString = this.convertArrayToAmpersandString(curlObj.dataAscii);
+
+                    request.data = this.trimQuotesFromString(dataString) + "&" + this.trimQuotesFromString(dataAsciiString);
+                    request.dataMode = "raw";
+                    request.method="POST";
+                    urlData = request.data;
+                }
+            }
+            if(curlObj['dataUrlencode'] && curlObj['dataUrlencode'].length!==0) {
+                request.data = request.data.concat(this.getDataForUrlEncoded(curlObj['dataUrlencode'], true));
+                request.dataMode = "urlencoded";
+                request.method="POST";
+                urlData = curlObj['dataUrlencode'];
+            }
+
+            if(!!curlObj.get) {
+                request.method="GET";
+                if(request.method.toLowerCase()==="get" && urlData!=="") {
+                	request.url+="?" + urlData;
+                }
+            }
+
+            request.id = request.collectionRequestId = uuid.v4();
+
+            this.setDefaultPostmanFields(request, curlString);
+            return request;
         }
-
-        request.id = request.collectionRequestId = uuid.v4();
-
-        this.setDefaultPostmanFields(request, curlString);
-        return request;
-        //console.log(JSON.stringify(request,null));
+        catch(e) {
+            return {error:e};
+        }
     }
 };
 
