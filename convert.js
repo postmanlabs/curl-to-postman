@@ -1,25 +1,92 @@
-var fs = require('fs');
 var uuid = require('node-uuid');
-var path = require('path');
 var program = require('commander');
-var validator = require('postman_validator');
 var _ = require('lodash');
-var argsplit = require('argsplit');
+//var argsplit = require('argsplit');
 
-var converter = {
+var curlConverter = {
+    loaded: false,
+
+    argsplit: function (str) {
+        var out = []
+            , quoteChar = ''
+            , current = ''
+
+        if (!str) return []
+        str = str.replace(/[\s]{2}/g, ' ')
+        for (var i=0, len=str.length; i<len; i++) {
+            var c = str[i]
+            if (c === ' ') {
+                if (quoteChar) {
+                    current += c
+                } else {
+                    if (current) {
+                        out.push(current)
+                        current = ''
+                    }
+                }
+            } else if (c === '"') {
+                if (quoteChar && quoteChar === c) {
+                    current += c
+                    out.push(current)
+                    quoteChar = ''
+                    current = ''
+                } else {
+                    current += c
+                    if(quoteChar==="") {
+                        quoteChar = c
+                    }
+                }
+            } else if (c === "'") {
+                if (quoteChar && quoteChar === c) {
+                    current += c
+                    out.push(current)
+                    quoteChar = ''
+                    current = ''
+                } else {
+                    current += c;
+                    if(quoteChar==="") {
+                        quoteChar = c
+                    }
+                }
+            } else {
+                current += c
+            }
+        }
+        if (current)
+            out.push(current)
+
+        return out
+    },
+
+    initialize: function() {
+        function collectValues(str, memo) {
+            memo.push(str);
+            return memo;
+        }
+
+        program.version('0.0.1')
+            .usage('[options] <URL ...>')
+            .option('-A, --user-agent <string>', 'An optional user-agent string', null)
+            .option('-d, --data <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
+            .option('--data-ascii <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
+            .option('--data-urlencode <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
+            .option('--data-binary <string>', 'Data send as-is', null)
+            .option('-F, --form <name=content>', 'A single form-data field', collectValues, [])
+            .option('-G, --get', 'Forces the request to be sent as GET, with the --data parameters appended to the query string', null)
+            .option('-H, --header <string>', 'Add a header (can be used multiple times)', collectValues, [])
+            .option('-X, --request <string>', 'Specify a custom request mehod to be used', null);
+    },
+
     trimQuotesFromString: function(str) {
-        if(str[0]==='"') str = str.substring(1);
-        var len = str.length;
-        if(str[len-1]=='"') str = str.substring(0,len-1);
+        if(!str) return null;
+        var strlen = str.length;
+        if((str[0]==='"' && str[strlen-1]==='"') || (str[0]==="'" && str[strlen-1]==="'"))  {
+        	return str.substring(1,strlen-1);
+        }
         return str;
     },
 
     validateCurlRequest: function(curlObj) {
-        //Must have a request
-        if(!curlObj.request) {
-            throw "A -X/--request option must be specified";
-        }
-
         //must be a valid method
         var validMethods = ["GET","POST","PUT","PATCH","DELETE","COPY","HEAD","OPTIONS","LINK","UNLINK","PURGE","LOCK","UNLOCK","PROPFIND"];
         if(validMethods.indexOf(curlObj.request.toUpperCase())===-1) {
@@ -34,11 +101,15 @@ var converter = {
 
     getHeaders: function(curlObj) {
         var headerArray = curlObj.header;
+        var str="";
+        if(curlObj["userAgent"]) {
+        	str += "User-Agent: "+this.trimQuotesFromString(curlObj["userAgent"]);+"\\n";
+        	this.headerPairs["User-Agent"]=this.trimQuotesFromString(curlObj["userAgent"]);
+        }
         if(headerArray==null || headerArray.length==0) {
-            return "";
+            return str;
         }
         var numHeaders = headerArray.length;
-        var str = "";
         for(var i=0;i<numHeaders;i++) {
             var thisHeader = headerArray[i];
 
@@ -46,6 +117,7 @@ var converter = {
             thisHeader = this.trimQuotesFromString(thisHeader);
 
             var keyIndex = thisHeader.indexOf(":");
+            this.headerPairs[thisHeader.substring(0,keyIndex).trim()]=thisHeader.substring(keyIndex+1, thisHeader.length).trim();
             if(keyIndex===-1) {
                 continue;
             }
@@ -63,50 +135,98 @@ var converter = {
         request.tests="";
         request.synced=false;
         request.pathVariables={};
+        request.version = 2;
     },
 
-    getDataForForm: function(dataArray) {
+    resetProgram: function() {
+        program["user-agent"] = null;
+        program["data"] = [];
+        program["dataBinary"] = null;
+        program["dataAscii"] = [];
+        program["dataUrlencode"] = [];
+        program["form"] = [];
+        delete program["get"];
+        program["header"] = [];
+        program["request"] = null;
+    },
+
+    getDataForForm: function(dataArray, toDecodeUri) {
         var numElems = dataArray.length;
         var retVal = [];
         for(var i=0;i<numElems;i++) {
             var thisElem = dataArray[i];
+            if(dataArray[i]==="") continue;
 
             thisElem = this.trimQuotesFromString(thisElem);
 
             var equalIndex = thisElem.indexOf("=");
+           	var key="";
+            var val="";
             if(equalIndex===-1) {
-                throw "Invalid CURL request. Each -F/--form argument must be of the form name=value";
+                key = thisElem;
+                val = "";
             }
-            var key = thisElem.substring(0,equalIndex);
-            var val = thisElem.substring(equalIndex+1, thisElem.length-1);
+            else {
+            	key = thisElem.substring(0,equalIndex);
+            	val = thisElem.substring(equalIndex+1, thisElem.length);
+            }
+
+            if(toDecodeUri) {
+                key = decodeURIComponent(key);
+                val = decodeURIComponent(val);
+            }
 
             retVal.push({
                 key: key,
                 value: val,
-                type: "text"
+                type: "text",
+                enabled: true
             });
         }
 
         return retVal;
     },
 
+    getDataForUrlEncoded: function(dataArray, enableDecoding) {
+        dataArray = dataArray.join("&").trim().split("&");
+        return this.getDataForForm(dataArray, enableDecoding);
+    },
+
+    getLowerCaseHeader: function(hk, rHeaders) {
+        for(var hKey in rHeaders) {
+            if(rHeaders.hasOwnProperty(hKey)) {
+                if(hKey.toLowerCase()===hk.toLowerCase()) {
+                    return rHeaders[hKey];
+                }
+            }
+        }
+        return "";
+    },
+
+    convertArrayToAmpersandString: function(arr) {
+    	if(arr instanceof Array) {
+    		return arr.join("&");
+		}
+		else {
+			return "";
+		}
+    },
+
     convertCurlToRequest: function(curlString) {
-        function collectValues(str, memo) {
-            memo.push(str);
-            return memo;
+        if(this.loaded===false) {
+            this.initialize();
+            this.loaded=true;
         }
 
-        program.version('0.0.1')
-            .usage('[options] <URL ...>')
-            .option('-A, --user-agent <string>', 'An optional user-agent string', null)
-            .option('-d, --data <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
-            .option('--data-binary <string>', 'Data send as-is', null)
-            .option('-F, --form <name=content>', 'A single form-data field', collectValues, [])
-            .option('-G, --get', 'Forces the request to be sent as GET, with the --data parameters appended to the query string', null)
-            .option('-H, --header <string>', 'Add a headerg (can be used multiple times)', collectValues, [])
-            .option('-X, --request <string>', 'Specify a custom request mehod to be used', null);
-        var argv = argsplit("node "+curlString);
+        this.resetProgram();
+
+        var argv = this.argsplit("node "+curlString);
         var curlObj = program.parse(argv);
+        this.headerPairs = {};
+
+        if(!curlObj.request) {
+        	curlObj.request = "GET";
+        }
 
         curlObj.request = this.trimQuotesFromString(curlObj.request);
 
@@ -114,33 +234,75 @@ var converter = {
 
         var request = {};
 
-        request.method= curlObj.request;
-        request.url = request.name = curlObj.args[0];
+        request.method= 'GET';//curlObj.request;
+        if(curlObj.request && curlObj.request.length!==0) {
+            request.method = curlObj.request;
+        }
+
+        request.url = request.name = this.trimQuotesFromString(curlObj.args[0]);
 
         request.headers = this.getHeaders(curlObj);
         request.time = (new Date()).getTime();
-        request.id = uuid.v4();
+        request.id = request.collectionRequestId = uuid.v4();
 
-        if(curlObj["data-binary"]) {
+        var content_type = this.getLowerCaseHeader("content-type", this.headerPairs);
+        var urlData = "";
+
+        request.data = [];
+        
+        request.dataMode = "params";
+
+
+        if(curlObj["dataBinary"]!==null) {
             request.dataMode="raw";
-            request.data=[];
-            request.rawModeData = request["data-binary"];
+            request.data = request.rawModeData = curlObj["dataBinary"];
+            urlData = request.rawModeData;
+            request.method="POST";
         }
-        else if(curlObj.form) {
-            request.rawModeData="";
-            request.data = this.getDataForForm(curlObj.form);
+        if(curlObj.form && curlObj.form.length!==0) {
+            request.data = request.data.concat(this.getDataForForm(curlObj.form, false));
             request.dataMode = "params";
+            request.method="POST";
         }
-        else if(curlObj.data) {
-            request.rawModeData="";
-            request.data = this.getDataForForm(curlObj.data);
+        if((curlObj.data && curlObj.data.length!==0) || (curlObj.dataAscii && curlObj.dataAscii.length!==0)) {
+        	if(content_type==="") {
+        		//No content-type set
+        		//set to urlencoded
+        		request.data = request.data.concat(this.getDataForUrlEncoded(curlObj.data, false)).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
+        		request.dataMode = "urlencoded";
+            	request.method="POST";
+            	urlData = this.convertArrayToAmpersandString(curlObj.data) + "&" + this.convertArrayToAmpersandString(curlObj.dataAscii);
+        	}
+            else {
+            	var dataString = this.convertArrayToAmpersandString(curlObj.data);
+            	var dataAsciiString = this.convertArrayToAmpersandString(curlObj.dataAscii);
+
+                request.data = this.trimQuotesFromString(dataString) + "&" + this.trimQuotesFromString(dataAsciiString);
+                request.dataMode = "raw";
+                request.method="POST";
+                urlData = request.data;
+            }
+        }
+        if(curlObj['dataUrlencode'] && curlObj['dataUrlencode'].length!==0) {
+            request.data = request.data.concat(this.getDataForUrlEncoded(curlObj['dataUrlencode'], true));
             request.dataMode = "urlencoded";
+            request.method="POST";
+            urlData = curlObj['dataUrlencode'];
         }
+
+        if(!!curlObj.get) {
+            request.method="GET";
+            if(request.method.toLowerCase()==="get" && urlData!=="") {
+            	request.url+="?" + urlData;
+            }
+        }
+
+        request.id = request.collectionRequestId = uuid.v4();
 
         this.setDefaultPostmanFields(request, curlString);
-
-        console.log(JSON.stringify(request,null));
+        return request;
+        //console.log(JSON.stringify(request,null));
     }
 };
 
-module.exports = converter;
+module.exports = curlConverter;
