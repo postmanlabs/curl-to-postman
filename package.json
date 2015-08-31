@@ -1,5 +1,5 @@
 {
-    "name": "Curl2Postman",
+    "name": "curl-to-postman",
     "version": "0.0.1",
     "private": true,
     "description": "Convert a given CURL command to a Postman request",
