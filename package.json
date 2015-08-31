@@ -5,7 +5,7 @@
     "description": "Convert a given CURL command to a Postman request",
     "main": "convert.js",
     "bin": {
-        "swagger2postman": "./bin/curl2postman"
+        "curl2postman": "./bin/curl2postman"
     },
     "dependencies": {
         "node-uuid": "1.4.1",
