@@ -6,6 +6,8 @@ var _ = require('lodash');
 var curlConverter = {
     loaded: false,
 
+    methodsWithBody: ["POST", "PUT", "PATCH", "DELETE", "LINK", "UNLINK", "LOCK", "PROPFIND", "VIEW"],
+
     argsplit: function (str) {
         var out = []
             , quoteChar = ''
@@ -215,6 +217,13 @@ var curlConverter = {
 		}
     },
 
+    trySetDefaultBodyMethod: function(request) {
+        //if the request method is GET
+        if(this.methodsWithBody.indexOf(request.method.toUpperCase()) === -1) {
+            request.method = "POST";
+        }
+    },
+
     convertCurlToRequest: function(curlString) {
         try {
             if(this.loaded===false) {
@@ -261,12 +270,12 @@ var curlConverter = {
                 request.dataMode="raw";
                 request.data = request.rawModeData = curlObj["dataBinary"];
                 urlData = request.rawModeData;
-                request.method="POST";
+                this.trySetDefaultBodyMethod(request);
             }
             if(curlObj.form && curlObj.form.length!==0) {
                 request.data = request.data.concat(this.getDataForForm(curlObj.form, false));
                 request.dataMode = "params";
-                request.method="POST";
+                this.trySetDefaultBodyMethod(request);
             }
             if((curlObj.data && curlObj.data.length!==0) || (curlObj.dataAscii && curlObj.dataAscii.length!==0)) {
             	if(content_type==="") {
@@ -274,7 +283,7 @@ var curlConverter = {
             		//set to urlencoded
             		request.data = request.data.concat(this.getDataForUrlEncoded(curlObj.data, false)).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
             		request.dataMode = "urlencoded";
-                	request.method="POST";
+                	this.trySetDefaultBodyMethod(request);
                 	urlData = this.convertArrayToAmpersandString(curlObj.data) + "&" + this.convertArrayToAmpersandString(curlObj.dataAscii);
             	}
                 else {
@@ -283,14 +292,14 @@ var curlConverter = {
 
                     request.data = this.trimQuotesFromString(dataString) + "&" + this.trimQuotesFromString(dataAsciiString);
                     request.dataMode = "raw";
-                    request.method="POST";
+                    this.trySetDefaultBodyMethod(request);
                     urlData = request.data;
                 }
             }
             if(curlObj['dataUrlencode'] && curlObj['dataUrlencode'].length!==0) {
                 request.data = request.data.concat(this.getDataForUrlEncoded(curlObj['dataUrlencode'], true));
                 request.dataMode = "urlencoded";
-                request.method="POST";
+                this.trySetDefaultBodyMethod(request);
                 urlData = curlObj['dataUrlencode'];
             }
 
