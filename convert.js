@@ -284,13 +284,22 @@ var curlConverter = {
             		request.data = request.data.concat(this.getDataForUrlEncoded(curlObj.data, false)).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
             		request.dataMode = "urlencoded";
                 	this.trySetDefaultBodyMethod(request);
-                	urlData = this.convertArrayToAmpersandString(curlObj.data) + "&" + this.convertArrayToAmpersandString(curlObj.dataAscii);
+                    var str1 = this.convertArrayToAmpersandString(curlObj.data),
+                        str2 = this.convertArrayToAmpersandString(curlObj.dataAscii);
+                	urlData = str1
+                        + ((str1.length>0 && str2.length>0)?"&":"") 
+                        + str2;
+                        
             	}
                 else {
                 	var dataString = this.convertArrayToAmpersandString(curlObj.data);
                 	var dataAsciiString = this.convertArrayToAmpersandString(curlObj.dataAscii);
+                    var str1 = this.trimQuotesFromString(dataString),
+                        str2 = this.trimQuotesFromString(dataAsciiString);
 
-                    request.data = this.trimQuotesFromString(dataString) + "&" + this.trimQuotesFromString(dataAsciiString);
+                    request.data =  str1
+                        + ((str1.length>0 && str2.length>0)?"&":"") 
+                        + str2;
                     request.dataMode = "raw";
                     this.trySetDefaultBodyMethod(request);
                     urlData = request.data;
