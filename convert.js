@@ -325,6 +325,10 @@ var curlConverter = {
             return request;
         }
         catch(e) {
+            if(e.message === "process.exit is not a function") {
+                //happened because of
+                e.message = "Invalid format for cURL."
+            }
             return {error:e};
         }
     }
