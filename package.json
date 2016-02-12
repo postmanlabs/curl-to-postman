@@ -1,6 +1,6 @@
 {
     "name": "curl-to-postman",
-    "version": "0.0.1",
+    "version": "1.0.3",
     "private": true,
     "description": "Convert a given CURL command to a Postman request",
     "main": "convert.js",
