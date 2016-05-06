@@ -278,7 +278,7 @@ var curlConverter = {
                 this.trySetDefaultBodyMethod(request);
             }
             if((curlObj.data && curlObj.data.length!==0) || (curlObj.dataAscii && curlObj.dataAscii.length!==0)) {
-            	if(content_type==="") {
+            	if(content_type==="" || content_type === "application/x-www-form-urlencoded") {
             		//No content-type set
             		//set to urlencoded
             		request.data = request.data.concat(this.getDataForUrlEncoded(curlObj.data, false)).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
