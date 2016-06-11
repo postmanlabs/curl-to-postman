@@ -131,7 +131,7 @@ var curlConverter = {
 
     setDefaultPostmanFields: function(request, curlstring) {
         request.collectionId = "";
-        request.description = 'Generated from a curl request: \\n' +  curlstring.split('"').join('\\\"');
+        request.description = 'Generated from a curl request: \n' +  curlstring.split('"').join('\\\"');
         request.descriptionFormat = "html";
         request.preRequestScript="";
         request.tests="";
