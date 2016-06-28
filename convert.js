@@ -1,64 +1,12 @@
-var uuid = require('node-uuid');
-var program = require('commander');
-var _ = require('lodash');
-//var argsplit = require('argsplit');
+var uuid = require('node-uuid'),
+    program = require('commander'),
+    _ = require('lodash'),
+    shellQuote = require('shell-quote');
 
 var curlConverter = {
     loaded: false,
 
     methodsWithBody: ["POST", "PUT", "PATCH", "DELETE", "LINK", "UNLINK", "LOCK", "PROPFIND", "VIEW"],
-
-    argsplit: function (str) {
-        var out = []
-            , quoteChar = ''
-            , current = ''
-
-        if (!str) return []
-        str = str.replace(/[\s]{2}/g, ' ')
-        for (var i=0, len=str.length; i<len; i++) {
-            var c = str[i]
-            if (c === ' ') {
-                if (quoteChar) {
-                    current += c
-                } else {
-                    if (current) {
-                        out.push(current)
-                        current = ''
-                    }
-                }
-            } else if (c === '"') {
-                if (quoteChar && quoteChar === c) {
-                    current += c
-                    out.push(current)
-                    quoteChar = ''
-                    current = ''
-                } else {
-                    current += c
-                    if(quoteChar==="") {
-                        quoteChar = c
-                    }
-                }
-            } else if (c === "'") {
-                if (quoteChar && quoteChar === c) {
-                    current += c
-                    out.push(current)
-                    quoteChar = ''
-                    current = ''
-                } else {
-                    current += c;
-                    if(quoteChar==="") {
-                        quoteChar = c
-                    }
-                }
-            } else {
-                current += c
-            }
-        }
-        if (current)
-            out.push(current)
-
-        return out
-    },
 
     initialize: function() {
         function collectValues(str, memo) {
@@ -233,8 +181,9 @@ var curlConverter = {
 
             this.resetProgram();
 
-            var argv = this.argsplit("node "+curlString);
+            var argv = shellQuote.parse("node " + curlString);
             var curlObj = program.parse(argv);
+
             this.headerPairs = {};
 
             if(!curlObj.request) {
