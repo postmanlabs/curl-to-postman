@@ -7,10 +7,33 @@ var path = require('path');
 var _ = require('lodash');
 
 function parseArguments() {
-    console.log(Converter.convertCurlToRequest("curl -X POST http://abg -H H1:h2 -d '{\"Handle\": \"this \"isn\\'t a test\"}'"));
-    //Converter.convertCurlToRequest('curl -G -A browser1 -X "POST" -H "Cache-Control:no-cache" -H "Postman-Token:0b95f584-a63e-73f2-3b0c-d3e07856ada9" -H "Content-Type:multipart/form-data; ' +
-        //'boundary=----WebKitFormBoundaryp7MA4YWxkTrZu0gW" -F "type=t1" -F "id=id1" http://localhost:1337/follows ');
+	var strings = [
+		//"curl -d '{\"Hello\":\"Va\'lue\"}'",
+		'curl -G -A browser1 -X "POST" -H "Cache-Control:no-cache" -H "Postman-Token:0b95f584-a63e-73f2-3b0c-d3e07856ada9" -H "Content-Type:multipart/form-data; boundary=----WebKitFormBoundaryp7MA4YWxkTrZu0gW" -F "type=t1" -F "id=id1" http://localhost:1337/follows ',
+		"curl --request GET --url http://www.google.com",
+		"curl http://google.com",
+		"curl --request POST --url"
+		// "curl -d '{\"Hello\":\"Value\"}'",
+		// "curl -d '{\"Hello\":\"Va\'lue\"}'"
+	];
+
+	_.each(strings, function(string) {
+		console.log("For curl:   " + string + "\n");
+		console.log(Converter.convertCurlToRequest(string));
+		console.log("\n\n\n");
+	});
+
     return;
 }
 
 parseArguments();
+
+// console.log(require('shell-quote').parse("curl --request GET --url http://www.google.com"));
+
+// console.log(require('shell-quote').parse("curl -d '{\"Hello\":\"Value\"}'"));
+
+// console.log(require('shell-quote').parse("curl -d '{\"Hello\":\"Va'lue\"}'"));
+
+// console.log(require('shell-quote').parse("curl -d '{\"Hello\":\"Va\'lue\"}'"));
+
+// console.log(require('shell-quote').parse("curl -d '{\"Hello\":\"Va\\'lue\"}'"));

@@ -6,7 +6,9 @@ var uuid = require('node-uuid'),
 var curlConverter = {
     loaded: false,
 
-    methodsWithBody: ["POST", "PUT", "PATCH", "DELETE", "LINK", "UNLINK", "LOCK", "PROPFIND", "VIEW"],
+    methodsWithBody: ["POST", "PUT", "PATCH", "DELETE", "LINK", "UNLINK", "LOCK", "PROPFIND", "VIEW", "OPTIONS"],
+
+    requestUrl: "",
 
     initialize: function() {
         function collectValues(str, memo) {
@@ -20,11 +22,12 @@ var curlConverter = {
             .option('-d, --data <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
             .option('--data-ascii <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
             .option('--data-urlencode <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
-            .option('--data-binary <string>', 'Data send as-is', null)
+            .option('--data-binary <string>', 'Data sent as-is', null)
             .option('-F, --form <name=content>', 'A single form-data field', collectValues, [])
             .option('-G, --get', 'Forces the request to be sent as GET, with the --data parameters appended to the query string', null)
             .option('-H, --header <string>', 'Add a header (can be used multiple times)', collectValues, [])
-            .option('-X, --request <string>', 'Specify a custom request mehod to be used', null);
+            .option('-X, --request <string>', 'Specify a custom request mehod to be used', null)
+            .option('--url <string>', 'An alternate way to specify the URL', null);
     },
 
     trimQuotesFromString: function(str) {
@@ -44,8 +47,8 @@ var curlConverter = {
         }
 
         //must have a URL
-        if(curlObj.args.length!==1) {
-            throw "Zero or Multiple option-less arguments. Only one is supported (the URL)";
+        if(curlObj.args.length!==1 && !curlObj.url) {
+            throw (curlObj.args.length + " option-less arguments found. Only one is supported (the URL)");
         }
     },
 
@@ -98,6 +101,8 @@ var curlConverter = {
         delete program["get"];
         program["header"] = [];
         program["request"] = null;
+        program["url"] = null;
+        this.requestUrl = "";
     },
 
     getDataForForm: function(dataArray, toDecodeUri) {
@@ -194,6 +199,13 @@ var curlConverter = {
 
             this.validateCurlRequest(curlObj);
 
+            if(curlObj.args.length == 0) {
+                this.requestUrl = curlObj.url;
+            }
+            else {
+                this.requestUrl = curlObj.args[0];
+            }
+
             var request = {};
 
             request.method= 'GET';//curlObj.request;
@@ -201,7 +213,7 @@ var curlConverter = {
                 request.method = curlObj.request;
             }
 
-            request.url = request.name = this.trimQuotesFromString(curlObj.args[0]);
+            request.url = request.name = this.trimQuotesFromString(this.requestUrl);
 
             request.headers = this.getHeaders(curlObj);
             request.time = (new Date()).getTime();
