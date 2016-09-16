@@ -1,6 +1,6 @@
 var uuid = require('node-uuid'),
     program = require('commander'),
-    _ = require('lodash'),
+    _ = require('lodash').noConflict(),
     shellQuote = require('shell-quote');
 
 var curlConverter = {
