@@ -187,7 +187,16 @@ var curlConverter = {
             this.resetProgram();
 
             var argv = shellQuote.parse("node " + curlString);
-            var curlObj = program.parse(argv);
+            var sanitizedArgs = _.compact(_.map(argv, function (arg) {
+              if (_.isObject(arg) && arg.op === 'glob') {
+                return arg.pattern
+              }
+              else {
+                return false
+              }
+              return arg
+            }))
+            var curlObj = program.parse(sanitizedArgs);
 
             this.headerPairs = {};
 
@@ -223,7 +232,7 @@ var curlConverter = {
             var urlData = "";
 
             request.data = [];
-            
+
             request.dataMode = "params";
 
 
@@ -248,9 +257,9 @@ var curlConverter = {
                     var str1 = this.convertArrayToAmpersandString(curlObj.data),
                         str2 = this.convertArrayToAmpersandString(curlObj.dataAscii);
                 	urlData = str1
-                        + ((str1.length>0 && str2.length>0)?"&":"") 
+                        + ((str1.length>0 && str2.length>0)?"&":"")
                         + str2;
-                        
+
             	}
                 else {
                 	var dataString = this.convertArrayToAmpersandString(curlObj.data);
@@ -259,7 +268,7 @@ var curlConverter = {
                         str2 = this.trimQuotesFromString(dataAsciiString);
 
                     request.data =  str1
-                        + ((str1.length>0 && str2.length>0)?"&":"") 
+                        + ((str1.length>0 && str2.length>0)?"&":"")
                         + str2;
                     request.dataMode = "raw";
                     this.trySetDefaultBodyMethod(request);
