@@ -187,15 +187,14 @@ var curlConverter = {
             this.resetProgram();
 
             var argv = shellQuote.parse("node " + curlString);
-            var sanitizedArgs = _.compact(_.map(argv, function (arg) {
+            var sanitizedArgs = _.map(argv, function (arg) {
               if (_.isObject(arg) && arg.op === 'glob') {
                 return arg.pattern
               }
               else {
-                return false
+                return arg
               }
-              return arg
-            }))
+            })
             var curlObj = program.parse(sanitizedArgs);
 
             this.headerPairs = {};
