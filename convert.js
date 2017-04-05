@@ -187,7 +187,7 @@ var curlConverter = {
             this.resetProgram();
 
             var argv = shellQuote.parse("node " + curlString);
-            var sanitizedArgs = _.map(_.filter(argv, (arg) => !_.isEmpty(arg)), function (arg) {
+            var sanitizedArgs = _.map(_.filter(argv, function(arg) { return !_.isEmpty(arg) }), function (arg) {
               if (_.isObject(arg) && arg.op === 'glob') {
                 return arg.pattern
               }
