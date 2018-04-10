@@ -1,5 +1,5 @@
-node_modules
 collection_schema.json
 main.json
 store
 swagger_spec
+node_modules/

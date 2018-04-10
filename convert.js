@@ -1,4 +1,4 @@
-var uuid = require('node-uuid'),
+var uuidv4 = require('uuid/v4'),
     program = require('commander'),
     _ = require('lodash').noConflict(),
     shellQuote = require('shell-quote');
@@ -225,7 +225,7 @@ var curlConverter = {
 
             request.headers = this.getHeaders(curlObj);
             request.time = (new Date()).getTime();
-            request.id = request.collectionRequestId = uuid.v4();
+            request.id = request.collectionRequestId = uuidv4();
 
             var content_type = this.getLowerCaseHeader("content-type", this.headerPairs);
             var urlData = "";
@@ -288,7 +288,7 @@ var curlConverter = {
                 }
             }
 
-            request.id = request.collectionRequestId = uuid.v4();
+            request.id = request.collectionRequestId = uuidv4();
 
             this.setDefaultPostmanFields(request, curlString);
             return request;

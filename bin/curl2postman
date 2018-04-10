@@ -1,9 +1,5 @@
 #!/usr/bin/env node
-
-var program = require('commander');
 var Converter = require('../convert.js');
-var fs = require('fs');
-var path = require('path');
 var _ = require('lodash').noConflict();
 
 function parseArguments() {
@@ -21,12 +17,11 @@ function parseArguments() {
 
 	_.each(strings, function(string) {
 		console.log("For curl:   " + string);
-		var output = Converter.convertCurlToRequest(string)
+		var output = Converter.convertCurlToRequest(string);
 		if(output.error) {
 			failed = true;
-			console.log(output);
 		}
-		console.log("\n");
+		console.log(JSON.stringify(output) + '\n');
 	});
 	console.log('Failed: ' , failed)
 

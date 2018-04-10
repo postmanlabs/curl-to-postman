@@ -1,17 +1,17 @@
 {
   "name": "@postman/curl-to-postman",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Convert a given CURL command to a Postman request",
   "main": "convert.js",
   "bin": {
     "curl2postman": "./bin/curl2postman"
   },
   "dependencies": {
-    "node-uuid": "1.4.1",
+    "uuid": ">=3.2.1",
     "postman_validator": ">=0.0.4",
-    "lodash": "3.10.0",
-    "commander": ">=2.3.0",
-    "shell-quote": "^1.6.1"
+    "lodash": ">=4.17.5",
+    "commander": ">=2.15.1",
+    "shell-quote": ">=1.6.1"
   },
   "publishConfig": {
     "registry": "https://npm.postmanlabs.com"
