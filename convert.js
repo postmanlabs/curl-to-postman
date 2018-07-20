@@ -16,18 +16,25 @@ var curlConverter = {
             return memo;
         }
 
+        program.allowUnknownOption(true);
+        program.option('*', function(a) {
+            console.log(a);
+        });
         program.version('0.0.1')
+            .allowUnknownOption()
             .usage('[options] <URL ...>')
             .option('-A, --user-agent <string>', 'An optional user-agent string', null)
-            .option('-d, --data <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
-            .option('--data-ascii <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
-            .option('--data-urlencode <string>', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
-            .option('--data-binary <string>', 'Data sent as-is', null)
+            .option('-d, --data [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
+            .option('--data-ascii [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
+            .option('--data-urlencode [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
+            .option('--data-binary [string]', 'Data sent as-is', null)
             .option('-F, --form <name=content>', 'A single form-data field', collectValues, [])
             .option('-G, --get', 'Forces the request to be sent as GET, with the --data parameters appended to the query string', null)
             .option('-H, --header <string>', 'Add a header (can be used multiple times)', collectValues, [])
             .option('-X, --request <string>', 'Specify a custom request mehod to be used', null)
-            .option('--url <string>', 'An alternate way to specify the URL', null);
+            .option('--url <string>', 'An alternate way to specify the URL', null)
+            .option('--basic', 'Overrides previous auth settings')
+            .option('-u, --user <string>', 'Basic auth ( -u <username:password>)', null);
     },
 
     trimQuotesFromString: function(str) {
@@ -41,28 +48,49 @@ var curlConverter = {
 
     validateCurlRequest: function(curlObj) {
         //must be a valid method
-        var validMethods = ["GET","POST","PUT","PATCH","DELETE","COPY","HEAD","OPTIONS","LINK","UNLINK","PURGE","LOCK","UNLOCK","PROPFIND"];
+        var validMethods = ["GET","POST","PUT","PATCH","DELETE","COPY","HEAD","OPTIONS","LINK","UNLINK","PURGE","LOCK","UNLOCK","PROPFIND"],
+            singleWordXMethod,
+            singleWordMethodPrefix = '-X';
         if(validMethods.indexOf(curlObj.request.toUpperCase())===-1) {
-            throw "The method "+ curlObj.request + " is not supported";
+
+            // no valid method
+            // -XPOST might have been used
+            // try the POST part again
+            singleWordXMethod = _.find(curlObj.rawArgs, function (arg) { return arg.startsWith(singleWordMethodPrefix); });
+            if(singleWordXMethod) {
+                // try to re-set curlObj.request to the newly extracted method
+                curlObj.request = singleWordXMethod.substring(singleWordMethodPrefix.length);                
+            }
+
+            if(validMethods.indexOf(curlObj.request.toUpperCase())===-1) {
+                // the method is still not valid
+                throw "The method "+ curlObj.request + " is not supported";
+            }
         }
 
         //must have a URL
-        if(curlObj.args.length!==1 && !curlObj.url) {
+        if(curlObj.args.length > 1 && !curlObj.url) {
             throw (curlObj.args.length + " option-less arguments found. Only one is supported (the URL)");
         }
     },
 
     getHeaders: function(curlObj) {
-        var headerArray = curlObj.header;
+        var headerArray = curlObj.header,
+            numHeaders;
+
+        headerArray = headerArray || [];
+        
         var str="";
         if(curlObj["userAgent"]) {
         	str += "User-Agent: "+this.trimQuotesFromString(curlObj["userAgent"]);+"\\n";
         	this.headerPairs["User-Agent"]=this.trimQuotesFromString(curlObj["userAgent"]);
         }
+
         if(headerArray==null || headerArray.length==0) {
             return str;
         }
-        var numHeaders = headerArray.length;
+        numHeaders = headerArray.length;
+
         for(var i=0;i<numHeaders;i++) {
             var thisHeader = headerArray[i];
 
@@ -77,6 +105,7 @@ var curlConverter = {
 
             str += thisHeader+"\\n";
         }
+
         return str;
     },
 
@@ -98,6 +127,7 @@ var curlConverter = {
         program["dataAscii"] = [];
         program["dataUrlencode"] = [];
         program["form"] = [];
+        program["user"] = null;
         delete program["get"];
         program["header"] = [];
         program["request"] = null;
@@ -179,12 +209,15 @@ var curlConverter = {
 
     convertCurlToRequest: function(curlString) {
         try {
-            if(this.loaded===false) {
+            if(!this.loaded) {
                 this.initialize();
-                this.loaded=true;
+                this.loaded = true;
             }
 
             this.resetProgram();
+
+            //replace -XPOST with -X POST
+            curlString = curlString.replace(/(-X)([A-Z]+)/, function (match, x, method) {return x + " " + method;})
 
             var argv = shellQuote.parse("node " + curlString);
             var sanitizedArgs = _.map(_.filter(argv, function(arg) { return !_.isEmpty(arg) }), function (arg) {
@@ -208,7 +241,19 @@ var curlConverter = {
             this.validateCurlRequest(curlObj);
 
             if(curlObj.args.length == 0) {
-                this.requestUrl = curlObj.url;
+                if (curlObj.url) {
+                    // url is populated if there's no unknown option
+                    this.requestUrl = curlObj.url;
+                }
+                else {
+                    // if there is an unknown option, we have to take it from the rawArgs
+                    try {
+                        this.requestUrl = curlObj.rawArgs.slice(-1)[0];
+                    }
+                    catch(e) {
+                        throw 'Error while parsing cURL: Could not identify the URL. Please use the --url option.'
+                    }
+                }
             }
             else {
                 this.requestUrl = curlObj.args[0];
@@ -216,7 +261,7 @@ var curlConverter = {
 
             var request = {};
 
-            request.method= 'GET';//curlObj.request;
+            request.method= 'GET';
             if(curlObj.request && curlObj.request.length!==0) {
                 request.method = curlObj.request;
             }
@@ -224,6 +269,11 @@ var curlConverter = {
             request.url = request.name = this.trimQuotesFromString(this.requestUrl);
 
             request.headers = this.getHeaders(curlObj);
+
+            if(curlObj.user) {
+                request.headers += "Authorization: Basic " + Buffer.from(curlObj.user).toString('base64');
+            }
+
             request.time = (new Date()).getTime();
             request.id = request.collectionRequestId = uuid.v4();
 
@@ -250,7 +300,7 @@ var curlConverter = {
             	if(content_type==="" || content_type === "application/x-www-form-urlencoded") {
             		//No content-type set
             		//set to urlencoded
-            		request.data = request.data.concat(this.getDataForUrlEncoded(curlObj.data, false)).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
+            		request.data = request.data.concat(this.getDataForUrlEncoded(curlObj.data, true)).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
             		request.dataMode = "urlencoded";
                 	this.trySetDefaultBodyMethod(request);
                     var str1 = this.convertArrayToAmpersandString(curlObj.data),

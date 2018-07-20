@@ -7,19 +7,21 @@
     "curl2postman": "./bin/curl2postman"
   },
   "dependencies": {
-    "node-uuid": "1.4.1",
-    "postman_validator": ">=0.0.4",
+    "commander": "^2.3.0",
     "lodash": "3.10.0",
-    "commander": ">=2.3.0",
-    "shell-quote": "^1.6.1"
+    "node-uuid": "1.4.1",
+    "postman_validator": "0.0.4",
+    "shell-quote": "1.6.1"
+  },
+  "devDependencies": {
+    "expect.js": "0.3.1"
   },
   "publishConfig": {
     "registry": "https://npm.postmanlabs.com"
   },
   "author": "Abhijit Kane",
   "license": "Apache",
-  "devDependencies": {},
   "scripts": {
-    "test": "scripts/test.sh"
+    "test": "scripts/test.js"
   }
 }
