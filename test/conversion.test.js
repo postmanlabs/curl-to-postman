@@ -1,4 +1,4 @@
-var Converter = require('../../convert.js'),
+var Converter = require('../src/convert.js'),
 	expect = require('expect.js'),
 	_ = require('lodash');
 
@@ -105,18 +105,18 @@ describe('Curl converter should', function() {
 		expect(result.url).to.equal('testUrl');
 	});
 
-	it.skip('gh2791', function () {
-		// no idea how to solve this
+	it.skip('Github #2791', function () {
+		// no idea how to solve this yet
 		str = "curl -XPOST 'http://httpbin.org/post' --data-binary $'{\"SearchTerms\":[{\"termValue\":\"`~!@#$%^&*()-+=<.,./?;:\'\\\"[{]}\\\\|\",\"termOption\"\:2}]}'";
 		var result = Converter.convertCurlToRequest(str);
 		console.log(result);
 	});
 
 	it('Empty data strings should work (Github #4018)', function() {
-		var result = Converter.convertCurlToRequest("curl http://simplesniff.com/ --data \"\"");
+		var result = Converter.convertCurlToRequest("curl http://getpostman.com/ --data \"\"");
 		expect(result.data).to.be.empty();
 
-		var result = Converter.convertCurlToRequest("curl http://simplesniff.com/ --data ''");
+		var result = Converter.convertCurlToRequest("curl http://getpostman.com/ --data ''");
 		expect(result.data).to.be.empty();
 	});
 

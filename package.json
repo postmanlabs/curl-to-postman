@@ -2,10 +2,7 @@
   "name": "@postman/curl-to-postman",
   "version": "1.0.14",
   "description": "Convert a given CURL command to a Postman request",
-  "main": "convert.js",
-  "bin": {
-    "curl2postman": "./bin/curl2postman"
-  },
+  "main": "index.js",
   "dependencies": {
     "commander": "^2.3.0",
     "lodash": "3.10.0",
@@ -22,6 +19,6 @@
   "author": "Abhijit Kane",
   "license": "Apache",
   "scripts": {
-    "test": "scripts/test.js"
+    "test": "scripts/test.sh"
   }
 }
