@@ -72,48 +72,60 @@ var curlConverter = {
 
     getHeaders: function(curlObj) {
         var headerArray = curlObj.header,
-            numHeaders;
+            numHeaders, retVal = [], uaString;
 
         headerArray = headerArray || [];
-        
-        var str="";
+    
+
         if(curlObj["userAgent"]) {
-        	str += "User-Agent: "+this.trimQuotesFromString(curlObj["userAgent"]);+"\\n";
-        	this.headerPairs["User-Agent"]=this.trimQuotesFromString(curlObj["userAgent"]);
+        	uaString = this.trimQuotesFromString(curlObj["userAgent"]);
+        	this.headerPairs["User-Agent"] = uaString;
+            retVal.push({
+                key: "User-Agent",
+                value: uaString
+            })
         }
 
         if(headerArray==null || headerArray.length==0) {
-            return str;
+            return retVal;
         }
+
         numHeaders = headerArray.length;
 
         for(var i=0;i<numHeaders;i++) {
-            var thisHeader = headerArray[i];
+            var thisHeader = headerArray[i], keyIndex;
 
             //remove leading and trailing quotes
             thisHeader = this.trimQuotesFromString(thisHeader);
+            keyIndex = thisHeader.indexOf(":");
+            if(keyIndex === -1) {
+                if(thisHeader.endsWith(';')) {
+                    //If you send the custom header with no-value then its header must be \ 
+                    // terminated with a semicolon, such as -H "X-Custom-Header;" to send "X-Custom-Header:".
+                    thisHeader = thisHeader.slice(0, -1) + ":";
+                    keyIndex = thisHeader.indexOf(":");
+                }
+                else {
+                    continue;
+                }
+            }
+            key = thisHeader.substring(0,keyIndex).trim();
+            value = thisHeader.substring(keyIndex+1, thisHeader.length).trim();
 
-            var keyIndex = thisHeader.indexOf(":");
-            this.headerPairs[thisHeader.substring(0,keyIndex).trim()]=thisHeader.substring(keyIndex+1, thisHeader.length).trim();
-            if(keyIndex===-1) {
+            if(this.headerPairs.hasOwnProperty(key)) {
+                // don't add the same header twice
                 continue;
             }
 
-            str += thisHeader+"\\n";
+            this.headerPairs[key] = value;
+
+            retVal.push({
+                key: key,
+                value: value
+            });
         }
 
-        return str;
-    },
-
-    setDefaultPostmanFields: function(request, curlstring) {
-        request.collectionId = "";
-        request.description = 'Generated from a curl request: \n' +  curlstring.split('"').join('\\\"');
-        request.descriptionFormat = "html";
-        request.preRequestScript="";
-        request.tests="";
-        request.synced=false;
-        request.pathVariables={};
-        request.version = 2;
+        return retVal;
     },
 
     resetProgram: function() {
@@ -124,6 +136,7 @@ var curlConverter = {
         program["dataUrlencode"] = [];
         program["form"] = [];
         program["user"] = null;
+        program["basic"] = null;
         delete program["get"];
         program["header"] = [];
         program["request"] = null;
@@ -160,8 +173,7 @@ var curlConverter = {
             retVal.push({
                 key: key,
                 value: val,
-                type: "text",
-                enabled: true
+                type: "text"
             });
         }
 
@@ -264,41 +276,44 @@ var curlConverter = {
 
             request.url = request.name = this.trimQuotesFromString(this.requestUrl);
 
-            request.headers = this.getHeaders(curlObj);
+            request.header = this.getHeaders(curlObj);
+
+            request.body = {};
 
             if(curlObj.user) {
-                request.headers += "Authorization: Basic " + Buffer.from(curlObj.user).toString('base64');
+                var basicAuthParts = curlObj.user.split(":") || [];
+                if(basicAuthParts.length >= 2) {
+                    request.auth = {
+                        type: 'basic',
+                        basic: [
+                            { key: 'username', value: basicAuthParts[0], type: 'string' },
+                            { key: 'password', value: basicAuthParts[1], type: 'string' }
+                        ]
+                    };
+                }
             }
-
-            request.time = (new Date()).getTime();
-            request.id = request.collectionRequestId = uuid.v4();
 
             var content_type = this.getLowerCaseHeader("content-type", this.headerPairs);
             var urlData = "";
 
-            request.data = [];
-
-            request.dataMode = "params";
-
-
             if(curlObj["dataBinary"]!==null) {
-                request.dataMode="raw";
-                request.data = request.rawModeData = curlObj["dataBinary"];
-                urlData = request.rawModeData;
+                request.body.mode = "raw";
+                request.body.raw = curlObj["dataBinary"];
                 this.trySetDefaultBodyMethod(request);
             }
             if(curlObj.form && curlObj.form.length!==0) {
-                request.data = request.data.concat(this.getDataForForm(curlObj.form, false));
-                request.dataMode = "params";
+                request.body.mode = "formdata";
+                request.body.formdata = this.getDataForForm(curlObj.form, false);
                 this.trySetDefaultBodyMethod(request);
             }
             if((curlObj.data && curlObj.data.length!==0) || (curlObj.dataAscii && curlObj.dataAscii.length!==0)) {
             	if(content_type==="" || content_type === "application/x-www-form-urlencoded") {
             		//No content-type set
             		//set to urlencoded
-            		request.data = request.data.concat(this.getDataForUrlEncoded(curlObj.data, true)).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
-            		request.dataMode = "urlencoded";
-                	this.trySetDefaultBodyMethod(request);
+                    request.body.mode = "urlencoded";
+            		request.body.urlencoded = this.getDataForUrlEncoded(curlObj.data, true).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
+                	
+                    this.trySetDefaultBodyMethod(request);
                     var str1 = this.convertArrayToAmpersandString(curlObj.data),
                         str2 = this.convertArrayToAmpersandString(curlObj.dataAscii);
                 	urlData = str1
@@ -312,17 +327,18 @@ var curlConverter = {
                     var str1 = this.trimQuotesFromString(dataString),
                         str2 = this.trimQuotesFromString(dataAsciiString);
 
-                    request.data =  str1
+                    request.body.mode = "raw";
+                    request.body.raw = str1
                         + ((str1.length>0 && str2.length>0)?"&":"")
                         + str2;
-                    request.dataMode = "raw";
+
                     this.trySetDefaultBodyMethod(request);
                     urlData = request.data;
                 }
             }
             if(curlObj['dataUrlencode'] && curlObj['dataUrlencode'].length!==0) {
-                request.data = request.data.concat(this.getDataForUrlEncoded(curlObj['dataUrlencode'], true));
-                request.dataMode = "urlencoded";
+                request.body.mode = "urlencoded";
+                request.body.urlencoded = this.getDataForUrlEncoded(curlObj['dataUrlencode'], true);
                 this.trySetDefaultBodyMethod(request);
                 urlData = curlObj['dataUrlencode'];
             }
@@ -334,9 +350,7 @@ var curlConverter = {
                 }
             }
 
-            request.id = request.collectionRequestId = uuid.v4();
-
-            this.setDefaultPostmanFields(request, curlString);
+            request.description = 'Generated from a curl request: \n' +  curlString.split('"').join('\\\"');
             return request;
         }
         catch(e) {
