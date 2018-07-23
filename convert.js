@@ -16,10 +16,6 @@ var curlConverter = {
             return memo;
         }
 
-        program.allowUnknownOption(true);
-        program.option('*', function(a) {
-            console.log(a);
-        });
         program.version('0.0.1')
             .allowUnknownOption()
             .usage('[options] <URL ...>')
