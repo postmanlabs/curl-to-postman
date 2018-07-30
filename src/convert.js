@@ -26,15 +26,15 @@ var curlConverter = {
             .option('--data-binary [string]', 'Data sent as-is', null)
             .option('-F, --form <name=content>', 'A single form-data field', collectValues, [])
             .option('-G, --get', 'Forces the request to be sent as GET, with the --data parameters appended to the query string', null)
-            .option('-H, --header <string>', 'Add a header (can be used multiple times)', collectValues, [])
-            .option('-X, --request <string>', 'Specify a custom request mehod to be used', null)
-            .option('--url <string>', 'An alternate way to specify the URL', null)
+            .option('-H, --header [string]', 'Add a header (can be used multiple times)', collectValues, [])
+            .option('-X, --request [string]', 'Specify a custom request mehod to be used', null)
+            .option('--url [string]', 'An alternate way to specify the URL', null)
             .option('--basic', 'Overrides previous auth settings')
-            .option('-u, --user <string>', 'Basic auth ( -u <username:password>)', null);
+            .option('-u, --user [string]', 'Basic auth ( -u <username:password>)', null);
     },
 
     trimQuotesFromString: function(str) {
-        if(str === null) return null;
+        if(!str) return '';
         var strlen = str.length;
         if((str[0]==='"' && str[strlen-1]==='"') || (str[0]==="'" && str[strlen-1]==="'"))  {
         	return str.substring(1,strlen-1);
@@ -60,13 +60,13 @@ var curlConverter = {
 
             if(validMethods.indexOf(curlObj.request.toUpperCase())===-1) {
                 // the method is still not valid
-                throw "The method "+ curlObj.request + " is not supported";
+                throw new Error("The method "+ curlObj.request + " is not supported");
             }
         }
 
         //must have a URL
         if(curlObj.args.length > 1 && !curlObj.url) {
-            throw (curlObj.args.length + " option-less arguments found. Only one is supported (the URL)");
+            throw new Error((curlObj.args.length + " option-less arguments found. Only one is supported (the URL)"));
         }
     },
 
@@ -215,6 +215,27 @@ var curlConverter = {
         }
     },
 
+    convertCurlToRequestAsync: function(curlString, cb) {
+        var result = this.convertCurlToRequest(curlString);
+        if(result.error) {
+            process.nextTick(function() {
+                cb(null, {
+                    result: false,
+                    reason: result.error.message
+                });
+            });
+        }
+        else {
+            process.nextTick(function() {
+                cb(null, {
+                    result: true,
+                    type: 'request',
+                    data: result
+                });
+            });
+        }
+    },
+
     convertCurlToRequest: function(curlString) {
         try {
             if(!this.loaded) {
@@ -257,9 +278,12 @@ var curlConverter = {
                     // if there is an unknown option, we have to take it from the rawArgs
                     try {
                         this.requestUrl = curlObj.rawArgs.slice(-1)[0];
+                        if (this.requestUrl.startsWith('-')) {
+                            throw 'No valid URL found';
+                        }
                     }
                     catch(e) {
-                        throw 'Error while parsing cURL: Could not identify the URL. Please use the --url option.'
+                        throw new Error('Error while parsing cURL: Could not identify the URL. Please use the --url option.');
                     }
                 }
             }
@@ -358,7 +382,7 @@ var curlConverter = {
                 //happened because of
                 e.message = "Invalid format for cURL."
             }
-            return {error:e};
+            return { error: e };
         }
     }
 };
