@@ -3,11 +3,8 @@ var Converter = require('../src/convert.js'),
 	_ = require('lodash');
 
 describe('Curl converter should', function() {
-
-	it('test', function () {
-		var result = Converter.convertCurlToRequest('curl --request');
-		console.log(result);
-	});
+	
+	//error
 
 	it('throw an error for a malformed request asyncly', function (done) {
 		Converter.convertCurlToRequestAsync('curl --request', function (err, result) {
@@ -16,6 +13,16 @@ describe('Curl converter should', function() {
 			done();
 		});
 	});
+
+	it('throw an error for sending GET with a request body', function (done) {
+		Converter.convertCurlToRequestAsync('curl -X GET -d "a=b&c=d" http://post.com', function (err, result) {
+			expect(result.result).to.equal(false);
+			expect(result.reason).to.equal('GET is currently not supported with a request body.');
+			done();
+		});
+	});
+
+	//success
 
 	it('convert a correct simple request asyncly', function (done) {
 		var result = Converter.convertCurlToRequestAsync('curl --request GET --url http://www.google.com', function (err, result) {
@@ -44,15 +51,17 @@ describe('Curl converter should', function() {
 	});
 
 	it('convert a simple GET request w/ headers', function (done) {
-		var result = Converter.convertCurlToRequest('curl --request GET http://www.google.com -H "h1:v1" -H "h2:v2" -H "h3;"');
+		var result = Converter.convertCurlToRequest('curl --request GET http://www.google.com -H "h1:v1" -H "h2:v2" -H "h3;" -H "h4" -H "h1:v11"');
 
 		var h1Header = _.find(result.header, function (header) { return header.key === 'h1' }),
 			h2Header = _.find(result.header, function (header) { return header.key === 'h2' }),
-			h3Header = _.find(result.header, function (header) { return header.key === 'h3' });
+			h3Header = _.find(result.header, function (header) { return header.key === 'h3' }),
+			h4Header = _.find(result.header, function (header) { return header.key === 'h4' });
 
 		expect(h1Header.value).to.equal('v1');
 		expect(h2Header.value).to.equal('v2');
 		expect(h3Header.value).to.equal('');
+		expect(h4Header).to.be.undefined;
 
 		done();
 	});
@@ -111,18 +120,22 @@ describe('Curl converter should', function() {
 	});
 
 	it('convert a simple POST request with x-www-form-urlencoded data', function (done) {
-		var result = Converter.convertCurlToRequest('curl --request POST --url http://google.com -d "username=postman&password=newman"'),
-			usernameRow, passwordRow;
+		var result = Converter.convertCurlToRequest('curl --request POST --url http://google.com -d "username=postman&password=newman&randomKey"'),
+			usernameRow, passwordRow, randomKeyRow;
 		expect(result.body.mode).to.equal('urlencoded');
 		
 		usernameRow = _.find(result.body.urlencoded, function (row) {return row.key === 'username'});
 		passwordRow = _.find(result.body.urlencoded, function (row) {return row.key === 'password'});
+		randomKeyRow = _.find(result.body.urlencoded, function (row) {return row.key === 'randomKey'});
 
 		expect(usernameRow.value).to.equal('postman');
 		expect(usernameRow.type).to.equal('text');
 		
 		expect(passwordRow.value).to.equal('newman');
 		expect(passwordRow.type).to.equal('text');
+
+		expect(randomKeyRow.value).to.equal('');
+		expect(randomKeyRow.type).to.equal('text');
 
 		done();
 	});

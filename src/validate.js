@@ -5,7 +5,7 @@ module.exports = function (curlCommand) {
 		curlCommand.startsWith('curl ')
 	) {
 		return {
-			result: true;
+			result: true
 		};
 	}
 

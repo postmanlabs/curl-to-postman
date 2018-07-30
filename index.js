@@ -1,4 +1,4 @@
-var curlConverter = require('src/convert.js');
+var curlConverter = require('./src/convert.js');
 
 module.exports = {
 	validate: require('./src/validate'),

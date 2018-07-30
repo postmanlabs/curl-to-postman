@@ -3,6 +3,11 @@
   "version": "1.0.14",
   "description": "Convert a given CURL command to a Postman request",
   "main": "index.js",
+  "com_postman_plugin": {
+    "plugin_type": "importer",
+    "name": "cURL",
+    "source_format": "cURL"
+  },
   "dependencies": {
     "commander": "^2.3.0",
     "lodash": "3.10.0",

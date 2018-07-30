@@ -182,7 +182,6 @@ var curlConverter = {
 
     getDataForUrlEncoded: function(dataArray, enableDecoding) {
         var concatString = dataArray.join("&").trim();
-        if(concatString === null) return null;
 
         dataArray = this.trimQuotesFromString(concatString).split("&");
         return this.getDataForForm(dataArray, enableDecoding);
@@ -200,18 +199,13 @@ var curlConverter = {
     },
 
     convertArrayToAmpersandString: function(arr) {
-    	if(arr instanceof Array) {
-    		return arr.join("&");
-		}
-		else {
-			return "";
-		}
+        return arr.join("&");
     },
 
     trySetDefaultBodyMethod: function(request) {
         //if the request method is GET
         if(this.methodsWithBody.indexOf(request.method.toUpperCase()) === -1) {
-            request.method = "POST";
+            throw new Error(request.method + ' is currently not supported with a request body.');
         }
     },
 
