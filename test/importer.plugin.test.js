@@ -21,3 +21,5 @@ var expect = require('expect.js'),
 			expect(typeof package.convert).to.be('function');
 		});
 	});
+
+	

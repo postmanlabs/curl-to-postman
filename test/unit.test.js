@@ -1,4 +1,4 @@
-var Converter = require('../src/convert.js'),
+var Converter = require('../src/lib.js'),
 	validate = require('../src/validate.js'),
 	expect = require('expect.js');
 

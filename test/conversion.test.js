@@ -1,4 +1,5 @@
-var Converter = require('../src/convert.js'),
+var Converter = require('../src/lib'),
+	convert = require('../src/convert'),
 	expect = require('expect.js'),
 	_ = require('lodash');
 
@@ -7,7 +8,7 @@ describe('Curl converter should', function() {
 	//error
 
 	it('throw an error for a malformed request asyncly', function (done) {
-		Converter.convertCurlToRequestAsync('curl --request', function (err, result) {
+		convert('curl --request', function (err, result) {
 			expect(result.result).to.equal(false);
 			expect(result.reason).to.equal('Error while parsing cURL: Could not identify the URL. Please use the --url option.');
 			done();
@@ -15,7 +16,7 @@ describe('Curl converter should', function() {
 	});
 
 	it('throw an error for sending GET with a request body', function (done) {
-		Converter.convertCurlToRequestAsync('curl -X GET -d "a=b&c=d" http://post.com', function (err, result) {
+		convert('curl -X GET -d "a=b&c=d" http://post.com', function (err, result) {
 			expect(result.result).to.equal(false);
 			expect(result.reason).to.equal('GET is currently not supported with a request body.');
 			done();
@@ -25,7 +26,7 @@ describe('Curl converter should', function() {
 	//success
 
 	it('convert a correct simple request asyncly', function (done) {
-		var result = Converter.convertCurlToRequestAsync('curl --request GET --url http://www.google.com', function (err, result) {
+		var result = convert('curl --request GET --url http://www.google.com', function (err, result) {
 			expect(result.result).to.equal(true);
 			expect(result.type).to.equal('request');
 
