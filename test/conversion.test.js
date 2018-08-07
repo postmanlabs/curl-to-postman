@@ -28,9 +28,11 @@ describe('Curl converter should', function() {
 	it('convert a correct simple request asyncly', function (done) {
 		var result = convert('curl --request GET --url http://www.google.com', function (err, result) {
 			expect(result.result).to.equal(true);
-			expect(result.type).to.equal('request');
 
-			var request = result.data;
+			expect(result.output.length).to.equal(1);
+			expect(result.output[0].type).to.equal('request');
+
+			var request = result.output[0].data;
 			expect(request.method).to.equal('GET');
 			expect(request.url).to.equal('http://www.google.com');
 			done();

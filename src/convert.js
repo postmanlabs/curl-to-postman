@@ -14,8 +14,10 @@ module.exports = function (curlCommand, cb) {
         process.nextTick(function() {
             cb(null, {
                 result: true,
-                type: 'request',
-                data: result
+                output: [{
+                  type: 'request',
+                  data: result
+                }]
             });
         });
     }

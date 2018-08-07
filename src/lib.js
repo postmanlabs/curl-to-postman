@@ -209,27 +209,6 @@ var curlConverter = {
         }
     },
 
-    convertCurlToRequestAsync: function(curlString, cb) {
-        var result = this.convertCurlToRequest(curlString);
-        if(result.error) {
-            process.nextTick(function() {
-                cb(null, {
-                    result: false,
-                    reason: result.error.message
-                });
-            });
-        }
-        else {
-            process.nextTick(function() {
-                cb(null, {
-                    result: true,
-                    type: 'request',
-                    data: result
-                });
-            });
-        }
-    },
-
     convertCurlToRequest: function(curlString) {
         try {
             if(!this.loaded) {
