@@ -7,8 +7,9 @@ describe('Curl converter should', function() {
 	
 	//error
 
-	it('throw an error for a malformed request asyncly', function (done) {
-		convert('curl --request', function (err, result) {
+	it.only('throw an error for a malformed request asyncly', function (done) {
+		convert("curl -H 'Host: www.getpostman.com' -H 'Cookie: _ga=GA1.2.1320587677.1540387202; _gid=GA1.2.1288189713.1540387202; _gat=1; postman.sid=[REDACTED]; getpostmanlogin=yes; dashboard_beta=no; postman.meta=[REDACTED]' -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36' -H 'accept: */*' -H 'referer: https://www.getpostman.com/community' -H 'accept-language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7' --compressed 'https://www.getpostman.com/assets/platformVendor.js?v=1538774398184'", function (err, result) {
+			console.log(JSON.stringify(result.output));
 			expect(result.result).to.equal(false);
 			expect(result.reason).to.equal('Error while parsing cURL: Could not identify the URL. Please use the --url option.');
 			done();
