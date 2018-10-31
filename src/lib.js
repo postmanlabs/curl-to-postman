@@ -6,8 +6,6 @@ var uuid = require('node-uuid'),
 var curlConverter = {
     loaded: false,
 
-    methodsWithBody: ["POST", "PUT", "PATCH", "DELETE", "LINK", "UNLINK", "LOCK", "PROPFIND", "VIEW", "OPTIONS"],
-
     requestUrl: "",
 
     initialize: function() {
@@ -202,13 +200,6 @@ var curlConverter = {
         return arr.join("&");
     },
 
-    trySetDefaultBodyMethod: function(request) {
-        //if the request method is GET
-        if(this.methodsWithBody.indexOf(request.method.toUpperCase()) === -1) {
-            throw new Error(request.method + ' is currently not supported with a request body.');
-        }
-    },
-
     convertCurlToRequest: function(curlString) {
         try {
             if(!this.loaded) {
@@ -296,12 +287,10 @@ var curlConverter = {
             if(curlObj["dataBinary"]!==null) {
                 request.body.mode = "raw";
                 request.body.raw = curlObj["dataBinary"];
-                this.trySetDefaultBodyMethod(request);
             }
             if(curlObj.form && curlObj.form.length!==0) {
                 request.body.mode = "formdata";
                 request.body.formdata = this.getDataForForm(curlObj.form, false);
-                this.trySetDefaultBodyMethod(request);
             }
             if((curlObj.data && curlObj.data.length!==0) || (curlObj.dataAscii && curlObj.dataAscii.length!==0)) {
             	if(content_type==="" || content_type === "application/x-www-form-urlencoded") {
@@ -310,7 +299,6 @@ var curlConverter = {
                     request.body.mode = "urlencoded";
             		request.body.urlencoded = this.getDataForUrlEncoded(curlObj.data, true).concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
                 	
-                    this.trySetDefaultBodyMethod(request);
                     var str1 = this.convertArrayToAmpersandString(curlObj.data),
                         str2 = this.convertArrayToAmpersandString(curlObj.dataAscii);
                 	urlData = str1
@@ -329,14 +317,12 @@ var curlConverter = {
                         + ((str1.length>0 && str2.length>0)?"&":"")
                         + str2;
 
-                    this.trySetDefaultBodyMethod(request);
                     urlData = request.data;
                 }
             }
             if(curlObj['dataUrlencode'] && curlObj['dataUrlencode'].length!==0) {
                 request.body.mode = "urlencoded";
                 request.body.urlencoded = this.getDataForUrlEncoded(curlObj['dataUrlencode'], true);
-                this.trySetDefaultBodyMethod(request);
                 urlData = curlObj['dataUrlencode'];
             }
 
