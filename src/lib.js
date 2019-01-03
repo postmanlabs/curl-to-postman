@@ -131,7 +131,6 @@ var curlConverter = {
         program["data"] = [];
         program["dataBinary"] = null;
         program["dataAscii"] = [];
-        program["dataUrlencode"] = [];
         program["form"] = [];
         program["user"] = null;
         program["basic"] = null;
@@ -320,16 +319,11 @@ var curlConverter = {
                     urlData = request.data;
                 }
             }
-            if(curlObj['dataUrlencode'] && curlObj['dataUrlencode'].length!==0) {
-                request.body.mode = "urlencoded";
-                request.body.urlencoded = this.getDataForUrlEncoded(curlObj['dataUrlencode'], true);
-                urlData = curlObj['dataUrlencode'];
-            }
 
             if(!!curlObj.get) {
-                request.method="GET";
-                if(request.method.toLowerCase()==="get" && urlData!=="") {
-                	request.url+="?" + urlData;
+                request.method = 'GET';
+                if(urlData !== '') {
+                	request.url += '?' + urlData;
                 }
             }
 
@@ -337,7 +331,7 @@ var curlConverter = {
             return request;
         }
         catch(e) {
-            if(e.message === "process.exit is not a function") {
+            if (e.message === "process.exit is not a function") {
                 //happened because of
                 e.message = "Invalid format for cURL."
             }

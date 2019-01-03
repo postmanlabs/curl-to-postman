@@ -5,9 +5,7 @@ var Converter = require('../src/lib'),
 
 describe('Curl converter should', function() {
 	
-	//error
-
-	it('throw an error for a malformed request asyncly', function (done) {
+	it('throw an error for a malformed request', function (done) {
 		convert('curl --request', function (err, result) {
 			console.log(JSON.stringify(result.output));
 			expect(result.result).to.equal(false);
@@ -23,7 +21,7 @@ describe('Curl converter should', function() {
 		});
 	});
 
-	it('convert a correct simple request asyncly', function (done) {
+	it('convert a correct simple request', function (done) {
 		var result = convert('curl --request GET --url http://www.google.com', function (err, result) {
 			expect(result.result).to.equal(true);
 
@@ -82,6 +80,16 @@ describe('Curl converter should', function() {
 		expect(result.auth.type).to.equal('basic');
 		expect(result.auth.basic[0].key).to.equal('username');
 		expect(result.auth.basic[1].key).to.equal('password');
+
+		done();
+	});
+
+	it('convert a request with a forced GET', function (done) {
+		var result = Converter.convertCurlToRequest('curl -X POST --get --url http://www.google.com -d "username=postman&password=newman&randomKey"');
+		
+		// even with -X POST
+		expect(result.method).to.equal('GET');
+		expect(result.url).to.equal('http://www.google.com?username=postman&password=newman&randomKey');
 
 		done();
 	});

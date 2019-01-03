@@ -1,0 +1,4 @@
+2.0.0: Oct 30, 2018
+
+- Fixes for Github issues - 4770,3623,3135,4018
+- Updated the exposed API to be more generic
