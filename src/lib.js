@@ -1,4 +1,4 @@
-var uuid = require('node-uuid'),
+var uuidv4 = require('uuid/v4'),
     program = require('commander'),
     _ = require('lodash').noConflict(),
     shellQuote = require('shell-quote');

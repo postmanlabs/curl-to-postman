@@ -29,25 +29,33 @@ function parseArguments() {
 	});
 
 	program.parse(process.argv);
-
+	var retObj;
 	if(program.collection) {
 		if(program.environment || program.globals) {
 			Validator.onlyOneValidator();
 		}
 
-		return Validator.validate('c',program.collection);
+		retObj = Validator.validate('c',program.collection);
 	}
 	else if(program.environment) {
 		if(program.globals) {
 			Validator.onlyOneValidator();
 		}
-		return Validator.validate('e',program.environment);
+		retObj = Validator.validate('e',program.environment);
 	}
 	else if(program.globals) {
-		return Validator.validate('g',program.globals);
+		retObj = Validator.validate('g',program.globals);
 	}
 	else {
 		Validator.printError("At least one option must be specified. Use --help to see the list of options\n");
+		return;
+	}
+
+	if(retObj.status) {
+		console.log("Validation passed");
+	}
+	else {
+		console.error("Validation failed. Message: " + retObj.message);
 	}
 }
 
