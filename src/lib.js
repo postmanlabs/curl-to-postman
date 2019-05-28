@@ -94,6 +94,10 @@ var curlConverter = {
         for(var i=0;i<numHeaders;i++) {
             var thisHeader = headerArray[i], keyIndex;
 
+            if (!(typeof thisHeader === 'string')) {
+                console.warn('Unparseable header in curl conversion: ', thisHeader);
+                continue;
+            }
             //remove leading and trailing quotes
             thisHeader = this.trimQuotesFromString(thisHeader);
             keyIndex = thisHeader.indexOf(":");
@@ -205,10 +209,15 @@ var curlConverter = {
               if (_.isObject(arg) && arg.op === 'glob') {
                 return arg.pattern
               }
+              else if (arg.op && arg.op.startsWith('$') && arg.op.length > 3) {
+                // in the app, certain headers like -H $'cookie: abc' are treated as operators
+                // converting the arg to cookie: abc instead of op: $'cookie: abc'
+                return arg.op.substring(2, arg.op.length-1);
+              }
               else {
                 return arg
               }
-            })
+            });
             var curlObj = program.parse(sanitizedArgs);
 
             this.headerPairs = {};
