@@ -1,20 +1,38 @@
-var lib = require('./lib.js');
+var fs = require('fs'),
+    lib = require('./lib.js');
 
-module.exports = function (curlCommand, cb) {
-	var result = lib.convertCurlToRequest(curlCommand);
-    if(result.error) {
+module.exports = function (input, cb) {
+    var result;
+
+    if (!input) {
         cb(null, {
             result: false,
-            reason: result.error.message
+            reason: 'Invalid input object provided'
         });
     }
+
+    if (input.type === 'string') {        
+        result = lib.convertCurlToRequest(input.data);
+        if(result.error) {
+            return cb(null, {
+                result: false,
+                reason: result.error.message
+            });
+        }
+        else {
+            return cb(null, {
+                result: true,
+                output: [{
+                  type: 'request',
+                  data: result
+                }]
+            });
+        }
+    }
     else {
-        cb(null, {
-            result: true,
-            output: [{
-              type: 'request',
-              data: result
-            }]
+        return cb(null, {
+            result: false,
+            reason: 'Only input.type=string supported for cURL'
         });
     }
 }

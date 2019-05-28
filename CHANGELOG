@@ -1,7 +1,4 @@
-2.0.1: May 28, 2019
-- Resetting program options after every call to convert()
-
-2.0.0: Oct 30, 2018
-
-- Fixes for Github issues - 4770,3623,3135,4018
-- Updated the exposed API to be more generic
+0.0.2: May 29, 2019
+- First public (beta) release
+- Conforming to the internal Postman plugin interface
+- Fixes for Github issues - 4770,3623,3135,4018,5737, among others

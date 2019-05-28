@@ -6,7 +6,10 @@ var Converter = require('../src/lib'),
 describe('Curl converter should', function() {
 	
 	it('throw an error for a malformed request', function (done) {
-		convert('curl --request', function (err, result) {
+		convert({
+			type: 'string',
+			data: 'curl --request'
+		}, function (err, result) {
 			console.log(JSON.stringify(result.output));
 			expect(result.result).to.equal(false);
 			expect(result.reason).to.equal('Error while parsing cURL: Could not identify the URL. Please use the --url option.');
@@ -15,14 +18,20 @@ describe('Curl converter should', function() {
 	});
 
 	it('not throw an error for sending GET with a request body', function (done) {
-		convert('curl -X GET -d "a=b&c=d" http://post.com', function (err, result) {
+		convert({
+			type: 'string',
+			data: 'curl -X GET -d "a=b&c=d" http://post.com'
+		}, function (err, result) {
 			expect(result.result).to.equal(true);
 			done();
 		});
 	});
 
 	it('convert a correct simple request', function (done) {
-		var result = convert('curl --request GET --url http://www.google.com', function (err, result) {
+		var result = convert({
+			type: 'string',
+			data: 'curl --request GET --url http://www.google.com'
+		}, function (err, result) {
 			expect(result.result).to.equal(true);
 
 			expect(result.output.length).to.equal(1);
@@ -218,6 +227,13 @@ describe('Curl converter should', function() {
 		var result = Converter.convertCurlToRequest('curl http://getpostman.com/ --data \'\'');
 		expect(result.body).to.be.empty();
 
+		done();
+	});
+
+	it('Should not try to resolve env vars in the curl input', function (done) {
+		var result = Converter.convertCurlToRequest('curl --location --request POST "https://sample.com" --header "h1: $v1"');
+		var header = _.find(result.header, function (header) { return header.key === 'h1' });
+		expect(header.value).to.equal('$v1');
 		done();
 	});
 });
