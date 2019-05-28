@@ -229,4 +229,11 @@ describe('Curl converter should', function() {
 
 		done();
 	});
+
+	it('Should not try to resolve env vars in the curl input', function (done) {
+		var result = Converter.convertCurlToRequest('curl --location --request POST "https://sample.com" --header "h1: $v1"');
+		var header = _.find(result.header, function (header) { return header.key === 'h1' });
+		expect(header.value).to.equal('$v1');
+		done();
+	});
 });

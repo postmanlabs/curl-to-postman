@@ -65,7 +65,7 @@ var curlConverter = {
 
         //must have a URL
         if(curlObj.args.length > 1 && !curlObj.url) {
-            throw new Error((curlObj.args.length + " option-less arguments found. Only one is supported (the URL)"));
+            throw new Error('Only the URL can be provided without an option preceding it. All other inputs must be specified via options.');
         }
     },
 
@@ -197,7 +197,10 @@ var curlConverter = {
             //replace -XPOST with -X POST
             curlString = curlString.replace(/(-X)([A-Z]+)/, function (match, x, method) {return x + " " + method;})
 
-            var argv = shellQuote.parse("node " + curlString);
+            var argv = shellQuote.parse("node " + curlString, function(key) {
+                // this is done to prevent converting vars like $id in the curl input to ''
+                return '$' + key;
+            });
             var sanitizedArgs = _.map(_.filter(argv, function(arg) { return !_.isEmpty(arg) }), function (arg) {
               if (_.isObject(arg) && arg.op === 'glob') {
                 return arg.pattern
