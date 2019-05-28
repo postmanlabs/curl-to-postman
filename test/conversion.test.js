@@ -60,7 +60,7 @@ describe('Curl converter should', function() {
 		expect(h1Header.value).to.equal('v1');
 		expect(h2Header.value).to.equal('v2');
 		expect(h3Header.value).to.equal('');
-		expect(h4Header).to.be.undefined;
+		expect(h4Header).to.be(undefined);
 
 		done();
 	});
@@ -70,6 +70,13 @@ describe('Curl converter should', function() {
 
 		var uaHeader = _.find(result.header, function (header) { return header.key === 'User-Agent' });
 		expect(uaHeader.value).to.equal('mosaic');
+
+
+		// should clear user-agent this time
+		result = Converter.convertCurlToRequest('curl --request GET http://www.google.com');
+
+		uaHeader = _.find(result.header, function (header) { return header.key === 'User-Agent' });
+		expect(uaHeader).to.be(undefined);
 
 		done();
 	});
@@ -213,5 +220,4 @@ describe('Curl converter should', function() {
 
 		done();
 	});
-
 });

@@ -1,11 +1,10 @@
 var uuidv4 = require('uuid/v4'),
-    program = require('commander'),
+    commander = require('commander'),
     _ = require('lodash').noConflict(),
-    shellQuote = require('shell-quote');
+    shellQuote = require('shell-quote'),
+    program;
 
 var curlConverter = {
-    loaded: false,
-
     requestUrl: "",
 
     initialize: function() {
@@ -13,6 +12,8 @@ var curlConverter = {
             memo.push(str);
             return memo;
         }
+
+        program = new commander.Command();
 
         program.version('0.0.1')
             .allowUnknownOption()
@@ -127,17 +128,6 @@ var curlConverter = {
     },
 
     resetProgram: function() {
-        program["user-agent"] = null;
-        program["data"] = [];
-        program["dataBinary"] = null;
-        program["dataAscii"] = [];
-        program["form"] = [];
-        program["user"] = null;
-        program["basic"] = null;
-        delete program["get"];
-        program["header"] = [];
-        program["request"] = null;
-        program["url"] = null;
         this.requestUrl = "";
     },
 
@@ -201,12 +191,8 @@ var curlConverter = {
 
     convertCurlToRequest: function(curlString) {
         try {
-            if(!this.loaded) {
-                this.initialize();
-                this.loaded = true;
-            }
-
-            this.resetProgram();
+            this.initialize();
+            this.requestUrl = '';
 
             //replace -XPOST with -X POST
             curlString = curlString.replace(/(-X)([A-Z]+)/, function (match, x, method) {return x + " " + method;})
