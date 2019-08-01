@@ -35,6 +35,9 @@ describe('Curl converter should', function() {
 			$'https://example.com.br/login.html'`
 		}, function (err, result) {
 			expect(result.result).to.equal(true);
+			expect(result.output[0].data.url).to.equal('https://example.com.br/login.html');
+			expect(result.output[0].data.header[0].key).to.equal('Host');
+			expect(result.output[0].data.header[1].key).to.equal('User-Agent');
 			done();
 		});
 	});
