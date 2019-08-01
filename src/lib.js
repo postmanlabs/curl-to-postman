@@ -214,6 +214,11 @@ var curlConverter = {
                 // converting the arg to cookie: abc instead of op: $'cookie: abc'
                 return arg.op.substring(2, arg.op.length-1);
               }
+              else if (arg.startsWith('$') && arg.length > 2) {
+                // removing $ before every string like -X $'POST' and
+                // converting the arg to -X 'POST'
+                return arg.substring(1);
+              }
               else {
                 return arg
               }
