@@ -19,11 +19,27 @@ var Converter = require('../src/lib.js'),
 	});
 
 	describe('validator should', function () {
-		it('indicate valid curl', function () {
+		it('indicate valid curl', function (done) {
 			expect(validate('curl helloworld').result).to.be(true);
 
 			var result = validate('invalid curl');
 			expect(result.result).to.be(false);
+
+			done();
 		});
 	});
+
+	describe('sanitizeArgs function should', function () {
+		it('remove all unnecessary $ from curl string', function (done) {
+			let curlString = `curl -i -s -k  -X $'POST' \
+			-H $'Host: example.com.br' -H $'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:68.0) Gecko/20100101 Firefox/68.0'\
+			$'https://example.com.br/login.html'`
+			let sanitizedArgs = Converter.sanitizeCurlArgs(curlString);
+			expect(sanitizedArgs[6]).to.equal('POST');
+			expect(sanitizedArgs[8]).to.equal('Host: example.com.br');
+			expect(sanitizedArgs[10]).to.equal('User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:68.0) Gecko/20100101 Firefox/68.0');
+
+			done();
+		})
+	})
 
