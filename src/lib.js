@@ -193,7 +193,7 @@ var curlConverter = {
         return arr.join("&");
     },
 
-    sanitizeCurlArgs: function(curlString) {
+    sanitizeArgs: function(curlString) {
         //replace -XPOST with -X POST
         curlString = curlString.replace(/(-X)([A-Z]+)/, function (match, x, method) {return x + " " + method;})
 
@@ -228,7 +228,7 @@ var curlConverter = {
             this.initialize();
             this.requestUrl = '';
 
-            var sanitizedArgs = this.sanitizeCurlArgs(curlString);
+            var sanitizedArgs = this.sanitizeArgs(curlString);
 
             var curlObj = program.parse(sanitizedArgs);
 

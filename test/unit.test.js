@@ -30,11 +30,11 @@ var Converter = require('../src/lib.js'),
 	});
 
 	describe('sanitizeArgs function should', function () {
-		it('remove all unnecessary $ from curl string', function (done) {
-			let curlString = `curl -i -s -k  -X $'POST' \
+		it('remove all unnecessary $ from bash string', function (done) {
+			let bashString = `curl -i -s -k  -X $'POST' \
 			-H $'Host: example.com.br' -H $'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:68.0) Gecko/20100101 Firefox/68.0'\
 			$'https://example.com.br/login.html'`
-			let sanitizedArgs = Converter.sanitizeCurlArgs(curlString);
+			let sanitizedArgs = Converter.sanitizeArgs(bashString);
 			expect(sanitizedArgs[6]).to.equal('POST');
 			expect(sanitizedArgs[8]).to.equal('Host: example.com.br');
 			expect(sanitizedArgs[10]).to.equal('User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:68.0) Gecko/20100101 Firefox/68.0');
