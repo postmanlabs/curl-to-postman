@@ -213,6 +213,7 @@ var curlConverter = {
           else if (arg.startsWith('$') && arg.length > 2) {
             // removing $ before every string like -X $'POST' and
             // converting the arg to -X 'POST'
+            // link of RFC- https://tiswww.case.edu/php/chet/bash/bashref.html#ANSI_002dC-Quoting
             return arg.substring(1);
           }
           else {
