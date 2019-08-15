@@ -237,6 +237,10 @@ var curlConverter = {
                 else if (curlObj.rawArgs.indexOf('-I') > -1 || curlObj.rawArgs.indexOf('--head') > -1) {
                     curlObj.request = "HEAD";
                 }
+                // set method to PUT if there is -T param in the curl command
+                else if (curlObj.rawArgs.indexOf('-T') > -1) {
+                    curlObj.request = "PUT";
+                }
                 // set method to GET if no param is present
                 else {
                     curlObj.request = "GET";
