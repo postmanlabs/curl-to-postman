@@ -222,8 +222,25 @@ var curlConverter = {
 
             this.headerPairs = {};
 
+            // if method is not given in the curl command
             if(!curlObj.request) {
-            	curlObj.request = "GET";
+            
+                // set method to POST if any of the param is given (-d, --data, --data-binary, --data-ascii)
+                if (curlObj.data.length > 0 || curlObj.dataAscii.length > 0 || curlObj.dataUrlencode.length > 0 || curlObj.dataBinary) {
+                    curlObj.request = "POST";
+                }
+                // set method to GET if there is -G or --get param in the curl command
+                else if (curlObj.get) {
+                    curlObj.request = "GET";
+                }
+                // set method to HEAD if there is -I or --head param in the curl command
+                else if (curlObj.rawArgs.indexOf('-I') > -1 || curlObj.rawArgs.indexOf('--head') > -1) {
+                    curlObj.request = "HEAD";
+                }
+                // set method to GET if no param is present
+                else {
+                    curlObj.request = "GET";
+                }
             }
 
             curlObj.request = this.trimQuotesFromString(curlObj.request);

@@ -27,6 +27,17 @@ describe('Curl converter should', function() {
 		});
 	});
 
+	it('[Github #2] - if method is absent then add it according to request params', function(done) {
+		convert({
+			type: 'string',
+			data: 'curl -d "key=example" https://example.com'
+		}, function (err, result) {
+			expect(result.result).to.equal(true);
+			expect(result.output[0].data.method).to.equal('POST');
+			done();
+		});
+	});
+
 	it('convert a correct simple request', function (done) {
 		var result = convert({
 			type: 'string',
