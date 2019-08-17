@@ -27,14 +27,49 @@ describe('Curl converter should', function() {
 		});
 	});
 
-	it('[Github #2] - if method is absent then add it according to request params', function(done) {
-		convert({
-			type: 'string',
-			data: 'curl -d "key=example" https://example.com'
-		}, function (err, result) {
-			expect(result.result).to.equal(true);
-			expect(result.output[0].data.method).to.equal('POST');
-			done();
+	describe('[Github #2] - if method is absent then convertor', function() {
+		it('should set the method to GET', function(done) {
+			convert({
+				type: 'string',
+				data: 'curl -d "key=example" --get https://example.com'
+			}, function (err, result) {
+				expect(result.result).to.equal(true);
+				expect(result.output[0].data.method).to.equal('GET');
+				done();
+			});
+		});
+
+		it('should set the method to POST', function(done) {
+			convert({
+				type: 'string',
+				data: 'curl -d "key=example" https://example.com'
+			}, function (err, result) {
+				expect(result.result).to.equal(true);
+				expect(result.output[0].data.method).to.equal('POST');
+				done();
+			});
+		});
+
+		it('should set the method to HEAD', function(done) {
+			convert({
+				type: 'string',
+				data: 'curl -d "key=example" --head https://example.com'
+			}, function (err, result) {
+				expect(result.result).to.equal(true);
+				expect(result.output[0].data.method).to.equal('HEAD');
+				done();
+			});
+		});
+
+		it('should set the method to PUT', function(done) {
+			convert({
+				type: 'string',
+				data: 'curl -T https://example.com'
+			}, function (err, result) {
+				expect(result.result).to.equal(true);
+				expect(result.output[0].data.method).to.equal('PUT');
+				done();
+			});
 		});
 	});
 

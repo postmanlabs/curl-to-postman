@@ -27,6 +27,8 @@ var curlConverter = {
             .option('-G, --get', 'Forces the request to be sent as GET, with the --data parameters appended to the query string', null)
             .option('-H, --header [string]', 'Add a header (can be used multiple times)', collectValues, [])
             .option('-X, --request [string]', 'Specify a custom request mehod to be used', null)
+            .option('-I, --head', 'Forces the request to be sent as HEAD, with the --data parameters appended to the query string', null)
+            .option('-T, --upload-file', 'Forces the request to be sent as PUT', null)
             .option('--url [string]', 'An alternate way to specify the URL', null)
             .option('--basic', 'Overrides previous auth settings')
             .option('-u, --user [string]', 'Basic auth ( -u <username:password>)', null);
@@ -39,6 +41,29 @@ var curlConverter = {
         	return str.substring(1,strlen-1);
         }
         return str;
+    },
+
+    getRequestMethod: function(curlObj) {
+        // checking if the user has mentioned -G or --get in curl command
+        if (curlObj.get) {
+            return "GET";
+        }
+        // checking if the user has mentioned -I or --head in curl command
+        else if (curlObj.head) {
+            return "HEAD";
+        }
+        // checking if the user has mentioned -T or --upload-file in curl command
+        else if (curlObj.uploadFile) {
+            return "PUT";
+        }
+        // checking if the user has mentioned any of these (-d, --data, --data-binary, --data-ascii) in curl command
+        else if (curlObj.data.length > 0 || curlObj.dataAscii.length > 0 || curlObj.dataUrlencode.length > 0 || curlObj.dataBinary) {
+            return "POST";
+        }
+        // set method to GET if no param is present
+        else {
+            return "GET";
+        }
     },
 
     validateCurlRequest: function(curlObj) {
@@ -224,27 +249,7 @@ var curlConverter = {
 
             // if method is not given in the curl command
             if(!curlObj.request) {
-            
-                // set method to POST if any of the param is given (-d, --data, --data-binary, --data-ascii)
-                if (curlObj.data.length > 0 || curlObj.dataAscii.length > 0 || curlObj.dataUrlencode.length > 0 || curlObj.dataBinary) {
-                    curlObj.request = "POST";
-                }
-                // set method to GET if there is -G or --get param in the curl command
-                else if (curlObj.get) {
-                    curlObj.request = "GET";
-                }
-                // set method to HEAD if there is -I or --head param in the curl command
-                else if (curlObj.rawArgs.indexOf('-I') > -1 || curlObj.rawArgs.indexOf('--head') > -1) {
-                    curlObj.request = "HEAD";
-                }
-                // set method to PUT if there is -T param in the curl command
-                else if (curlObj.rawArgs.indexOf('-T') > -1) {
-                    curlObj.request = "PUT";
-                }
-                // set method to GET if no param is present
-                else {
-                    curlObj.request = "GET";
-                }
+                curlObj.request = this.getRequestMethod(curlObj);
             }
 
             curlObj.request = this.trimQuotesFromString(curlObj.request);
