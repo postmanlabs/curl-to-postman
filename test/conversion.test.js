@@ -53,7 +53,7 @@ describe('Curl converter should', function() {
 		it('should set the method to HEAD', function(done) {
 			convert({
 				type: 'string',
-				data: 'curl -d "key=example" --head https://example.com'
+				data: 'curl --head https://example.com'
 			}, function (err, result) {
 				expect(result.result).to.equal(true);
 				expect(result.output[0].data.method).to.equal('HEAD');
