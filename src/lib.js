@@ -193,11 +193,11 @@ var curlConverter = {
         return arr.join("&");
     },
 
-    sanitizeArgs: function(curlString) {
+    sanitizeArgs: function(string) {
         //replace -XPOST with -X POST
-        curlString = curlString.replace(/(-X)([A-Z]+)/, function (match, x, method) {return x + " " + method;})
+        string = string.replace(/(-X)([A-Z]+)/, function (match, x, method) {return x + " " + method;})
 
-        var argv = shellQuote.parse("node " + curlString, function(key) {
+        var argv = shellQuote.parse("node " + string, function(key) {
             // this is done to prevent converting vars like $id in the curl input to ''
             return '$' + key;
         });
@@ -213,7 +213,7 @@ var curlConverter = {
           else if (arg.startsWith('$') && arg.length > 2) {
             // removing $ before every string like -X $'POST' and
             // converting the arg to -X 'POST'
-            // link of RFC- https://tiswww.case.edu/php/chet/bash/bashref.html#ANSI_002dC-Quoting
+            // link of RFC- http://www.gnu.org/software/bash/manual/html_node/ANSI_002dC-Quoting.html
             return arg.substring(1);
           }
           else {
