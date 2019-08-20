@@ -65,7 +65,6 @@ var curlConverter = {
 
         //must have a URL
         if(curlObj.args.length > 1 && !curlObj.url) {
-            console.log(curlObj)
             throw new Error('Only the URL can be provided without an option preceding it. All other inputs must be specified via options.');
         }
     },
