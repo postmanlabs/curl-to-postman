@@ -319,29 +319,6 @@ var curlConverter = {
                 }
             }
 
-            if(!!curlObj.get) {
-                request.method = 'GET';
-                if(urlData !== '') {
-                    if (request.url.includes('?')) {
-                        // url already contains query parameters
-                        let dataBeforePath = request.url.split('?')[0],
-                          dataAfterPath = request.url.split('?')[1],
-                          queryParams = '', fragments = '';
-                        if (dataAfterPath.includes('#')) {
-                            fragments = '#' + dataAfterPath.split('#')[1];
-                            queryParams = dataAfterPath.split('#')[0];
-                        } else {
-                            queryParams = dataAfterPath;
-                        }
-                        queryParams += '&' + urlData;
-                        request.url = dataBeforePath + '?' + queryParams + fragments;
-                    }
-                    else {
-                        request.url += '?' + urlData;
-                    }
-                }
-            }
-
             request.description = 'Generated from a curl request: \n' +  curlString.split('"').join('\\\"');
             return request;
         }
