@@ -28,7 +28,7 @@ var curlConverter = {
             .option('-H, --header [string]', 'Add a header (can be used multiple times)', collectValues, [])
             .option('-X, --request [string]', 'Specify a custom request mehod to be used', null)
             .option('-I, --head', 'Forces the request to be sent as HEAD, with the --data parameters appended to the query string', null)
-            .option('-T, --upload-file', 'Forces the request to be sent as PUT', null)
+            .option('-T, --upload-file [string]', 'Forces the request to be sent as PUT with the specified local file to the server', collectValues, [])
             .option('--url [string]', 'An alternate way to specify the URL', null)
             .option('--basic', 'Overrides previous auth settings')
             .option('-u, --user [string]', 'Basic auth ( -u <username:password>)', null);
@@ -43,18 +43,37 @@ var curlConverter = {
         return str;
     },
 
+    addQueryParamsFromDataOption: function(curlObj, urlData, request) {
+        // What this will do:
+        // If URL is http://example.com?a=b and -d 'c=d' => http://example.com?a=b&c=d
+        // If URL is http://example.com#fragment and -d 'c=d' => http://example.com#fragment
+        if (curlObj.uploadFile.length > 0 || !!curlObj.head || !!curlObj.get) {
+            if (request.url.includes('?')) {
+                if (!request.url.includes('#')) {
+                    request.url += '&' + urlData;
+                }
+            }
+            else {
+                if (!request.url.includes('#')) {
+                    request.url += '?' + urlData;
+                }
+            }
+        }
+    },
+
     getRequestMethod: function(curlObj) {
-        // checking if the user has mentioned -G or --get in curl command
-        if (curlObj.get) {
-            return "GET";
+        // RFC- https://curl.haxx.se/docs/manpage.html
+        // checking if the user has mentioned -T or --upload-file in curl command
+        if (curlObj.uploadFile.length > 0) {
+            return "PUT";
         }
         // checking if the user has mentioned -I or --head in curl command
         else if (curlObj.head) {
             return "HEAD";
         }
-        // checking if the user has mentioned -T or --upload-file in curl command
-        else if (curlObj.uploadFile) {
-            return "PUT";
+        // checking if the user has mentioned -G or --get in curl command
+        else if (curlObj.get) {
+            return "GET";
         }
         // checking if the user has mentioned any of these (-d, --data, --data-binary, --data-ascii) in curl command
         else if (curlObj.data.length > 0 || curlObj.dataAscii.length > 0 || curlObj.dataUrlencode.length > 0 || curlObj.dataBinary) {
@@ -344,12 +363,8 @@ var curlConverter = {
                 }
             }
 
-            if(!!curlObj.get) {
-                request.method = 'GET';
-                if(urlData !== '') {
-                	request.url += '?' + urlData;
-                }
-            }
+            // add data to query parameteres in the URL from --data or -d option
+            this.addQueryParamsFromDataOption(curlObj, urlData, request);
 
             request.description = 'Generated from a curl request: \n' +  curlString.split('"').join('\\\"');
             return request;

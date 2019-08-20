@@ -27,8 +27,8 @@ describe('Curl converter should', function() {
 		});
 	});
 
-	describe('[Github #2] - if method is absent then convertor', function() {
-		it('should set the method to GET', function(done) {
+	describe('[Github #2] - set the method to ', function() {
+		it('GET if --get or -G option is given in the curl command', function(done) {
 			convert({
 				type: 'string',
 				data: 'curl -d "key=example" --get https://example.com'
@@ -39,7 +39,7 @@ describe('Curl converter should', function() {
 			});
 		});
 
-		it('should set the method to POST', function(done) {
+		it('POST if only -d option is given in the curl command', function(done) {
 			convert({
 				type: 'string',
 				data: 'curl -d "key=example" https://example.com'
@@ -50,10 +50,10 @@ describe('Curl converter should', function() {
 			});
 		});
 
-		it('should set the method to HEAD', function(done) {
+		it('HEAD if --head or -I is given in the curl command', function(done) {
 			convert({
 				type: 'string',
-				data: 'curl --head https://example.com'
+				data: 'curl --head https://example.com -d "a=b" --get'
 			}, function (err, result) {
 				expect(result.result).to.equal(true);
 				expect(result.output[0].data.method).to.equal('HEAD');
@@ -61,10 +61,10 @@ describe('Curl converter should', function() {
 			});
 		});
 
-		it('should set the method to PUT', function(done) {
+		it('PUT if -T or --upload-file is given in the curl command', function(done) {
 			convert({
 				type: 'string',
-				data: 'curl -T https://example.com'
+				data: 'curl --upload-file "./example.txt" https://example.com -d "" --get'
 			}, function (err, result) {
 				expect(result.result).to.equal(true);
 				expect(result.output[0].data.method).to.equal('PUT');
@@ -146,11 +146,11 @@ describe('Curl converter should', function() {
 		done();
 	});
 
-	it('convert a request with a forced GET', function (done) {
+	it('convert a request with a forced POST', function (done) {
 		var result = Converter.convertCurlToRequest('curl -X POST --get --url http://www.google.com -d "username=postman&password=newman&randomKey"');
 		
-		// even with -X POST
-		expect(result.method).to.equal('GET');
+		// even with --get
+		expect(result.method).to.equal('POST');
 		expect(result.url).to.equal('http://www.google.com?username=postman&password=newman&randomKey');
 
 		done();
