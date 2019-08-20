@@ -28,7 +28,7 @@ describe('Curl converter should', function() {
 	});
 
 	describe('[Github #2] - set the method to ', function() {
-		it('GET if --get or -G option is given in the curl command', function(done) {
+		it('GET if --get option is given in the curl command', function(done) {
 			convert({
 				type: 'string',
 				data: 'curl -d "key=example" --get https://example.com'
@@ -64,7 +64,7 @@ describe('Curl converter should', function() {
 		it('PUT if -T or --upload-file is given in the curl command', function(done) {
 			convert({
 				type: 'string',
-				data: 'curl --upload-file "./example.txt" https://example.com -d "" --get'
+				data: 'curl --upload-file "./example.txt" https://example.com -d "a=b" --get --head'
 			}, function (err, result) {
 				expect(result.result).to.equal(true);
 				expect(result.output[0].data.method).to.equal('PUT');

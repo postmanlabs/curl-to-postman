@@ -47,16 +47,12 @@ var curlConverter = {
         // What this will do:
         // If URL is http://example.com?a=b and -d 'c=d' => http://example.com?a=b&c=d
         // If URL is http://example.com#fragment and -d 'c=d' => http://example.com#fragment
-        if (curlObj.uploadFile.length > 0 || !!curlObj.head || !!curlObj.get) {
+        if ((curlObj.uploadFile.length > 0 || curlObj.head || curlObj.data.length > 0) && curlObj.get) {
             if (request.url.includes('?')) {
-                if (!request.url.includes('#')) {
-                    request.url += '&' + urlData;
-                }
+                request.url += '&' + urlData;
             }
             else {
-                if (!request.url.includes('#')) {
-                    request.url += '?' + urlData;
-                }
+                request.url += '?' + urlData;
             }
         }
     },
