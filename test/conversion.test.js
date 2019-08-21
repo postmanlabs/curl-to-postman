@@ -31,7 +31,7 @@ describe('Curl converter should', function() {
 		it('GET if --get option is given in the curl command', function(done) {
 			convert({
 				type: 'string',
-				data: 'curl -d "key=example" --get https://example.com'
+				data: 'curl --get https://example.com'
 			}, function (err, result) {
 				expect(result.result).to.equal(true);
 				expect(result.output[0].data.method).to.equal('GET');
@@ -53,7 +53,7 @@ describe('Curl converter should', function() {
 		it('HEAD if --head or -I is given in the curl command', function(done) {
 			convert({
 				type: 'string',
-				data: 'curl --head https://example.com -d "a=b" --get'
+				data: 'curl --head https://example.com'
 			}, function (err, result) {
 				expect(result.result).to.equal(true);
 				expect(result.output[0].data.method).to.equal('HEAD');
@@ -64,7 +64,7 @@ describe('Curl converter should', function() {
 		it('PUT if -T or --upload-file is given in the curl command', function(done) {
 			convert({
 				type: 'string',
-				data: 'curl --upload-file "./example.txt" https://example.com -d "a=b" --get --head'
+				data: 'curl --upload-file "./example.txt" https://example.com'
 			}, function (err, result) {
 				expect(result.result).to.equal(true);
 				expect(result.output[0].data.method).to.equal('PUT');

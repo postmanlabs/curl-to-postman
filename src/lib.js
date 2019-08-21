@@ -47,6 +47,7 @@ var curlConverter = {
         // What this will do:
         // If URL is http://example.com?a=b and -d 'c=d' => http://example.com?a=b&c=d
         // If URL is http://example.com#fragment and -d 'c=d' => http://example.com#fragment
+        // Related Doc - https://curl.haxx.se/docs/manpage.html#-G
         if ((curlObj.uploadFile.length > 0 || curlObj.head || curlObj.data.length > 0) && curlObj.get) {
             if (request.url.includes('?')) {
                 request.url += '&' + urlData;
@@ -76,9 +77,7 @@ var curlConverter = {
             return "POST";
         }
         // set method to GET if no param is present
-        else {
             return "GET";
-        }
     },
 
     validateCurlRequest: function(curlObj) {

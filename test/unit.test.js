@@ -27,3 +27,66 @@ var Converter = require('../src/lib.js'),
 		});
 	});
 
+	describe('getRequestMethod should', function() {
+		it('return POST if -d options is given in the curl command', function(done) {
+			let object = {
+				data: ['a=b'],
+                dataAscii: [],
+                dataUrlencode: [],
+                dataBinary: null,
+                uploadFile: []
+			}
+			let result = Converter.getRequestMethod(object);
+			expect(result).to.equal('POST');
+
+			done();
+		});
+
+		it('return GET if --get and -d options are given in the curl command', function(done) {
+			let object = {
+				data: ['a=b'],
+                dataAscii: [],
+                dataUrlencode: [],
+                dataBinary: null,
+                uploadFile: [],
+                get: true
+			}
+			let result = Converter.getRequestMethod(object);
+			expect(result).to.equal('GET');
+
+			done();
+		});
+
+		it('return HEAD if --get, -d, -I options are given in the curl command', function(done) {
+			let object = {
+				data: ['a=b'],
+                dataAscii: [],
+                dataUrlencode: [],
+                dataBinary: null,
+                uploadFile: [],
+				get: true,
+				head: true
+			}
+			let result = Converter.getRequestMethod(object);
+			expect(result).to.equal('HEAD');
+
+			done();
+		});
+
+		it('return PUT if --get, -d, -I and -T options are given in the curl command', function(done) {
+			let object = {
+				data: ['a=b'],
+                dataAscii: [],
+                dataUrlencode: [],
+                dataBinary: null,
+                uploadFile: ['./text.txt'],
+				get: true,
+				head: true
+			}
+			let result = Converter.getRequestMethod(object);
+			expect(result).to.equal('PUT');
+
+			done();
+		});
+	});
+
