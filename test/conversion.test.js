@@ -97,10 +97,10 @@ describe('Curl converter should', function() {
 		done();
 	});
 
-	it('throw an error if POST body option is given with HEAD and PUT and without --get/-G', function(done) {
+	it('throw an error if POST body option is given with HEAD without --get/-G', function(done) {
 		convert({
 			type: 'string',
-			data: 'curl -I -T "./example.txt" http://example.com -d "a=b"'
+			data: 'curl -I http://example.com -d "a=b"'
 		}, function (err, result) {
 			expect(result.result).to.equal(false);
 			expect(result.reason).to.equal('Error while parsing cURL: You can only select one HTTP request method!');

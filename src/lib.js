@@ -102,11 +102,10 @@ var curlConverter = {
             }
         }
 
-        // cannot add two methods in the curl command with POST data option and without --get/-G
-        // Ex- 'curl -I -T './example.txt' http://example.com -d 'a=b' will throw an error,
-        // but in case of 'curl -I -T './example.txt' http://example.com' curl will send the request with PUT method.
+        // cannot send HEAD request in the curl command with POST data option and without --get/-G
+        // Ex- 'curl -I http://example.com -d "a=b"' will throw an error.
         if ((curlObj.data.length > 0 || curlObj.dataAscii.length > 0 || curlObj.dataBinary || curlObj.dataUrlencode.length > 0) && 
-            (curlObj.head || curlObj.uploadFile.length > 0) && !curlObj.get) {
+            curlObj.head && !curlObj.get) {
                 throw new Error('Error while parsing cURL: You can only select one HTTP request method!')
         }
 
