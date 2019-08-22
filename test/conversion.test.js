@@ -97,6 +97,17 @@ describe('Curl converter should', function() {
 		done();
 	});
 
+	it('throw an error if POST body option is given with HEAD and PUT and without --get/-G', function(done) {
+		convert({
+			type: 'string',
+			data: 'curl -I -T "./example.txt" http://example.com -d "a=b"'
+		}, function (err, result) {
+			expect(result.result).to.equal(false);
+			expect(result.reason).to.equal('Error while parsing cURL: You can only select one HTTP request method!');
+			done();
+		});
+	});
+
 	it('convert a simple GET request w/o the --url param', function (done) {
 		var result = Converter.convertCurlToRequest('curl --request GET http://www.google.com');
 		expect(result.method).to.equal('GET');
