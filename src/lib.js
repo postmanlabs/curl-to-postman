@@ -108,7 +108,7 @@ var curlConverter = {
         // Ex- 'curl -I http://example.com -d "a=b"' will throw an error.
         if ((curlObj.data.length > 0 || curlObj.dataAscii.length > 0 || curlObj.dataBinary || curlObj.dataUrlencode.length > 0) && 
             curlObj.head && !curlObj.get) {
-                throw new Error('Error while parsing cURL: Both --head and --data are not supported')
+                throw new Error('Error while parsing cURL: Both (--head/-I) and (-d/--data/--data-binary/--data-ascii/--data-urlencode) are not supported');
         }
 
         //must have a URL

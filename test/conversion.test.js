@@ -103,7 +103,7 @@ describe('Curl converter should', function() {
 			data: 'curl -I http://example.com -d "a=b"'
 		}, function (err, result) {
 			expect(result.result).to.equal(false);
-			expect(result.reason).to.equal('Error while parsing cURL: Both --head and --data are not supported');
+			expect(result.reason).to.equal('Error while parsing cURL: Both (--head/-I) and (-d/--data/--data-binary/--data-ascii/--data-urlencode) are not supported');
 			done();
 		});
 	});
