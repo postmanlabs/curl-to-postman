@@ -103,7 +103,7 @@ describe('Curl converter should', function() {
 			data: 'curl -I http://example.com -d "a=b"'
 		}, function (err, result) {
 			expect(result.result).to.equal(false);
-			expect(result.reason).to.equal('Error while parsing cURL: You can only select one HTTP request method!');
+			expect(result.reason).to.equal('Error while parsing cURL: Both --head and --data are not supported');
 			done();
 		});
 	});
