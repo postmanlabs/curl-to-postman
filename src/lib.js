@@ -43,12 +43,14 @@ var curlConverter = {
         return str;
     },
 
+    // What this will do:
+    // If URL is http://example.com?a=b and -d 'c=d' => http://example.com?a=b&c=d
+    // If URL is http://example.com#fragment and -d 'c=d' => http://example.com#fragment
     addQueryParamsFromDataOption: function(curlObj, urlData, request) {
-        // What this will do:
-        // If URL is http://example.com?a=b and -d 'c=d' => http://example.com?a=b&c=d
-        // If URL is http://example.com#fragment and -d 'c=d' => http://example.com#fragment
+        // If --get/-G option is given with --data/-d/--data-binary/--data-urlencode/--data-ascii.
+        // Then the value of data body will append to the URL query params regardless what method is mentioned.
         // Related Doc - https://curl.haxx.se/docs/manpage.html#-G
-        if ((curlObj.uploadFile.length > 0 || curlObj.head || curlObj.data.length > 0) && curlObj.get) {
+        if (curlObj.get && (curlObj.data.length > 0 || curlObj.dataAscii.length > 0 || curlObj.dataUrlencode.length > 0 || curlObj.dataBinary)) {
             if (request.url.includes('?')) {
                 request.url += '&' + urlData;
             }
