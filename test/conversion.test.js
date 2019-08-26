@@ -33,6 +33,7 @@ describe('Curl converter should', function() {
 			data: `curl -X $'POST' 'https://example.com.br/login.html'`
 		}, function (err, result) {
 			expect(result.result).to.equal(true);
+			expect(result.output[0].data.method).to.equal('POST');
 			done();
 		});
 	});
