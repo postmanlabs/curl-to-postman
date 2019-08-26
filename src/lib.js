@@ -211,8 +211,8 @@ var curlConverter = {
             return arg.op.substring(2, arg.op.length-1);
           }
           else if (arg.startsWith('$') && arg.length > 2) {
-            // removing $ before every string like -X $'POST' and
-            // converting the arg to -X 'POST'
+            // removing $ before every arg like $'POST' and
+            // converting the arg to 'POST'
             // link of RFC- http://www.gnu.org/software/bash/manual/html_node/ANSI_002dC-Quoting.html
             return arg.substring(1);
           }
