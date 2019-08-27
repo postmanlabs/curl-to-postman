@@ -27,6 +27,17 @@ describe('Curl converter should', function() {
 		});
 	});
 
+	it('[Github: #1]: not throw an error for having $ before method', function (done) {
+		convert({
+			type: 'string',
+			data: `curl -X $'POST' 'https://example.com.br/login.html'`
+		}, function (err, result) {
+			expect(result.result).to.equal(true);
+			expect(result.output[0].data.method).to.equal('POST');
+			done();
+		});
+	});
+
 	it('convert a correct simple request', function (done) {
 		var result = convert({
 			type: 'string',

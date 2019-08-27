@@ -193,31 +193,44 @@ var curlConverter = {
         return arr.join("&");
     },
 
+    sanitizeArgs: function(string) {
+        //replace -XPOST with -X POST
+        string = string.replace(/(-X)([A-Z]+)/, function (match, x, method) {return x + " " + method;})
+
+        var argv = shellQuote.parse("node " + string, function(key) {
+            // this is done to prevent converting vars like $id in the curl input to ''
+            return '$' + key;
+        });
+        var sanitizedArgs = _.map(_.filter(argv, function(arg) { return !_.isEmpty(arg) }), function (arg) {
+          if (_.isObject(arg) && arg.op === 'glob') {
+            return arg.pattern
+          }
+          else if (arg.op && arg.op.startsWith('$') && arg.op.length > 3) {
+            // in the app, certain headers like -H $'cookie: abc' are treated as operators
+            // converting the arg to cookie: abc instead of op: $'cookie: abc'
+            return arg.op.substring(2, arg.op.length-1);
+          }
+          else if (arg.startsWith('$') && arg.length > 2) {
+            // removing $ before every arg like $'POST' and
+            // converting the arg to 'POST'
+            // link of RFC- http://www.gnu.org/software/bash/manual/html_node/ANSI_002dC-Quoting.html
+            return arg.substring(1);
+          }
+          else {
+            return arg
+          }
+        });
+
+        return sanitizedArgs;
+    },
+
     convertCurlToRequest: function(curlString) {
         try {
             this.initialize();
             this.requestUrl = '';
 
-            //replace -XPOST with -X POST
-            curlString = curlString.replace(/(-X)([A-Z]+)/, function (match, x, method) {return x + " " + method;})
+            var sanitizedArgs = this.sanitizeArgs(curlString);
 
-            var argv = shellQuote.parse("node " + curlString, function(key) {
-                // this is done to prevent converting vars like $id in the curl input to ''
-                return '$' + key;
-            });
-            var sanitizedArgs = _.map(_.filter(argv, function(arg) { return !_.isEmpty(arg) }), function (arg) {
-              if (_.isObject(arg) && arg.op === 'glob') {
-                return arg.pattern
-              }
-              else if (arg.op && arg.op.startsWith('$') && arg.op.length > 3) {
-                // in the app, certain headers like -H $'cookie: abc' are treated as operators
-                // converting the arg to cookie: abc instead of op: $'cookie: abc'
-                return arg.op.substring(2, arg.op.length-1);
-              }
-              else {
-                return arg
-              }
-            });
             var curlObj = program.parse(sanitizedArgs);
 
             this.headerPairs = {};
