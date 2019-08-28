@@ -90,3 +90,18 @@ var Converter = require('../src/lib.js'),
         });
     });
 
+	describe('sanitizeArgs function should', function () {
+		it('remove all unnecessary $ from string', function (done) {
+			let string = `curl -X $'POST' \
+			-H $'Host: example.com.br' -H $'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:68.0) Gecko/20100101 Firefox/68.0'\
+			$'https://example.com.br/login.html'`
+			let sanitizedArgs = Converter.sanitizeArgs(string);
+			expect(sanitizedArgs[3]).to.equal('POST');
+			expect(sanitizedArgs[5]).to.equal('Host: example.com.br');
+			expect(sanitizedArgs[7]).to.equal('User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:68.0) Gecko/20100101 Firefox/68.0');
+			expect(sanitizedArgs[8]).to.equal('https://example.com.br/login.html');
+
+			done();
+		})
+	})
+
