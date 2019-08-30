@@ -125,6 +125,17 @@ describe('Curl converter should', function() {
 		done();
 	});
 
+	it('append the data params with & if query params are already present in the url', function (done) {
+		convert({
+			type: 'string',
+			data: 'curl -d "a=b" --get http://post.com?name=example'
+		}, function (err, result) {
+			expect(result.result).to.equal(true);
+			expect(result.output[0].data.url).to.equal('http://post.com?name=example&a=b')
+			done();
+		});
+	});
+
 	it('convert a simple GET request w/ headers', function (done) {
 		var result = Converter.convertCurlToRequest('curl --request GET http://www.google.com -H "h1:v1" -H "h2:v2" -H "h3;" -H "h4" -H "h1:v11"');
 

@@ -382,7 +382,6 @@ var curlConverter = {
 
             // add data to query parameteres in the URL from --data or -d option
             this.addQueryParamsFromDataOption(curlObj, urlData, request);
-
             request.description = 'Generated from a curl request: \n' +  curlString.split('"').join('\\\"');
             return request;
         }
