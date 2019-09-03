@@ -51,11 +51,13 @@ var curlConverter = {
         // Then the value of data body will append to the URL query params regardless what method is mentioned.
         // Related Doc - https://curl.haxx.se/docs/manpage.html#-G
         if (curlObj.get && (curlObj.data.length > 0 || curlObj.dataAscii.length > 0 || curlObj.dataUrlencode.length > 0 || curlObj.dataBinary)) {
-            if (request.url.includes('?')) {
-                request.url += '&' + urlData;
-            }
-            else {
-                request.url += '?' + urlData;
+            if (urlData) {
+                if (request.url.includes('?')) {
+                    request.url += '&' + urlData;
+                }
+                else {
+                    request.url += '?' + urlData;
+                }
             }
         }
     },
