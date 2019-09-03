@@ -27,6 +27,73 @@ describe('Curl converter should', function() {
 		});
 	});
 
+	describe('[Github #2] - set the method to ', function() {
+		it('GET if --get option is given in the curl command', function(done) {
+			convert({
+				type: 'string',
+				data: 'curl --get https://example.com'
+			}, function (err, result) {
+				expect(result.result).to.equal(true);
+				expect(result.output[0].data.method).to.equal('GET');
+				done();
+			});
+		});
+
+		it('POST if only -d option is given in the curl command', function(done) {
+			convert({
+				type: 'string',
+				data: 'curl -d "key=example" https://example.com'
+			}, function (err, result) {
+				expect(result.result).to.equal(true);
+				expect(result.output[0].data.method).to.equal('POST');
+				done();
+			});
+		});
+
+		it('HEAD if --head or -I is given in the curl command', function(done) {
+			convert({
+				type: 'string',
+				data: 'curl --head https://example.com'
+			}, function (err, result) {
+				expect(result.result).to.equal(true);
+				expect(result.output[0].data.method).to.equal('HEAD');
+				done();
+			});
+		});
+
+		it('PUT if -T or --upload-file is given in the curl command', function(done) {
+			convert({
+				type: 'string',
+				data: 'curl --upload-file "./example.txt" https://example.com'
+			}, function (err, result) {
+				expect(result.result).to.equal(true);
+				expect(result.output[0].data.method).to.equal('PUT');
+				done();
+			});
+		});
+	});
+	it('[Github: #1]: not throw an error for having $ before method', function (done) {
+		convert({
+			type: 'string',
+			data: `curl -X $'POST' 'https://example.com.br/login.html'`
+		}, function (err, result) {
+			expect(result.result).to.equal(true);
+			expect(result.output[0].data.method).to.equal('POST');
+			done();
+		});
+	});
+
+	it('not add ? if data body is empty', function (done) {
+		convert({
+			type: 'string',
+			data: 'curl -d "" --get http://www.google.com'
+		}, function (err, result) {
+			expect(result.result).to.equal(true);
+			expect(result.output[0].data.url).to.equal('http://www.google.com');
+			done();
+		});
+	});
+
 	it('convert a correct simple request', function (done) {
 		var result = convert({
 			type: 'string',
@@ -51,11 +118,33 @@ describe('Curl converter should', function() {
 		done();
 	});
 
+	it('throw an error if POST body option is given with HEAD without --get/-G', function(done) {
+		convert({
+			type: 'string',
+			data: 'curl -I http://example.com -d "a=b"'
+		}, function (err, result) {
+			expect(result.result).to.equal(false);
+			expect(result.reason).to.equal('Error while parsing cURL: Both (--head/-I) and (-d/--data/--data-binary/--data-ascii/--data-urlencode) are not supported');
+			done();
+		});
+	});
+
 	it('convert a simple GET request w/o the --url param', function (done) {
 		var result = Converter.convertCurlToRequest('curl --request GET http://www.google.com');
 		expect(result.method).to.equal('GET');
 		expect(result.url).to.equal('http://www.google.com');
 		done();
+	});
+
+	it('append the data params with & if query params are already present in the url', function (done) {
+		convert({
+			type: 'string',
+			data: 'curl -d "a=b" --get http://post.com?name=example'
+		}, function (err, result) {
+			expect(result.result).to.equal(true);
+			expect(result.output[0].data.url).to.equal('http://post.com?name=example&a=b')
+			done();
+		});
 	});
 
 	it('convert a simple GET request w/ headers', function (done) {
@@ -100,11 +189,11 @@ describe('Curl converter should', function() {
 		done();
 	});
 
-	it('convert a request with a forced GET', function (done) {
+	it('convert a request with a forced POST', function (done) {
 		var result = Converter.convertCurlToRequest('curl -X POST --get --url http://www.google.com -d "username=postman&password=newman&randomKey"');
 		
-		// even with -X POST
-		expect(result.method).to.equal('GET');
+		// even with --get
+		expect(result.method).to.equal('POST');
 		expect(result.url).to.equal('http://www.google.com?username=postman&password=newman&randomKey');
 
 		done();

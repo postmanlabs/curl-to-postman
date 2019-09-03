@@ -2,3 +2,6 @@ sample_files
 node_modules
 test
 coverage
+.idea
+.vscode
+.nyc_output
