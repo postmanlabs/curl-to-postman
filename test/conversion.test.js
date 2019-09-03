@@ -83,6 +83,17 @@ describe('Curl converter should', function() {
 		});
 	});
 
+	it('not add ? if data body is empty', function (done) {
+        convert({
+			type: 'string',
+			data: 'curl -d "" --get http://www.google.com'
+		}, function (err, result) {
+			expect(result.result).to.equal(true);
+			expect(result.output[0].data.url).to.equal('http://www.google.com');
+			done();
+		});
+    })
+
 	it('convert a correct simple request', function (done) {
 		var result = convert({
 			type: 'string',
