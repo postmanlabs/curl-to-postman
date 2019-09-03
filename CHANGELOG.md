@@ -1,3 +1,10 @@
+CHANGELOG
+
+#### 0.0.5: Sep 3, 2019
+* Fix for https://github.com/postmanlabs/curl-to-postman/issues/1 - cURL commands with `$` prepended to arguments not importing correctly
+* Fix for https://github.com/postmanlabs/curl-to-postman/issues/2 - the importer was using -X to determine method, not -d or --head
+* Fix for https://github.com/postmanlabs/curl-to-postman/issues/4 - Data parameters are added to the URL if the method is determined to be GET, PUT, or HEAD
+
 #### 0.0.4: June 5, 2019
 * Updated dependency versions
 * Updated lockfile for npm@6.4.1
