@@ -92,7 +92,7 @@ describe('Curl converter should', function() {
 			expect(result.output[0].data.url).to.equal('http://www.google.com');
 			done();
 		});
-    })
+    });
 
 	it('convert a correct simple request', function (done) {
 		var result = convert({
