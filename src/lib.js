@@ -48,16 +48,18 @@ var commander = require('commander'),
     // If URL is http://example.com?a=b and -d 'c=d' => http://example.com?a=b&c=d
     // If URL is http://example.com#fragment and -d 'c=d' => http://example.com#fragment
     addQueryParamsFromDataOption: function(curlObj, urlData, request) {
-    // If --get/-G option is given with --data/-d/--data-binary/--data-urlencode/--data-ascii.
-    // Then the value of data body will append to the URL query params regardless what method is mentioned.
-    // Related Doc - https://curl.haxx.se/docs/manpage.html#-G
+      // If --get/-G option is given with --data/-d/--data-binary/--data-urlencode/--data-ascii.
+      // Then the value of data body will append to the URL query params regardless what method is mentioned.
+      // Related Doc - https://curl.haxx.se/docs/manpage.html#-G
       if (curlObj.get && (curlObj.data.length > 0 || curlObj.dataAscii.length > 0 ||
-        curlObj.dataUrlencode.length > 0 || curlObj.dataBinary)) {
-        if (request.url.includes('?')) {
-          request.url += '&' + urlData;
-        }
-        else {
-          request.url += '?' + urlData;
+         curlObj.dataUrlencode.length > 0 || curlObj.dataBinary)) {
+        if (urlData) {
+          if (request.url.includes('?')) {
+            request.url += '&' + urlData;
+          }
+          else {
+            request.url += '?' + urlData;
+          }
         }
       }
     },
