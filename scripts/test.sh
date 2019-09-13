@@ -8,8 +8,6 @@ set -e;
 
 # information block
 
-# TODO - Add ASCII art banner for Cloud API
-
 echo -e "\033[0m\033[2m";
 date;
 echo "node `node -v`";
