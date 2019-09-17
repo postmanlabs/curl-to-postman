@@ -1,6 +1,6 @@
 #!/bin/bash
 # ----------------------------------------------------------------------------------------------------------------------
-# This script is intended to execute all app and repository unit and integration tests.
+# This script is intended to execute repository unit and integration tests.
 # ----------------------------------------------------------------------------------------------------------------------
 
 # stop on first error
