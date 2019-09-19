@@ -15,13 +15,21 @@
     "uuid": "3.2.1"
   },
   "devDependencies": {
+    "editorconfig": "^0.15.3",
+    "eslint": "5.16.0",
+    "eslint-plugin-jsdoc": "3.8.0",
+    "eslint-plugin-mocha": "5.2.0",
+    "eslint-plugin-security": "1.4.0",
     "expect.js": "0.3.1",
     "mocha": "6.1.4",
-    "nyc": "12.0.2"
+    "nyc": "14.1.1"
   },
   "author": "Postman",
   "license": "Apache",
   "scripts": {
-    "test": "scripts/test.sh"
+    "test": "./scripts/test.sh",
+    "test-unit": "./scripts/test-unit.sh",
+    "test-lint": "./scripts/test-lint.sh",
+    "coverage": "nyc report --reporter=html --reporter=text mocha"
   }
 }
