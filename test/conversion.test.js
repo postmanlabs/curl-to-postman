@@ -17,7 +17,7 @@ describe('Curl converter should', function() {
     });
   });
 
-  it('set request URL correctly irrespective of where it is mentioned', function (done) {
+  it('[Github #7390]: set request URL correctly irrespective of where it is mentioned', function (done) {
     convert({
       type: 'string',
       data: 'curl -i http://example.com -d "{\\"a\\": 1}"'
