@@ -323,9 +323,19 @@ var commander = require('commander'),
           else {
           // if there is an unknown option, we have to take it from the rawArgs
             try {
-              this.requestUrl = curlObj.rawArgs.slice(-1)[0];
+              // regex for checking if a string is a valid URL or not
+              let regex = '(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}' +
+              '|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]' +
+              '+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})';
+
+              curlObj.rawArgs.forEach((rawArg) => {
+                if (rawArg.match(regex)) {
+                  this.requestUrl = rawArg;
+                }
+              });
+
               /* eslint-disable max-depth */
-              if (this.requestUrl.startsWith('-')) {
+              if (this.requestUrl.startsWith('-') || this.requestUrl === '') {
                 // eslint-disable-next-line no-throw-literal
                 throw 'No valid URL found';
               }

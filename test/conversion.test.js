@@ -17,6 +17,17 @@ describe('Curl converter should', function() {
     });
   });
 
+  it('set request URL correctly irrespective of where it is mentioned', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl -i http://example.com -d "{\\"a\\": 1}"'
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output[0].data.url).to.equal('http://example.com');
+      done();
+    });
+  });
+
   it('not throw an error for sending GET with a request body', function (done) {
     convert({
       type: 'string',
