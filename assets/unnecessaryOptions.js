@@ -1,4 +1,4 @@
-// list of all curl non-argument options which are not necessary in postman
+// list of all curl non-argument options which are not necessary
 
 let unnecessaryOptions = [
   '--anyauth',

@@ -268,7 +268,7 @@ var commander = require('commander'),
         }),
         sanitizedArgs = _.map(_.filter(argv, function(arg) {
           // remove arg if it is present in unnecessary options list
-          if (unnecessaryOptions.indexOf(arg) > -1) {
+          if (unnecessaryOptions.includes(arg)) {
             return false;
           }
           return !_.isEmpty(arg);
