@@ -1,6 +1,7 @@
 var commander = require('commander'),
   _ = require('lodash').noConflict(),
   shellQuote = require('shell-quote'),
+  unnecessaryOptions = require('../assets/unnecessaryOptions'),
   program,
 
   curlConverter = {
@@ -265,7 +266,13 @@ var commander = require('commander'),
           // this is done to prevent converting vars like $id in the curl input to ''
           return '$' + key;
         }),
-        sanitizedArgs = _.map(_.filter(argv, function(arg) { return !_.isEmpty(arg); }), function (arg) {
+        sanitizedArgs = _.map(_.filter(argv, function(arg) {
+          // remove arg if it is present in unnecessary options list
+          if (unnecessaryOptions.indexOf(arg) > -1) {
+            return false;
+          }
+          return !_.isEmpty(arg);
+        }), function (arg) {
           if (_.isObject(arg) && arg.op === 'glob') {
             return arg.pattern;
           }
@@ -323,17 +330,7 @@ var commander = require('commander'),
           else {
           // if there is an unknown option, we have to take it from the rawArgs
             try {
-              // regex for checking if a string is a valid URL or not
-              let regex = '(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}' +
-              '|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]' +
-              '+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})';
-
-              curlObj.rawArgs.forEach((rawArg) => {
-                if (rawArg.match(regex)) {
-                  this.requestUrl = rawArg;
-                }
-              });
-
+              this.requestUrl = curlObj.rawArgs.slice(-1)[0];
               /* eslint-disable max-depth */
               if (this.requestUrl.startsWith('-') || this.requestUrl === '') {
                 // eslint-disable-next-line no-throw-literal
