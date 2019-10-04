@@ -332,7 +332,7 @@ var commander = require('commander'),
             try {
               this.requestUrl = curlObj.rawArgs.slice(-1)[0];
               /* eslint-disable max-depth */
-              if (this.requestUrl.startsWith('-') || this.requestUrl === '') {
+              if (this.requestUrl.startsWith('-')) {
                 // eslint-disable-next-line no-throw-literal
                 throw 'No valid URL found';
               }
