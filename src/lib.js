@@ -1,6 +1,7 @@
 var commander = require('commander'),
   _ = require('lodash').noConflict(),
   shellQuote = require('shell-quote'),
+  unnecessaryOptions = require('../assets/unnecessaryOptions'),
   program,
 
   curlConverter = {
@@ -265,7 +266,13 @@ var commander = require('commander'),
           // this is done to prevent converting vars like $id in the curl input to ''
           return '$' + key;
         }),
-        sanitizedArgs = _.map(_.filter(argv, function(arg) { return !_.isEmpty(arg); }), function (arg) {
+        sanitizedArgs = _.map(_.filter(argv, function(arg) {
+          // remove arg if it is present in unnecessary options list
+          if (unnecessaryOptions.includes(arg)) {
+            return false;
+          }
+          return !_.isEmpty(arg);
+        }), function (arg) {
           if (_.isObject(arg) && arg.op === 'glob') {
             return arg.pattern;
           }

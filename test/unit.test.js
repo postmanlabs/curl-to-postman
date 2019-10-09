@@ -105,5 +105,14 @@ describe('sanitizeArgs function should', function () {
 
     done();
   });
+
+  it('remove all unnecessary options which are in the unnecessary options list', function(done) {
+    // In this case -i, -v and -a will be removed
+    let string = 'curl -i -v http://example.com -a',
+      sanitizeArgs = Converter.sanitizeArgs(string);
+    expect(sanitizeArgs[1]).to.equal('curl');
+    expect(sanitizeArgs[2]).to.equal('http://example.com');
+    done();
+  });
 });
 
