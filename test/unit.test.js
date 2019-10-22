@@ -1,5 +1,6 @@
 var Converter = require('../src/lib.js'),
   validate = require('../src/validate.js'),
+  shellQuote = require('../assets/shell-quote'),
   expect = require('expect.js');
 
 describe('trimQuotesFromString should', function() {
@@ -116,3 +117,11 @@ describe('sanitizeArgs function should', function () {
   });
 });
 
+describe('shell-quote should', function() {
+  it('escape characters correctly', function(done) {
+    let string = '\\\'"\\\""',
+      result = shellQuote.parse(string);
+    expect(result[0]).to.equal('\'"');
+    done();
+  });
+});
