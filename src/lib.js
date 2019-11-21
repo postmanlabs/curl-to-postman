@@ -1,6 +1,6 @@
 var commander = require('commander'),
   _ = require('lodash').noConflict(),
-  shellQuote = require('shell-quote'),
+  shellQuote = require('../assets/shell-quote'),
   unnecessaryOptions = require('../assets/unnecessaryOptions'),
   program,
 
@@ -281,7 +281,7 @@ var commander = require('commander'),
             // converting the arg to cookie: abc instead of op: $'cookie: abc'
             return arg.op.substring(2, arg.op.length - 1);
           }
-          else if (arg.startsWith('$') && arg.length > 2) {
+          else if (arg.startsWith('$') && arg.length > 1) {
             // removing $ before every arg like $'POST' and
             // converting the arg to 'POST'
             // link of RFC- http://www.gnu.org/software/bash/manual/html_node/ANSI_002dC-Quoting.html

@@ -28,6 +28,31 @@ describe('Curl converter should', function() {
     });
   });
 
+  describe('[Github #2791]: escaping single and double quotes correctly', function() {
+    it('in case where there is nothing between single and double quote', function(done) {
+      convert({
+        type: 'string',
+        // eslint-disable-next-line quotes
+        data: `curl http://example.com -d $'{"a":"\\\'\\\""}' -H 'Content-type: application/json'`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output[0].data.body.raw).to.equal('{"a":"\'\""}');
+        done();
+      });
+    });
+    it('in case where there is something between single and double quote', function(done) {
+      convert({
+        type: 'string',
+        // eslint-disable-next-line quotes
+        data: `curl http://example.com -d $'{"a":"\\\"abcd\\\'"}' -H 'Content-type: application/json'`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output[0].data.body.raw).to.equal('{"a":"\"abcd\'"}');
+        done();
+      });
+    });
+  });
+
   it('not throw an error for sending GET with a request body', function (done) {
     convert({
       type: 'string',
