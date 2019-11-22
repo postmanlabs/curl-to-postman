@@ -2,7 +2,7 @@ CHANGELOG
 
 #### 0.1.0: Nov 22, 2019
 * Fix for https://github.com/postmanlabs/postman-app-support/issues/2791 - not escaping single quotes correctly in the cURL commands
-* FIx for https://github.com/postmanlabs/postman-app-support/issues/7390 - removing unnecessary options from the cURL commands
+* Fix for https://github.com/postmanlabs/postman-app-support/issues/7390 - removing unnecessary options from the cURL commands
 
 #### 0.0.5: Sep 3, 2019
 * Fix for https://github.com/postmanlabs/curl-to-postman/issues/1 - cURL commands with `$` prepended to arguments not importing correctly
