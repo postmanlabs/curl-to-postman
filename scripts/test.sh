@@ -1,14 +1,23 @@
 #!/bin/bash
-# ----------------------------------------------------------------------------------------------------------------------
-# This script is intended to execute unit tests.
-# ----------------------------------------------------------------------------------------------------------------------
 
-# stop on first error
+# Stop on first error
 set -e;
 
-# run mocha tests
-echo -e "\033[93mRunning sails/mocha unit/convertion tests...\033[0m";
-echo -en "\033[0m\033[2mmocha `mocha --version`\033[0m";
+# information block
 
-# run test
-nyc ./node_modules/.bin/_mocha --reporter spec test/**/*.test.js;
+echo -e "\033[0m\033[2m";
+date;
+echo "node `node -v`";
+echo "npm  v`npm -v`";
+which git &>/dev/null && git --version;
+echo -e "\033[0m";
+
+# git version
+which git &>/dev/null && \
+  echo -e "Running on branch: \033[4m`git rev-parse --abbrev-ref HEAD`\033[0m (${NODE_ENV:=development} environment)";
+
+# run lint
+npm run test-lint;
+
+# run unit tests
+npm run test-unit;
