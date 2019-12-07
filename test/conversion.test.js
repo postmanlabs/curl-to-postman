@@ -33,10 +33,11 @@ describe('Curl converter should', function() {
       convert({
         type: 'string',
         // eslint-disable-next-line quotes
-        data: `curl http://example.com -d $'{"a":"\\'\\\""}' -H 'Content-type: application/json'`
+        data: `curl http://example.com -H 'Content-type: application/json' -d $'{"a":"\\'\\""}'`
       }, function (err, result) {
         expect(result.result).to.equal(true);
-        expect(result.output[0].data.body.raw).to.equal('{"a":"\'\""}');
+        // eslint-disable-next-line quotes
+        expect(result.output[0].data.body.raw).to.equal(`{"a":"'\""}`);
         done();
       });
     });
@@ -44,7 +45,7 @@ describe('Curl converter should', function() {
       convert({
         type: 'string',
         // eslint-disable-next-line quotes
-        data: `curl http://example.com -d $'{"a":"\\\"abcd\\'"}' -H 'Content-type: application/json'`
+        data: `curl http://example.com -d $'{"a":"\"abcd\\'"}' -H 'Content-type: application/json'`
       }, function (err, result) {
         expect(result.result).to.equal(true);
         expect(result.output[0].data.body.raw).to.equal('{"a":"\"abcd\'"}');
