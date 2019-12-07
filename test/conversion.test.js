@@ -33,7 +33,7 @@ describe('Curl converter should', function() {
       convert({
         type: 'string',
         // eslint-disable-next-line quotes
-        data: `curl http://example.com -H 'Content-type: application/json' -d $'{"a":"\\'\\""}'`
+        data: `curl http://example.com -H 'Content-type: application/json' -d $'{"a":"\\'\""}'`
       }, function (err, result) {
         expect(result.result).to.equal(true);
         // eslint-disable-next-line quotes
