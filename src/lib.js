@@ -21,6 +21,7 @@ var commander = require('commander'),
         /* eslint-disable max-len */
         .option('-A, --user-agent <string>', 'An optional user-agent string', null)
         .option('-d, --data [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
+        .option('--data-raw [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
         .option('--data-ascii [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
         .option('--data-urlencode [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
         .option('--data-binary [string]', 'Data sent as-is', null)
@@ -49,11 +50,11 @@ var commander = require('commander'),
     // If URL is http://example.com?a=b and -d 'c=d' => http://example.com?a=b&c=d
     // If URL is http://example.com#fragment and -d 'c=d' => http://example.com#fragment
     addQueryParamsFromDataOption: function(curlObj, urlData, request) {
-      // If --get/-G option is given with --data/-d/--data-binary/--data-urlencode/--data-ascii.
+      // If --get/-G option is given with --data/-d/--data-raw/--data-binary/--data-urlencode/--data-ascii.
       // Then the value of data body will append to the URL query params regardless what method is mentioned.
       // Related Doc - https://curl.haxx.se/docs/manpage.html#-G
       if (curlObj.get && (curlObj.data.length > 0 || curlObj.dataAscii.length > 0 ||
-         curlObj.dataUrlencode.length > 0 || curlObj.dataBinary)) {
+         curlObj.dataUrlencode.length > 0 || curlObj.dataRaw.length > 0 || curlObj.dataBinary)) {
         if (urlData) {
           if (request.url.includes('?')) {
             request.url += '&' + urlData;
@@ -79,9 +80,10 @@ var commander = require('commander'),
       else if (curlObj.get) {
         return 'GET';
       }
-      // checking if the user has mentioned any of these (-d, --data, --data-binary, --data-ascii) in curl command
+      // checking if the user has mentioned any of these (-d, --data, --data-raw
+      // --data-binary, --data-ascii) in curl command
       else if (curlObj.data.length > 0 || curlObj.dataAscii.length > 0 ||
-         curlObj.dataUrlencode.length > 0 || curlObj.dataBinary) {
+         curlObj.dataUrlencode.length > 0 || curlObj.dataRaw.length > 0 || curlObj.dataBinary) {
         return 'POST';
       }
       // set method to GET if no param is present
@@ -117,7 +119,7 @@ var commander = require('commander'),
          curlObj.dataBinary || curlObj.dataUrlencode.length > 0) &&
             curlObj.head && !curlObj.get) {
         throw new Error('Error while parsing cURL: Both (--head/-I) and' +
-         '(-d/--data/--data-binary/--data-ascii/--data-urlencode) are not supported');
+         '(-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       }
 
       // must have a URL
@@ -308,7 +310,9 @@ var commander = require('commander'),
           urlData = '',
           str1,
           str2,
+          str3,
           dataString,
+          dataRawString,
           dataAsciiString;
 
         this.headerPairs = {};
@@ -381,31 +385,39 @@ var commander = require('commander'),
           request.body.mode = 'formdata';
           request.body.formdata = this.getDataForForm(curlObj.form, false);
         }
-        if ((curlObj.data && curlObj.data.length !== 0) || (curlObj.dataAscii && curlObj.dataAscii.length !== 0)) {
+        if ((curlObj.data && curlObj.data.length !== 0) || (curlObj.dataAscii && curlObj.dataAscii.length !== 0) ||
+          (curlObj.dataRaw && curlObj.dataRaw.length !== 0)) {
           if (content_type === '' || content_type === 'application/x-www-form-urlencoded') {
             // No content-type set
             // set to urlencoded
             request.body.mode = 'urlencoded';
-            request.body.urlencoded = this.getDataForUrlEncoded(curlObj.data, true).concat(
-              this.getDataForUrlEncoded(curlObj.dataAscii, false));
+            request.body.urlencoded = this.getDataForUrlEncoded(curlObj.data, true)
+              .concat(this.getDataForUrlEncoded(curlObj.dataRaw, true))
+              .concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
 
             str1 = this.convertArrayToAmpersandString(curlObj.data);
-            str2 = this.convertArrayToAmpersandString(curlObj.dataAscii);
+            str2 = this.convertArrayToAmpersandString(curlObj.dataRaw);
+            str3 = this.convertArrayToAmpersandString(curlObj.dataAscii);
             urlData = str1 +
                         ((str1.length > 0 && str2.length > 0) ? '&' : '') +
-                        str2;
-
+                        str2 +
+                        ((str2.length > 0 && str3.length > 0) ? '&' : '') +
+                        str3;
           }
           else {
             dataString = this.convertArrayToAmpersandString(curlObj.data);
+            dataRawString = this.convertArrayToAmpersandString(curlObj.dataRaw);
             dataAsciiString = this.convertArrayToAmpersandString(curlObj.dataAscii);
             str1 = this.trimQuotesFromString(dataString);
-            str2 = this.trimQuotesFromString(dataAsciiString);
+            str2 = this.trimQuotesFromString(dataRawString);
+            str3 = this.trimQuotesFromString(dataAsciiString);
 
             request.body.mode = 'raw';
             request.body.raw = str1 +
                         ((str1.length > 0 && str2.length > 0) ? '&' : '') +
-                        str2;
+                        str2 +
+                        ((str2.length > 0 && str3.length > 0) ? '&' : '') +
+                        str3;
 
             urlData = request.data;
           }
