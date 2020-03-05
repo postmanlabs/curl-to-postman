@@ -150,7 +150,7 @@ describe('Curl converter should', function() {
     }, function (err, result) {
       expect(result.result).to.equal(false);
       expect(result.reason).to.equal('Error while parsing cURL: Both (--head/-I) and' +
-       '(-d/--data/--data-binary/--data-ascii/--data-urlencode) are not supported');
+       '(-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       done();
     });
   });
@@ -354,6 +354,52 @@ describe('Curl converter should', function() {
      '"https://sample.com" --header "h1: $v1"'),
       header = _.find(result.header, function (header) { return header.key === 'h1'; });
     expect(header.value).to.equal('$v1');
+    done();
+  });
+
+  it('[GitHub #8126] [GitHub #7983] [GitHub #7895]: should import body data with --data-raw argument', function (done) {
+
+    // #8126 content-type application/json, so mode = raw
+    var result = Converter.convertCurlToRequest(`curl --location --request PUT
+      'http://192.168.73.22/api/admin/v0/device/control/status' \
+      --header 'Authorization: <redacted>' \
+      --header 'Content-Type: application/json' \
+      --data-raw '{
+        "deviceID": "ffffffff-9334-1a1b-ffff-ffffef05ac4a",
+        "phone": "+0000000000000"
+      }'`
+      ),
+      rawBody = {
+        deviceID: 'ffffffff-9334-1a1b-ffff-ffffef05ac4a',
+        phone: '+0000000000000'
+      };
+    expect(result.body).to.have.property('mode', 'raw');
+    expect(JSON.parse(result.body.raw)).to.eql(rawBody);
+
+    // #7983 no content-type, so mode = appliation/x-www-form-urlencoded
+    result = Converter.convertCurlToRequest(`curl --location --request POST 'https://postman-echo.com/post'
+    --data-raw 'This is expected to be sent back as part of response body.'`);
+    expect(result.body).to.have.property('mode', 'urlencoded');
+    expect(result.body.urlencoded[0]).to.eql({
+      key: 'This is expected to be sent back as part of response body.',
+      value: '',
+      type: 'text'
+    });
+
+    // # 7895 content-type application/json, so mode = raw
+    result = Converter.convertCurlToRequest(`curl --location --request POST "https://sample.com"
+    --header "Content-Type: application/json"
+    --data-raw '{ "details": { "id": "11", "sample": { "name": "ankit" } } }'`);
+    rawBody = {
+      details: {
+        id: 11,
+        sample: {
+          name: 'ankit'
+        }
+      }
+    };
+    expect(result.body).to.have.property('mode', 'raw');
+    expect(JSON.parse(result.body.raw)).to.eql(rawBody);
     done();
   });
 });
