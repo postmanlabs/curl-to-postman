@@ -360,47 +360,25 @@ describe('Curl converter should', function() {
 
   it('[GitHub #8126] [GitHub #7983] [GitHub #7895]: should import body data with --data-raw argument', function (done) {
 
-    // #8126 content-type application/json, so mode = raw
-    var result = Converter.convertCurlToRequest(`curl --location --request PUT
-      'http://192.168.73.22/api/admin/v0/device/control/status' \
-      --header 'Authorization: <redacted>' \
-      --header 'Content-Type: application/json' \
-      --data-raw '{
-        "deviceID": "ffffffff-9334-1a1b-ffff-ffffef05ac4a",
-        "phone": "+0000000000000"
-      }'`
-      ),
+    // content-type application/json, so mode = raw
+    var result = Converter.convertCurlToRequest(`curl --location --request POST "https://sample.com"
+    --header "Content-Type: application/json"
+    --data-raw '{ "sampleKey": "sampleValue" }'`),
       rawBody = {
-        deviceID: 'ffffffff-9334-1a1b-ffff-ffffef05ac4a',
-        phone: '+0000000000000'
+        sampleKey: 'sampleValue'
       };
     expect(result.body).to.have.property('mode', 'raw');
     expect(JSON.parse(result.body.raw)).to.eql(rawBody);
 
-    // #7983 no content-type, so mode = appliation/x-www-form-urlencoded
+    // no content-type, so mode = appliation/x-www-form-urlencoded
     result = Converter.convertCurlToRequest(`curl --location --request POST 'https://postman-echo.com/post'
-    --data-raw 'This is expected to be sent back as part of response body.'`);
+    --data-raw 'raw body'`);
     expect(result.body).to.have.property('mode', 'urlencoded');
     expect(result.body.urlencoded[0]).to.eql({
-      key: 'This is expected to be sent back as part of response body.',
+      key: 'raw body',
       value: '',
       type: 'text'
     });
-
-    // # 7895 content-type application/json, so mode = raw
-    result = Converter.convertCurlToRequest(`curl --location --request POST "https://sample.com"
-    --header "Content-Type: application/json"
-    --data-raw '{ "details": { "id": "11", "sample": { "name": "ankit" } } }'`);
-    rawBody = {
-      details: {
-        id: 11,
-        sample: {
-          name: 'ankit'
-        }
-      }
-    };
-    expect(result.body).to.have.property('mode', 'raw');
-    expect(JSON.parse(result.body.raw)).to.eql(rawBody);
     done();
   });
 });
