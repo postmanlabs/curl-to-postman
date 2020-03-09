@@ -150,7 +150,7 @@ describe('Curl converter should', function() {
     }, function (err, result) {
       expect(result.result).to.equal(false);
       expect(result.reason).to.equal('Error while parsing cURL: Both (--head/-I) and' +
-       '(-d/--data/--data-binary/--data-ascii/--data-urlencode) are not supported');
+       '(-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       done();
     });
   });
@@ -354,6 +354,30 @@ describe('Curl converter should', function() {
      '"https://sample.com" --header "h1: $v1"'),
       header = _.find(result.header, function (header) { return header.key === 'h1'; });
     expect(header.value).to.equal('$v1');
+    done();
+  });
+
+  it('[GitHub #8126] [GitHub #7983] [GitHub #7895]: should import body data with --data-raw argument', function (done) {
+
+    // content-type application/json, so mode = raw
+    var result = Converter.convertCurlToRequest(`curl --location --request POST "https://sample.com"
+    --header "Content-Type: application/json"
+    --data-raw '{ "sampleKey": "sampleValue" }'`),
+      rawBody = {
+        sampleKey: 'sampleValue'
+      };
+    expect(result.body).to.have.property('mode', 'raw');
+    expect(JSON.parse(result.body.raw)).to.eql(rawBody);
+
+    // no content-type, so mode = appliation/x-www-form-urlencoded
+    result = Converter.convertCurlToRequest(`curl --location --request POST 'https://postman-echo.com/post'
+    --data-raw 'raw body'`);
+    expect(result.body).to.have.property('mode', 'urlencoded');
+    expect(result.body.urlencoded[0]).to.eql({
+      key: 'raw body',
+      value: '',
+      type: 'text'
+    });
     done();
   });
 });
