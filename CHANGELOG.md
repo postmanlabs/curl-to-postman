@@ -1,10 +1,7 @@
 CHANGELOG
 
 #### 0.2.0: Mar 11, 2020
-* Fix for --data-raw import removes body:
-  * https://github.com/postmanlabs/postman-app-support/issues/8126
-  * https://github.com/postmanlabs/postman-app-support/issues/7983
-  * https://github.com/postmanlabs/postman-app-support/issues/7895
+* Fix for https://github.com/postmanlabs/postman-app-support/issues/7895 - --data-raw now successfully imports body
 
 #### 0.1.0: Nov 22, 2019
 * Fix for https://github.com/postmanlabs/postman-app-support/issues/2791 - not escaping single quotes correctly in the cURL commands
