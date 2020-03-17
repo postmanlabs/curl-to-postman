@@ -2,6 +2,7 @@ var commander = require('commander'),
   _ = require('lodash').noConflict(),
   shellQuote = require('../assets/shell-quote'),
   unnecessaryOptions = require('../assets/unnecessaryOptions'),
+  supportedOptions = require('../assets/supportedOptions'),
   program,
 
   curlConverter = {
@@ -262,7 +263,6 @@ var commander = require('commander'),
 
     sanitizeArgs: function(string) {
     // replace -XPOST with -X POST
-      string = string.replace(/(-X)([A-Z]+)/, function (match, x, method) { return x + ' ' + method; });
 
       var argv = shellQuote.parse('node ' + string, function(key) {
           // this is done to prevent converting vars like $id in the curl input to ''
@@ -292,8 +292,17 @@ var commander = require('commander'),
 
           return arg;
 
-        });
-
+        }),
+        i;
+      for (i = 0; i < sanitizedArgs.length; i++) {
+        let arg = sanitizedArgs[i];
+        if (arg.startsWith('-X') && arg !== '-X') {
+          if (!supportedOptions.includes(sanitizedArgs[i - 1])) {
+            sanitizedArgs[i] = '-X';
+            sanitizedArgs.splice(i + 1, 0, arg.slice(2));
+          }
+        }
+      }
       return sanitizedArgs;
     },
 
