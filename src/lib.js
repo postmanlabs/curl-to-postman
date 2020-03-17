@@ -296,10 +296,16 @@ var commander = require('commander'),
         i;
       for (i = 0; i < sanitizedArgs.length; i++) {
         let arg = sanitizedArgs[i];
+        // check for not exact equal to -X also, as it can be of the form -X POST
         if (arg.startsWith('-X') && arg !== '-X') {
+          // suppose arg = -XPOST
           if (!supportedOptions.includes(sanitizedArgs[i - 1])) {
+            // gets POST from -XPOST
+            let method = arg.slice(2);
+            // replaces value at index i to -X from -XPOST
             sanitizedArgs[i] = '-X';
-            sanitizedArgs.splice(i + 1, 0, arg.slice(2));
+            // inserts value 'POST' at index i+1
+            sanitizedArgs.splice(i + 1, 0, method);
           }
         }
       }
