@@ -381,4 +381,52 @@ describe('Curl converter should', function() {
     });
     done();
   });
+
+  it('[GitHub #7806]: should parse -X method correctly', function (done) {
+    var result = Converter.convertCurlToRequest('curl -H "X-XSRF-Token: token_value" https://domain.com');
+    expect(result.method).to.eql('GET');
+    expect(result.header).to.eql([
+      {
+        key: 'X-XSRF-Token',
+        value: 'token_value'
+      }
+    ]);
+
+    // should not tamper -X present elsewhere than method name
+    result = Converter.convertCurlToRequest(`curl -XPUT -H "accept:application/-Xjson"
+    https://domain-Xvalue.com --data-raw "a=-Xb"`);
+    expect(result.method).to.equal('PUT');
+    expect(result.url).to.equal('https://domain-Xvalue.com');
+    expect(result.header).to.eql([
+      {
+        key: 'accept',
+        value: 'application/-Xjson'
+      }
+    ]);
+    expect(result.body).to.eql({
+      mode: 'urlencoded',
+      urlencoded: [
+        {
+          key: 'a',
+          value: '-Xb',
+          type: 'text'
+        }
+      ]
+    });
+
+    // check for various positions of -XMETHOD
+    result = Converter.convertCurlToRequest('curl -XPUT https://domain.com');
+    expect(result.method).to.equal('PUT');
+    result = Converter.convertCurlToRequest('curl https://domain.com -XPUT --data “d“');
+    expect(result.method).to.equal('PUT');
+    result = Converter.convertCurlToRequest('curl https://domain.com --data “d“ -XPUT -H ”a:b”');
+    expect(result.method).to.equal('PUT');
+    result = Converter.convertCurlToRequest('curl https://domain.com --data “d“ -H ”a:b” -XPUT');
+    expect(result.method).to.equal('PUT');
+
+    // more than one -XMETHOD, last one gets the preference
+    result = Converter.convertCurlToRequest('curl -XGET -XPUT https://domain.com');
+    expect(result.method).to.equal('PUT');
+    done();
+  });
 });
