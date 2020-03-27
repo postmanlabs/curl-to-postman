@@ -2,6 +2,7 @@ var commander = require('commander'),
   _ = require('lodash').noConflict(),
   shellQuote = require('../assets/shell-quote'),
   unnecessaryOptions = require('../assets/unnecessaryOptions'),
+  supportedOptions = require('../assets/supportedOptions'),
   program,
 
   curlConverter = {
@@ -17,24 +18,20 @@ var commander = require('commander'),
 
       program.version('0.0.1')
         .allowUnknownOption()
-        .usage('[options] <URL ...>')
-        /* eslint-disable max-len */
-        .option('-A, --user-agent <string>', 'An optional user-agent string', null)
-        .option('-d, --data [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
-        .option('--data-raw [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
-        .option('--data-ascii [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
-        .option('--data-urlencode [string]', 'Sends the specified data to the server with type application/x-www-form-urlencoded. application/x-www-form-urlencoded', collectValues, [])
-        .option('--data-binary [string]', 'Data sent as-is', null)
-        .option('-F, --form <name=content>', 'A single form-data field', collectValues, [])
-        .option('-G, --get', 'Forces the request to be sent as GET, with the --data parameters appended to the query string', null)
-        .option('-H, --header [string]', 'Add a header (can be used multiple times)', collectValues, [])
-        .option('-X, --request [string]', 'Specify a custom request mehod to be used', null)
-        .option('-I, --head', 'Forces the request to be sent as HEAD, with the --data parameters appended to the query string', null)
-        .option('-T, --upload-file [string]', 'Forces the request to be sent as PUT with the specified local file to the server', collectValues, [])
-        .option('--url [string]', 'An alternate way to specify the URL', null)
-        .option('--basic', 'Overrides previous auth settings')
-        .option('-u, --user [string]', 'Basic auth ( -u <username:password>)', null);
-      /* eslint-enable */
+        .usage('[options] <URL ...>');
+      supportedOptions.forEach((option) => {
+        var optionStr = '';
+        optionStr += option.short ? `${option.short}, ${option.long}` : option.long;
+        if (option.format) {
+          optionStr += ` ${option.format}`;
+        }
+        if (option.collectValues) {
+          program.option(optionStr, option.description, collectValues, []);
+        }
+        else {
+          program.option(optionStr, option.description, null);
+        }
+      });
     },
 
     trimQuotesFromString: function(str) {
@@ -261,9 +258,6 @@ var commander = require('commander'),
     },
 
     sanitizeArgs: function(string) {
-    // replace -XPOST with -X POST
-      string = string.replace(/(-X)([A-Z]+)/, function (match, x, method) { return x + ' ' + method; });
-
       var argv = shellQuote.parse('node ' + string, function(key) {
           // this is done to prevent converting vars like $id in the curl input to ''
           return '$' + key;
@@ -292,8 +286,29 @@ var commander = require('commander'),
 
           return arg;
 
-        });
-
+        }),
+        validArgs = [],
+        i;
+      supportedOptions.forEach((option) => {
+        validArgs.push(option.long);
+        option.short && validArgs.push(option.short);
+      });
+      for (i = 0; i < sanitizedArgs.length; i++) {
+        let arg = sanitizedArgs[i];
+        // check for not exact equal to -X also, as it can be of the form -X POST
+        if (arg.startsWith('-X') && arg !== '-X') {
+          // suppose arg = -XPOST
+          // the arg preceding isn't a commander option(e.g. -H)
+          if (!validArgs.includes(sanitizedArgs[i - 1])) {
+            // gets POST from -XPOST
+            let method = arg.slice(2);
+            // replaces value at index i to -X from -XPOST
+            sanitizedArgs[i] = '-X';
+            // inserts value 'POST' at index i+1
+            sanitizedArgs.splice(i + 1, 0, method);
+          }
+        }
+      }
       return sanitizedArgs;
     },
 

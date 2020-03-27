@@ -1,5 +1,8 @@
 CHANGELOG
 
+#### 0.3.0: Mar 27, 2020
+* Fix for https://github.com/postmanlabs/postman-app-support/issues/7806 - -X argument parses method correcrtly, not interfere with any other args
+
 #### 0.2.0: Mar 11, 2020
 * Fix for https://github.com/postmanlabs/postman-app-support/issues/7895 - --data-raw now successfully imports body
 
