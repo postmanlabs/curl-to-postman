@@ -323,12 +323,11 @@ var commander = require('commander'),
           basicAuthParts,
           content_type,
           urlData = '',
-          str1,
-          str2,
-          str3,
+          bodyArr = [],
           dataString,
           dataRawString,
-          dataAsciiString;
+          dataAsciiString,
+          dataUrlencode;
 
         this.headerPairs = {};
 
@@ -401,38 +400,39 @@ var commander = require('commander'),
           request.body.formdata = this.getDataForForm(curlObj.form, false);
         }
         if ((curlObj.data && curlObj.data.length !== 0) || (curlObj.dataAscii && curlObj.dataAscii.length !== 0) ||
-          (curlObj.dataRaw && curlObj.dataRaw.length !== 0)) {
+          (curlObj.dataRaw && curlObj.dataRaw.length !== 0) ||
+          (curlObj.dataUrlencode && curlObj.dataUrlencode.length !== 0)) {
           if (content_type === '' || content_type === 'application/x-www-form-urlencoded') {
             // No content-type set
             // set to urlencoded
             request.body.mode = 'urlencoded';
             request.body.urlencoded = this.getDataForUrlEncoded(curlObj.data, true)
               .concat(this.getDataForUrlEncoded(curlObj.dataRaw, true))
+              .concat(this.getDataForUrlEncoded(curlObj.dataUrlencode, true))
               .concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
 
-            str1 = this.convertArrayToAmpersandString(curlObj.data);
-            str2 = this.convertArrayToAmpersandString(curlObj.dataRaw);
-            str3 = this.convertArrayToAmpersandString(curlObj.dataAscii);
-            urlData = str1 +
-                        ((str1.length > 0 && str2.length > 0) ? '&' : '') +
-                        str2 +
-                        ((str2.length > 0 && str3.length > 0) ? '&' : '') +
-                        str3;
+            bodyArr.push(this.convertArrayToAmpersandString(curlObj.data));
+            bodyArr.push(this.convertArrayToAmpersandString(curlObj.dataRaw));
+            bodyArr.push(this.convertArrayToAmpersandString(curlObj.dataUrlencode));
+            bodyArr.push(this.convertArrayToAmpersandString(curlObj.dataAscii));
+            urlData = _.join(_.reject(bodyArr, (ele) => {
+              return !ele;
+            }), '&');
           }
           else {
             dataString = this.convertArrayToAmpersandString(curlObj.data);
             dataRawString = this.convertArrayToAmpersandString(curlObj.dataRaw);
+            dataUrlencode = this.convertArrayToAmpersandString(curlObj.dataUrlencode);
             dataAsciiString = this.convertArrayToAmpersandString(curlObj.dataAscii);
-            str1 = this.trimQuotesFromString(dataString);
-            str2 = this.trimQuotesFromString(dataRawString);
-            str3 = this.trimQuotesFromString(dataAsciiString);
+            bodyArr.push(this.trimQuotesFromString(dataString));
+            bodyArr.push(this.trimQuotesFromString(dataRawString));
+            bodyArr.push(this.trimQuotesFromString(dataUrlencode));
+            bodyArr.push(this.trimQuotesFromString(dataAsciiString));
 
             request.body.mode = 'raw';
-            request.body.raw = str1 +
-                        ((str1.length > 0 && str2.length > 0) ? '&' : '') +
-                        str2 +
-                        ((str2.length > 0 && str3.length > 0) ? '&' : '') +
-                        str3;
+            request.body.raw = _.join(_.reject(bodyArr, (ele) => {
+              return !ele;
+            }), '&');
 
             urlData = request.data;
           }
