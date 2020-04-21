@@ -428,4 +428,18 @@ describe('Curl converter should', function() {
     expect(result.method).to.equal('PUT');
     done();
   });
+
+  it('[GitHub #8292]: should import body with --data-urlencode argument', function (done) {
+    var result = Converter.convertCurlToRequest(`curl --location --request POST 'https://httpbin.org/post'
+    --header 'accept: application/json'
+    --header 'Content-Type: application/x-www-form-urlencoded'
+    --data-urlencode 'test=test'`);
+    expect(result.body).to.have.property('mode', 'urlencoded');
+    expect(result.body.urlencoded[0]).to.eql({
+      key: 'test',
+      value: 'test',
+      type: 'text'
+    });
+    done();
+  });
 });
