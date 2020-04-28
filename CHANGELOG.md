@@ -1,4 +1,7 @@
 CHANGELOG
+#### 0.5.0: Apr 29, 2020
+* Added a function to get meta data from a curl command.
+
 #### 0.4.0: Apr 21, 2020
 * Fix for https://github.com/postmanlabs/postman-app-support/issues/8292 - --data-urlencode now successfully imports body
 
