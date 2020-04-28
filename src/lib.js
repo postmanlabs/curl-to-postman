@@ -312,6 +312,55 @@ var commander = require('commander'),
       return sanitizedArgs;
     },
 
+    getMetaData: function(curlString) {
+      try {
+        this.initialize();
+        var sanitizeArgs = this.sanitizeArgs(curlString),
+          curlObj = program.parse(sanitizeArgs);
+
+        this.getRequestUrl(curlObj);
+
+        return {
+          url: this.requestUrl
+        };
+      }
+      catch (e) {
+        if (e.message === 'process.exit is not a function') {
+        // happened because of
+          e.message = 'Invalid format for cURL.';
+        }
+        return { error: e };
+      }
+    },
+
+    getRequestUrl: function(curlObj) {
+      this.requestUrl = '';
+      if (curlObj.args.length === 0) {
+        if (curlObj.url) {
+        // url is populated if there's no unknown option
+          this.requestUrl = curlObj.url;
+        }
+        else {
+        // if there is an unknown option, we have to take it from the rawArgs
+          try {
+            this.requestUrl = curlObj.rawArgs.slice(-1)[0];
+            /* eslint-disable max-depth */
+            if (this.requestUrl.startsWith('-')) {
+              // eslint-disable-next-line no-throw-literal
+              throw 'No valid URL found';
+            }
+          }
+          catch (e) {
+            throw new Error('Error while parsing cURL: Could not identify the URL. Please use the --url option.');
+          }
+        }
+        /* eslint-enable */
+      }
+      else {
+        this.requestUrl = curlObj.args[0];
+      }
+    },
+
     convertCurlToRequest: function(curlString) {
       try {
         this.initialize();
@@ -340,30 +389,7 @@ var commander = require('commander'),
 
         this.validateCurlRequest(curlObj);
 
-        if (curlObj.args.length === 0) {
-          if (curlObj.url) {
-          // url is populated if there's no unknown option
-            this.requestUrl = curlObj.url;
-          }
-          else {
-          // if there is an unknown option, we have to take it from the rawArgs
-            try {
-              this.requestUrl = curlObj.rawArgs.slice(-1)[0];
-              /* eslint-disable max-depth */
-              if (this.requestUrl.startsWith('-')) {
-                // eslint-disable-next-line no-throw-literal
-                throw 'No valid URL found';
-              }
-            }
-            catch (e) {
-              throw new Error('Error while parsing cURL: Could not identify the URL. Please use the --url option.');
-            }
-          }
-          /* eslint-enable */
-        }
-        else {
-          this.requestUrl = curlObj.args[0];
-        }
+        this.getRequestUrl(curlObj);
 
         request.method = 'GET';
         if (curlObj.request && curlObj.request.length !== 0) {

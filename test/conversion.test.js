@@ -1,7 +1,36 @@
 var Converter = require('../src/lib'),
   convert = require('../src/convert'),
+  getMetaData = require('../src/getMetaData'),
   expect = require('expect.js'),
   _ = require('lodash');
+
+describe('getMetaData', function () {
+  it('get meta data for a correct simple request', function (done) {
+    getMetaData({
+      type: 'string',
+      data: 'curl --request GET --url http://www.google.com'
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+
+      expect(result.output.length).to.equal(1);
+      expect(result.output[0].type).to.equal('request');
+      expect(result.name).to.equal('http://www.google.com');
+      done();
+    });
+  });
+
+  it('return false result for malformed curl snippet', function (done) {
+    getMetaData({
+      type: 'string',
+      data: 'curl --request'
+    }, function (err, result) {
+      expect(result.result).to.equal(false);
+      expect(result.reason).to.equal('Error while parsing cURL: Could not identify the URL.' +
+        ' Please use the --url option.');
+      done();
+    });
+  });
+});
 
 describe('Curl converter should', function() {
 
