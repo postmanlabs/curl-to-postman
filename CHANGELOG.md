@@ -1,4 +1,7 @@
 CHANGELOG
+#### 0.5.1: Apr 29, 2020
+* Added getMetaData function in root exports
+
 #### 0.5.0: Apr 29, 2020
 * Added a function to get meta data from a curl command.
 
