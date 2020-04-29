@@ -1,6 +1,6 @@
 var Converter = require('../src/lib'),
   convert = require('../src/convert'),
-  getMetaData = require('../src/getMetaData'),
+  getMetaData = require('../index').getMetaData,
   expect = require('expect.js'),
   _ = require('lodash');
 
