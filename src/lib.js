@@ -197,7 +197,7 @@ var commander = require('commander'),
       this.requestUrl = '';
     },
 
-    getDataForForm: function(dataArray, toDecodeUri) {
+    getDataForForm: function(dataArray, toDecodeUri, mode = 'formdata') {
       var numElems = dataArray.length,
         retVal = [],
         equalIndex,
@@ -225,11 +225,25 @@ var commander = require('commander'),
           val = decodeURIComponent(val);
         }
 
-        retVal.push({
-          key: key,
-          value: val,
-          type: 'text'
-        });
+        // file references are only supported in mode = formdata
+        // the value fields which starts with @ denotes a file path
+        // https://curl.haxx.se/docs/manpage.html#-F
+        if (_.startsWith(val, '@') && mode === 'formdata') {
+          val = val.substr(1);
+          retVal.push({
+            key: key,
+            src: val,
+            type: 'file'
+          });
+        }
+        // we don't support file references for x-www-form-urlencoded body mode
+        else {
+          retVal.push({
+            key: key,
+            value: val,
+            type: 'text'
+          });
+        }
       }
 
       return retVal;
@@ -239,7 +253,7 @@ var commander = require('commander'),
       var concatString = dataArray.join('&').trim();
 
       dataArray = this.trimQuotesFromString(concatString).split('&');
-      return this.getDataForForm(dataArray, enableDecoding);
+      return this.getDataForForm(dataArray, enableDecoding, 'urlencoded');
     },
 
     getLowerCaseHeader: function(hk, rHeaders) {
@@ -423,7 +437,7 @@ var commander = require('commander'),
         }
         if (curlObj.form && curlObj.form.length !== 0) {
           request.body.mode = 'formdata';
-          request.body.formdata = this.getDataForForm(curlObj.form, false);
+          request.body.formdata = this.getDataForForm(curlObj.form, false, request.body.mode);
         }
         if ((curlObj.data && curlObj.data.length !== 0) || (curlObj.dataAscii && curlObj.dataAscii.length !== 0) ||
           (curlObj.dataRaw && curlObj.dataRaw.length !== 0) ||

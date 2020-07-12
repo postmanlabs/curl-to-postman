@@ -472,4 +472,15 @@ describe('Curl converter should', function() {
     });
     done();
   });
+
+  it('[GitHub #5299]: should import file references for formdata', function(done) {
+    var result = Converter.convertCurlToRequest('curl -F "abc=@/path/to/file" google.com');
+    expect(result.body).to.have.property('mode', 'formdata');
+    expect(result.body.formdata[0]).to.eql({
+      key: 'abc',
+      src: '/path/to/file',
+      type: 'file'
+    });
+    done();
+  });
 });
