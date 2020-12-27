@@ -69,6 +69,9 @@ function parse (s, env, opts) {
       return { op: s };
     }
 
+    // escape unicode characters
+    s = s.replace(/(\\u[0-9A-Fa-f]{4})/gm, '\\$1');
+
     // Hand-written scanner/parser for Bash quoting rules:
     //
     //  1. inside single quotes, all characters are printed literally.
