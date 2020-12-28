@@ -69,8 +69,12 @@ function parse (s, env, opts) {
       return { op: s };
     }
 
-    // escape unicode characters
-    s = s.replace(/(\\u[0-9A-Fa-f]{4})/gm, '\\$1');
+    var replacer = function (match, p1) {
+      return String.fromCharCode(parseInt(p1, 16));
+    };
+
+    // replace unicode sequence with coresponding unicode character
+    s = s.replace(/\\u([0-9A-Fa-f]{4})/gm, replacer);
 
     // Hand-written scanner/parser for Bash quoting rules:
     //

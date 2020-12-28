@@ -482,7 +482,7 @@ describe('Curl converter should', function() {
 
     expect(result.body).to.have.property('mode', 'raw');
     expect(result.body.raw).to.eql('[{\"operationName\":\"someMutation\",\"variables\":{\"aRequiredVar\":\"foo\"},' +
-      '\"query\":\"mutation someMutation($aRequiredVar: String\\u0021) {\\n  mutateSomething(aRequiredVar: ' +
+      '\"query\":\"mutation someMutation($aRequiredVar: String!) {\\n  mutateSomething(aRequiredVar: ' +
       '$aRequiredVar) {\\n    message\\n    __typename\\n  }\\n}\\n\"}]');
     done();
   });
