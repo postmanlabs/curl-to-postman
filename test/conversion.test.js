@@ -472,4 +472,18 @@ describe('Curl converter should', function() {
     });
     done();
   });
+
+  it('[GitHub #8505] [GitHub #8953]: should correctly handle unicode characters present in data', function (done) {
+    var result = Converter.convertCurlToRequest(`curl 'http://localhost:4000/graphql' \\
+    --data-binary $'[{"operationName":"someMutation","variables":{"aRequiredVar":"foo"},"query":"mutation ` +
+    'someMutation($aRequiredVar: String\\u0021) {\\\\n  mutateSomething(aRequiredVar: $aRequiredVar) ' +
+    `{\\\\n    message\\\\n    __typename\\\\n  }\\\\n}\\\\n"}]' \\
+    --compressed`);
+
+    expect(result.body).to.have.property('mode', 'raw');
+    expect(result.body.raw).to.eql('[{\"operationName\":\"someMutation\",\"variables\":{\"aRequiredVar\":\"foo\"},' +
+      '\"query\":\"mutation someMutation($aRequiredVar: String!) {\\n  mutateSomething(aRequiredVar: ' +
+      '$aRequiredVar) {\\n    message\\n    __typename\\n  }\\n}\\n\"}]');
+    done();
+  });
 });
