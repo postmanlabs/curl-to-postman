@@ -31,6 +31,18 @@ for (var i = 0; i < 4; i++) {
   TOKEN += (Math.pow(16, 8) * Math.random()).toString(16);
 }
 
+/**
+ Regex expression to identify standard unicode escape sequences, matched group corrsponds to hexadecimal code.
+
+ First matching group correspond to Hexadecimal code, between U+0000 and U+00FF (ISO-8859-1)
+ Second matching froup correspond to Unicode, between U+0000 and U+FFFF (the Unicode Basic Multilingual Plane)
+ Third matching froup correspond to Unicode with surrounding curly braces,
+  between U+0000 and U+10FFFF (the entirety of Unicode)
+
+ Ref: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#escape_sequences
+ */
+const unicodeRegExp = /\\x([0-9A-Fa-f]{2})|\\u([0-9A-Fa-f]{4})|\\u\{([0-9A-Fa-f]{1,6})\}/gm;
+
 exports.parse = function (s, env, opts) {
   var mapped = parse(s, env, opts);
   if (typeof env !== 'function') return mapped;
@@ -66,6 +78,26 @@ function parse(s, env, opts) {
       return { op: s };
     }
 
+    var replacer = function (match, p1, p2, p3) {
+      // only one of three will be defined 
+      var matchedCodeUnit = p1 || p2 || p3;
+        // parse matched hexadecimal code to integer
+        EqCodeUnit = parseInt(matchedCodeUnit, 16);
+
+      // don't convert unicode chars outside range
+      if (EqCodeUnit > parseInt('10FFFF', 16)) {
+        return match;
+      }
+      // convert to equivalent unicode character
+      return String.fromCharCode(EqCodeUnit);
+    };
+
+    // resolve ansi_c_like_strings (https://wiki.bash-hackers.org/syntax/quoting#ansi_c_like_strings)
+    if (typeof s === 'string' && s.startsWith('$\'') && s.endsWith('\'') && s.length > 3) {
+      // replace escaped unicode sequence with coresponding unicode character
+      s = s.replace(unicodeRegExp, replacer);
+    }
+
     // Hand-written scanner/parser for Bash quoting rules:
     //
     //  1. inside single quotes, all characters are printed literally.
@@ -97,14 +129,14 @@ function parse(s, env, opts) {
         if (c === quote) {
           quote = false;
         }
-        else if (quote == SQ) {
+        else if (quote == SQ && s.charAt(0) !== DS) {
           out += c;
         }
         else { // Double quote
           if (c === BS) {
             i += 1;
             c = s.charAt(i);
-            if (c === DQ || c === BS || c === DS) {
+            if (c === DQ || c === BS || c === DS || (c === SQ && s.charAt(0) === DS)) {
               out += c;
             } else {
               out += BS + c;
