@@ -1,80 +1,70 @@
 /* eslint-disable */
-var json = typeof JSON !== undefined ? JSON : require('jsonify');
-var map = require('array-map');
-var filter = require('array-filter');
-var reduce = require('array-reduce');
-
 exports.quote = function (xs) {
-  return map(xs, function (s) {
+  return xs.map(function (s) {
     if (s && typeof s === 'object') {
       return s.op.replace(/(.)/g, '\\$1');
     }
-    else if ((/["\s]/).test(s) && !(/'/).test(s)) {
-      return '\'' + s.replace(/(['\\])/g, '\\$1') + '\'';
+    else if (/["\s]/.test(s) && !/'/.test(s)) {
+      return "'" + s.replace(/(['\\])/g, '\\$1') + "'";
     }
-    else if ((/["'\s]/).test(s)) {
+    else if (/["'\s]/.test(s)) {
       return '"' + s.replace(/(["\\$`!])/g, '\\$1') + '"';
     }
-
-    return String(s).replace(/([#!"$&'()*,:;<=>?@\[\\\]^`{|}])/g, '\\$1');
-
+    else {
+      return String(s).replace(/([A-z]:)?([#!"$&'()*,:;<=>?@\[\\\]^`{|}])/g, '$1\\$2');
+    }
   }).join(' ');
 };
 
+// '<(' is process substitution operator and
+// can be parsed the same as control operator
 var CONTROL = '(?:' + [
-    '\\|\\|', '\\&\\&', ';;', '\\|\\&', '[&;()|<>]'
-  ].join('|') + ')',
-  META = '|&;()<> \\t',
-  BAREWORD = '(\\\\[\'"' + META + ']|[^\\s\'"' + META + '])+',
-  SINGLE_QUOTE = '"((\\\\"|[^"])*?)"',
-  DOUBLE_QUOTE = '\'((\\\\\'|[^\'])*?)\'',
+  '\\|\\|', '\\&\\&', ';;', '\\|\\&', '\\<\\(', '>>', '>\\&', '[&;()|<>]'
+].join('|') + ')';
+var META = '|&;()<> \\t';
+var BAREWORD = '(\\\\[\'"' + META + ']|[^\\s\'"' + META + '])+';
+var SINGLE_QUOTE = '"((\\\\"|[^"])*?)"';
+var DOUBLE_QUOTE = '\'((\\\\\'|[^\'])*?)\'';
 
-  TOKEN = '';
+var TOKEN = '';
 for (var i = 0; i < 4; i++) {
   TOKEN += (Math.pow(16, 8) * Math.random()).toString(16);
 }
 
 exports.parse = function (s, env, opts) {
   var mapped = parse(s, env, opts);
-  if (typeof env !== 'function') { return mapped; }
-  return reduce(mapped, function (acc, s) {
-    if (typeof s === 'object') { return acc.concat(s); }
+  if (typeof env !== 'function') return mapped;
+  return mapped.reduce(function (acc, s) {
+    if (typeof s === 'object') return acc.concat(s);
     var xs = s.split(RegExp('(' + TOKEN + '.*?' + TOKEN + ')', 'g'));
-    if (xs.length === 1) { return acc.concat(xs[0]); }
-    return acc.concat(map(filter(xs, Boolean), function (x) {
+    if (xs.length === 1) return acc.concat(xs[0]);
+    return acc.concat(xs.filter(Boolean).map(function (x) {
       if (RegExp('^' + TOKEN).test(x)) {
-        return json.parse(x.split(TOKEN)[1]);
+        return JSON.parse(x.split(TOKEN)[1]);
       }
-      return x;
+      else return x;
     }));
   }, []);
 };
 
-function parse (s, env, opts) {
+function parse(s, env, opts) {
   var chunker = new RegExp([
-      '(' + CONTROL + ')', // control chars
-      '(' + BAREWORD + '|' + SINGLE_QUOTE + '|' + DOUBLE_QUOTE + ')*'
-    ].join('|'), 'g'),
-    match = filter(s.match(chunker), Boolean),
-    commented = false;
+    '(' + CONTROL + ')', // control chars
+    '(' + BAREWORD + '|' + SINGLE_QUOTE + '|' + DOUBLE_QUOTE + ')*'
+  ].join('|'), 'g');
+  var match = s.match(chunker).filter(Boolean);
+  var commented = false;
 
-  if (!match) { return []; }
-  if (!env) { env = {}; }
-  if (!opts) { opts = {}; }
-  return map(match, function (s, j) {
+  if (!match) return [];
+  if (!env) env = {};
+  if (!opts) opts = {};
+  return match.map(function (s, j) {
     if (commented) {
       return;
     }
     if (RegExp('^' + CONTROL + '$').test(s)) {
       return { op: s };
     }
-
-    var replacer = function (match, p1) {
-      return String.fromCharCode(parseInt(p1, 16));
-    };
-
-    // replace unicode sequence with coresponding unicode character
-    s = s.replace(/\\u([0-9A-Fa-f]{4})/gm, replacer);
 
     // Hand-written scanner/parser for Bash quoting rules:
     //
@@ -87,14 +77,14 @@ function parse (s, env, opts) {
     //  4. quote context can switch mid-token if there is no whitespace
     //     between the two quote contexts (e.g. all'one'"token" parses as
     //     "allonetoken")
-    var SQ = '\'',
-      DQ = '"',
-      DS = '$',
-      BS = opts.escape || '\\',
-      quote = false,
-      esc = false,
-      out = '',
-      isGlob = false;
+    var SQ = "'";
+    var DQ = '"';
+    var DS = '$';
+    var BS = opts.escape || '\\';
+    var quote = false;
+    var esc = false;
+    var out = '';
+    var isGlob = false;
 
     for (var i = 0, len = s.length; i < len; i++) {
       var c = s.charAt(i);
@@ -102,9 +92,6 @@ function parse (s, env, opts) {
       if (esc) {
         out += c;
         esc = false;
-      }
-      else if (c === BS) {
-        esc = true;
       }
       else if (quote) {
         if (c === quote) {
@@ -119,8 +106,7 @@ function parse (s, env, opts) {
             c = s.charAt(i);
             if (c === DQ || c === BS || c === DS) {
               out += c;
-            }
-            else {
+            } else {
               out += BS + c;
             }
           }
@@ -145,33 +131,36 @@ function parse (s, env, opts) {
         }
         return [{ comment: s.slice(i + 1) + match.slice(j + 1).join(' ') }];
       }
+      else if (c === BS) {
+        esc = true;
+      }
       else if (c === DS) {
         out += parseEnvVar();
       }
-      else { out += c; }
+      else out += c;
     }
 
-    if (isGlob) { return { op: 'glob', pattern: out }; }
+    if (isGlob) return { op: 'glob', pattern: out };
 
     return out;
 
     function parseEnvVar() {
       i += 1;
       var varend, varname;
-      // debugger
+      //debugger
       if (s.charAt(i) === '{') {
         i += 1;
         if (s.charAt(i) === '}') {
-          throw new Error('Bad substitution: ' + s.substr(i - 2, 3));
+          throw new Error("Bad substitution: " + s.substr(i - 2, 3));
         }
         varend = s.indexOf('}', i);
         if (varend < 0) {
-          throw new Error('Bad substitution: ' + s.substr(i));
+          throw new Error("Bad substitution: " + s.substr(i));
         }
         varname = s.substr(i, varend - i);
         i = varend;
       }
-      else if ((/[*@#?$!_\-]/).test(s.charAt(i))) {
+      else if (/[*@#?$!_\-]/.test(s.charAt(i))) {
         varname = s.charAt(i);
         i += 1;
       }
@@ -180,8 +169,7 @@ function parse (s, env, opts) {
         if (!varend) {
           varname = s.substr(i);
           i = s.length;
-        }
-        else {
+        } else {
           varname = s.substr(i, varend.index);
           i += varend.index - 1;
         }
@@ -190,20 +178,23 @@ function parse (s, env, opts) {
     }
   })
     // finalize parsed aruments
-    .reduce(function(prev, arg) {
+    .reduce(function (prev, arg) {
       if (arg === undefined) {
         return prev;
       }
       return prev.concat(arg);
     }, []);
 
-  function getVar (_, pre, key) {
+  function getVar(_, pre, key) {
     var r = typeof env === 'function' ? env(key) : env[key];
-    if (r === undefined) { r = ''; }
+    if (r === undefined && key != '')
+      r = '';
+    else if (r === undefined)
+      r = '$';
 
     if (typeof r === 'object') {
-      return pre + TOKEN + json.stringify(r) + TOKEN;
+      return pre + TOKEN + JSON.stringify(r) + TOKEN;
     }
-    return pre + r;
+    else return pre + r;
   }
 }
