@@ -472,4 +472,44 @@ describe('Curl converter should', function() {
     });
     done();
   });
+
+  it('[GitHub #8505] [GitHub #8953]: should correctly handle unicode characters present in data', function (done) {
+    var result = Converter.convertCurlToRequest(`curl 'http://localhost:4000/graphql' \\
+    --data-binary $'[{"operationName":"someMutation","variables":{"aRequiredVar":"foo\\x78bar\\u{1064A9}"},"query":` +
+    '"mutation someMutation($aRequiredVar: String\\u0021) {\\\\n  mutateSomething(aRequiredVar: $aRequiredVar) ' +
+    `{\\\\n    message\\\\n    __typename\\\\n  }\\\\n}\\\\n"}]' \\
+    --compressed`);
+
+    expect(result.body).to.have.property('mode', 'raw');
+    expect(result.body.raw).to.eql('[{\"operationName\":\"someMutation\",\"variables\":{\"aRequiredVar\":' +
+      '\"fooxbar撩\"},\"query\":\"mutation someMutation($aRequiredVar: String!) {\\n  mutateSomething(aRequiredVar: ' +
+      '$aRequiredVar) {\\n    message\\n    __typename\\n  }\\n}\\n\"}]');
+    done();
+  });
+
+  it('[GitHub #9391] [GitHub #10090]: should correctly handle escaped newlines present in data', function (done) {
+    var result = Converter.convertCurlToRequest(`curl 'https://api.secretdomain.com/v3/login.awp' \\
+      -H 'authority: api.secretdomain.com' \\
+      -H 'accept: application/json, text/plain, */*' \\
+      -H 'content-type: application/x-www-form-urlencoded' \\
+      -H 'origin: https://www.secretdomain.com' \\
+      --data-raw $'data={\n  "username": "someValue",\n  "password": "somethingSecret",\n  "token": "secret-token"\n}'\\
+      --compressed`);
+
+    expect(result.body).to.have.property('mode', 'urlencoded');
+    expect(result.body.urlencoded[0].value).to.eql('{\n  "username": "someValue",\n  "password": "somethingSecret"' +
+      ',\n  "token": "secret-token"\n}');
+    expect(JSON.parse(result.body.urlencoded[0].value)).to.be.an.object;
+    done();
+  });
+
+  it('[GitHub #10090]: should correctly handle escaped newlines present in data', function (done) {
+    var result = Converter.convertCurlToRequest(`curl 'http://host' \\
+    --data-binary $'{\n  "foo": "bar"\n}'`);
+
+    expect(result.body).to.have.property('mode', 'raw');
+    expect(result.body.raw).to.eql('{\n  "foo": "bar"\n}');
+    expect(JSON.parse(result.body.raw)).to.be.an.object;
+    done();
+  });
 });
