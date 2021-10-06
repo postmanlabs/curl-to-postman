@@ -512,4 +512,17 @@ describe('Curl converter should', function() {
     expect(JSON.parse(result.body.raw)).to.be.an.object;
     done();
   });
+
+  it('[GitHub #4772]: should correctly handle escaped newlines present in urlencoded data', function (done) {
+    var result = Converter.convertCurlToRequest(`curl 'https://api.secretdomain.com/v3/login.awp' --data-raw \\
+      $'data={\n    "username": "someValue",\n    "password": "somethingSecret",\n    "token": "secret-token"\n}' \\
+      --compressed`);
+
+    expect(result.body).to.have.property('mode', 'urlencoded');
+    expect(result.body.urlencoded.length).to.eql(1);
+    expect(result.body.urlencoded[0].key).to.eql('data');
+    expect(result.body.urlencoded[0].value).to.eql('{\n    \"username\": \"someValue\",\n    \"password\": ' +
+      '\"somethingSecret\",\n    \"token\": \"secret-token\"\n}');
+    done();
+  });
 });
