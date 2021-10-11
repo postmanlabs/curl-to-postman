@@ -1,9 +1,11 @@
-var commander = require('commander'),
+const commander = require('commander'),
   _ = require('lodash').noConflict(),
   shellQuote = require('../assets/shell-quote'),
   unnecessaryOptions = require('../assets/unnecessaryOptions'),
   supportedOptions = require('../assets/supportedOptions'),
-  program,
+  formDataOptions = ['-d', '--data', '--data-raw', '--data-binary', '--data-ascii'];
+
+var program,
 
   curlConverter = {
     requestUrl: '',
@@ -361,6 +363,75 @@ var commander = require('commander'),
       }
     },
 
+    /**
+     * Parses raw data and generates object from it by understanding content present in it
+     *
+     * @param {String} data - Raw data string
+     * @param {String} contentType - Content type header value
+     * @returns {Object} Parsed data in key-value pairs as object
+     */
+    parseFormBoundryData: function (data, contentType) {
+      var m,
+        boundary,
+        parts,
+        parsedFormData = [];
+
+      // Examples for content types:
+      //      multipart/form-data; boundary="----7dd322351017c"; ...
+      //      multipart/form-data; boundary=----7dd322351017c; ...
+      m = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
+
+      // \r\n is part of the boundary.
+      boundary = '\r\n--' + (m[1] || m[2]);
+
+      // split data based on boundary string
+      parts = data.split(new RegExp(boundary));
+
+      _.forEach(parts, (part) => {
+        var subparts = part.split('\r\n\r\n'),
+          headers,
+          formDataRow = {};
+
+        if (subparts.length < 2) {
+          return;
+        }
+
+        // identify key/name from subpart 1
+        headers = subparts[0].split('\r\n');
+        _.forEach(headers, (header) => {
+          // first try to identify if header contains both name and filename
+          var matchResult = header.match(/^.*name="([^"]*)"\s*;\s*filename="([^"]*)"$/);
+
+          if (matchResult) {
+            // keep formdata row type as file if filename is present
+            formDataRow = {
+              key: matchResult[1],
+              value: matchResult[2],
+              type: 'file'
+            };
+          }
+          else {
+            // if both name and filename is not present, use "name" as key and data present in subpart[1] as value
+            matchResult = header.match(/^.*name="([^"]*)"$/);
+            if (matchResult) {
+              formDataRow = {
+                key: matchResult[1],
+                value: subparts[1],
+                type: 'text'
+              };
+            }
+          }
+        });
+
+        // assign key values to parsed data
+        if (!_.isEmpty(formDataRow)) {
+          parsedFormData.push(formDataRow);
+        }
+      });
+
+      return parsedFormData;
+    },
+
     convertCurlToRequest: function(curlString) {
       try {
         this.initialize();
@@ -376,7 +447,8 @@ var commander = require('commander'),
           dataString,
           dataRawString,
           dataAsciiString,
-          dataUrlencode;
+          dataUrlencode,
+          formData;
 
         this.headerPairs = {};
 
@@ -421,11 +493,11 @@ var commander = require('commander'),
           request.body.mode = 'raw';
           request.body.raw = curlObj.dataBinary;
         }
-        if (curlObj.form && curlObj.form.length !== 0) {
+        else if (curlObj.form && curlObj.form.length !== 0) {
           request.body.mode = 'formdata';
           request.body.formdata = this.getDataForForm(curlObj.form, false);
         }
-        if ((curlObj.data && curlObj.data.length !== 0) || (curlObj.dataAscii && curlObj.dataAscii.length !== 0) ||
+        else if ((curlObj.data && curlObj.data.length !== 0) || (curlObj.dataAscii && curlObj.dataAscii.length !== 0) ||
           (curlObj.dataRaw && curlObj.dataRaw.length !== 0) ||
           (curlObj.dataUrlencode && curlObj.dataUrlencode.length !== 0)) {
           if (content_type === '' || content_type === 'application/x-www-form-urlencoded') {
@@ -462,6 +534,20 @@ var commander = require('commander'),
 
             urlData = request.data;
           }
+        }
+        else if (_.toLower(content_type).startsWith('multipart/form-data')) {
+          /**
+           * get data arg value from raw args as formdata boundary separated string
+           * is not parsed as any of data options by commander
+           */
+          _.forEach(curlObj.rawArgs, (arg, index) => {
+            if (_.includes(formDataOptions, arg)) {
+              formData = _.get(curlObj.rawArgs, index + 1);
+              return false;
+            }
+          });
+          request.body.mode = 'formdata';
+          request.body.formdata = this.parseFormBoundryData(formData, content_type);
         }
 
         // add data to query parameteres in the URL from --data or -d option

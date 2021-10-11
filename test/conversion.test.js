@@ -525,4 +525,25 @@ describe('Curl converter should', function() {
       '\"somethingSecret\",\n    \"token\": \"secret-token\"\n}');
     done();
   });
+
+  it('[GitHub #7895]: should correctly handle raw form data with boundry separated body', function (done) {
+    var result = Converter.convertCurlToRequest(`curl 'https://httpbin.org/post'
+    -H 'Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7oJTsSWYoA2LdaPx' --data $'` +
+    '------WebKitFormBoundary7oJTsSWYoA2LdaPx\r\nContent-Disposition: form-data; name="source"\r\n\r\ns\r\n' +
+    '------WebKitFormBoundary7oJTsSWYoA2LdaPx\r\nContent-Disposition: form-data; name="files"; ' +
+    'filename="index.js"\r\n\r\nt\r\n------WebKitFormBoundary7oJTsSWYoA2LdaPx--\r\n\' --compressed');
+
+    expect(result.body).to.have.property('mode', 'formdata');
+    expect(result.body.formdata[0]).to.eql({
+      key: 'source',
+      value: 's',
+      type: 'text'
+    });
+    expect(result.body.formdata[1]).to.eql({
+      key: 'files',
+      value: 'index.js',
+      type: 'file'
+    });
+    done();
+  });
 });
