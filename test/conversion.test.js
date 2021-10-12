@@ -546,4 +546,19 @@ describe('Curl converter should', function() {
     });
     done();
   });
+
+  it('[GitHub #10068]: should correctly handle raw form data with boundry separated body', function (done) {
+    var result = Converter.convertCurlToRequest(`curl --location --request POST 'https://httpbin.org/post' \\
+    --header 'Content-Type: multipart/form-data' \\
+    --form 'name="value"' \\
+    --form 'request="{\"hello\":\"world\"}"'`);
+
+    expect(result.body).to.have.property('mode', 'formdata');
+    expect(result.body.formdata.length).to.eql(2);
+    expect(result.body.formdata[0].key).to.eql('name');
+    expect(result.body.formdata[0].value).to.eql('value');
+    expect(result.body.formdata[1].key).to.eql('request');
+    expect(result.body.formdata[1].value).to.eql('{\"hello\":\"world\"}');
+    done();
+  });
 });

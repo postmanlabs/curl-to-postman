@@ -220,6 +220,13 @@ var program,
         else {
           key = thisElem.substring(0, equalIndex);
           val = thisElem.substring(equalIndex + 1, thisElem.length);
+
+          // remove starting and ending double quotes if present
+          if (val.length > 1 && val.startsWith('"') && val.endsWith('"')) {
+            val = val.slice(1, -1);
+            // unescape all double quotes as we have removed starting and ending double quotes
+            val = val.replace(/\\\"/gm, '"');
+          }
         }
 
         if (toDecodeUri) {
@@ -548,6 +555,16 @@ var program,
           });
           request.body.mode = 'formdata';
           request.body.formdata = this.parseFormBoundryData(formData, content_type);
+        }
+
+        if (request.body.mode === 'formdata') {
+          /**
+           * remove content-type header for form-data body type as it overrides the header added by postman
+           * resulting in incorrect boundary details in header value
+           */
+          _.remove(request.header, (h) => {
+            return _.toLower(h.key) === 'content-type';
+          });
         }
 
         // add data to query parameteres in the URL from --data or -d option
