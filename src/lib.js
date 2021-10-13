@@ -199,14 +199,17 @@ var program,
       this.requestUrl = '';
     },
 
-    getDataForForm: function(dataArray, toDecodeUri) {
+    getDataForForm: function(dataArray, toDecodeUri, mode) {
       var numElems = dataArray.length,
         retVal = [],
         equalIndex,
         key = '',
-        val = '';
+        val = '',
+        headerMatch;
+
       for (let i = 0; i < numElems; i++) {
-        let thisElem = dataArray[i];
+        let thisElem = dataArray[i],
+          paramObj = { type: 'text' };
 
         if (dataArray[i] === '') { continue; }
 
@@ -221,11 +224,27 @@ var program,
           key = thisElem.substring(0, equalIndex);
           val = thisElem.substring(equalIndex + 1, thisElem.length);
 
-          // remove starting and ending double quotes if present
-          if (val.length > 1 && val.startsWith('"') && val.endsWith('"')) {
-            val = val.slice(1, -1);
-            // unescape all double quotes as we have removed starting and ending double quotes
-            val = val.replace(/\\\"/gm, '"');
+          if (mode === 'formdata') {
+            headerMatch = val.match(/;\s*type=([^\s\/;]+)\/([^;\s]+)\s*(?:;(.*))?$/);
+
+            // remove content type header from value
+            if (headerMatch) {
+              paramObj.contentType = headerMatch[1] + '/' + headerMatch[2];
+              val = val.slice(0, headerMatch.index);
+            }
+
+            // set type of param as file for value starting with @
+            if (val.startsWith('@')) {
+              paramObj.type = 'file';
+              val = val.slice(1);
+            }
+
+            // remove starting and ending double quotes if present
+            if (val.length > 1 && val.startsWith('"') && val.endsWith('"')) {
+              val = val.slice(1, -1);
+              // unescape all double quotes as we have removed starting and ending double quotes
+              val = val.replace(/\\\"/gm, '"');
+            }
           }
         }
 
@@ -234,11 +253,8 @@ var program,
           val = decodeURIComponent(val);
         }
 
-        retVal.push({
-          key: key,
-          value: val,
-          type: 'text'
-        });
+        _.assign(paramObj, { key, value: val });
+        retVal.push(paramObj);
       }
 
       return retVal;
@@ -502,7 +518,7 @@ var program,
         }
         else if (curlObj.form && curlObj.form.length !== 0) {
           request.body.mode = 'formdata';
-          request.body.formdata = this.getDataForForm(curlObj.form, false);
+          request.body.formdata = this.getDataForForm(curlObj.form, false, request.body.mode);
         }
         else if ((curlObj.data && curlObj.data.length !== 0) || (curlObj.dataAscii && curlObj.dataAscii.length !== 0) ||
           (curlObj.dataRaw && curlObj.dataRaw.length !== 0) ||
