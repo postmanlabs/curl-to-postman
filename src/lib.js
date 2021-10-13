@@ -225,6 +225,12 @@ var program,
           val = thisElem.substring(equalIndex + 1, thisElem.length);
 
           if (mode === 'formdata') {
+            /**
+             * Following regexp tries to find sytax like "";type=application/json" from value.
+             * Here first matching group is type of content-type and
+             * second matching group is subtype of content type
+             * Similar to usecase: https://github.com/postmanlabs/openapi-to-postman/blob/develop/lib/schemaUtils.js
+             */
             headerMatch = val.match(/;\s*type=([^\s\/;]+)\/([^;\s]+)\s*(?:;(.*))?$/);
 
             // remove content type header from value
