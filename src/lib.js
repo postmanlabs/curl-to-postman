@@ -227,8 +227,8 @@ var program,
           if (mode === 'formdata') {
             /**
              * Following regexp tries to find sytax like "";type=application/json" from value.
-             * Here first matching group is type of content-type and
-             * second matching group is subtype of content type
+             * Here first matching group is type of content-type (i.e. "application") and
+             * second matching group is subtype of content type (i.e. "json")
              * Similar to usecase: https://github.com/postmanlabs/openapi-to-postman/blob/develop/lib/schemaUtils.js
              */
             headerMatch = val.match(/;\s*type=([^\s\/;]+)\/([^;\s]+)\s*(?:;(.*))?$/);
