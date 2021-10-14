@@ -30,6 +30,7 @@
     "test": "./scripts/test.sh",
     "test-unit": "./scripts/test-unit.sh",
     "test-lint": "./scripts/test-lint.sh",
-    "coverage": "nyc report --reporter=html --reporter=text mocha"
+    "coverage": "nyc report --reporter=html --reporter=text mocha",
+    "release": "./scripts/release.sh"
   }
 }
