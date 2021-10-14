@@ -35,13 +35,25 @@ for (var i = 0; i < 4; i++) {
  Regex expression to identify standard unicode escape sequences, matched group corrsponds to hexadecimal code.
 
  First matching group correspond to Hexadecimal code, between U+0000 and U+00FF (ISO-8859-1)
- Second matching froup correspond to Unicode, between U+0000 and U+FFFF (the Unicode Basic Multilingual Plane)
- Third matching froup correspond to Unicode with surrounding curly braces,
+ Second matching group correspond to Unicode, between U+0000 and U+FFFF (the Unicode Basic Multilingual Plane)
+ Third matching group correspond to Unicode with surrounding curly braces,
   between U+0000 and U+10FFFF (the entirety of Unicode)
+ Forth matching group correspond to single character codes
 
  Ref: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#escape_sequences
  */
-const unicodeRegExp = /\\x([0-9A-Fa-f]{2})|\\u([0-9A-Fa-f]{4})|\\u\{([0-9A-Fa-f]{1,6})\}/gm;
+const unicodeRegExp = /\\x([0-9A-Fa-f]{2})|\\u([0-9A-Fa-f]{4})|\\u\{([0-9A-Fa-f]{1,6})\}|\\([\s\S])/gm;
+
+// Single character escape sequence mapping to corresponding character 
+const escapeCharMap = {
+  'b': '\b',
+  'f': '\f',
+  'n': '\n',
+  'r': '\r',
+  't': '\t',
+  'v': '\v',
+  '0': '\0',
+};
 
 exports.parse = function (s, env, opts) {
   var mapped = parse(s, env, opts);
@@ -78,8 +90,12 @@ function parse(s, env, opts) {
       return { op: s };
     }
 
-    var replacer = function (match, p1, p2, p3) {
-      // only one of three will be defined 
+    var replacer = function (match, p1, p2, p3, p4) {
+      // escape single character sequence by replacing it with actual char. i.e. "\\n" to "\n"
+      if (p4) {
+        return escapeCharMap[p4] || `\\${p4}`;
+      }
+      // only one of three will be defined at a time
       var matchedCodeUnit = p1 || p2 || p3;
         // parse matched hexadecimal code to integer
         EqCodeUnit = parseInt(matchedCodeUnit, 16);

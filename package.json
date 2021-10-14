@@ -9,7 +9,7 @@
     "source_format": "cURL"
   },
   "dependencies": {
-    "commander": "2.15.1",
+    "commander": "2.20.3",
     "lodash": "^4.17.11",
     "shell-quote": "1.6.1",
     "uuid": "3.2.1"

@@ -512,4 +512,86 @@ describe('Curl converter should', function() {
     expect(JSON.parse(result.body.raw)).to.be.an.object;
     done();
   });
+
+  it('[GitHub #4772]: should correctly handle escaped newlines present in urlencoded data', function (done) {
+    var result = Converter.convertCurlToRequest(`curl 'https://api.secretdomain.com/v3/login.awp' --data-raw \\
+      $'data={\n    "username": "someValue",\n    "password": "somethingSecret",\n    "token": "secret-token"\n}' \\
+      --compressed`);
+
+    expect(result.body).to.have.property('mode', 'urlencoded');
+    expect(result.body.urlencoded.length).to.eql(1);
+    expect(result.body.urlencoded[0].key).to.eql('data');
+    expect(result.body.urlencoded[0].value).to.eql('{\n    \"username\": \"someValue\",\n    \"password\": ' +
+      '\"somethingSecret\",\n    \"token\": \"secret-token\"\n}');
+    done();
+  });
+
+  it('[GitHub #7895]: should correctly handle raw form data with boundry separated body', function (done) {
+    var result = Converter.convertCurlToRequest(`curl 'https://httpbin.org/post'
+    -H 'Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7oJTsSWYoA2LdaPx' --data $'` +
+    '------WebKitFormBoundary7oJTsSWYoA2LdaPx\r\nContent-Disposition: form-data; name="source"\r\n\r\ns\r\n' +
+    '------WebKitFormBoundary7oJTsSWYoA2LdaPx\r\nContent-Disposition: form-data; name="files"; ' +
+    'filename="index.js"\r\n\r\nt\r\n------WebKitFormBoundary7oJTsSWYoA2LdaPx--\r\n\' --compressed');
+
+    expect(result.body).to.have.property('mode', 'formdata');
+    expect(result.body.formdata[0]).to.eql({
+      key: 'source',
+      value: 's',
+      type: 'text'
+    });
+    expect(result.body.formdata[1]).to.eql({
+      key: 'files',
+      value: 'index.js',
+      type: 'file'
+    });
+    done();
+  });
+
+  it('[GitHub #10068]: should correctly handle raw form data with boundry separated body', function (done) {
+    var result = Converter.convertCurlToRequest(`curl --location --request POST 'https://httpbin.org/post' \\
+    --header 'Content-Type: multipart/form-data' \\
+    --form 'name="value"' \\
+    --form 'request="{\"hello\":\"world\"}"'`);
+
+    expect(result.body).to.have.property('mode', 'formdata');
+    expect(result.body.formdata.length).to.eql(2);
+    expect(result.body.formdata[0].key).to.eql('name');
+    expect(result.body.formdata[0].value).to.eql('value');
+    expect(result.body.formdata[1].key).to.eql('request');
+    expect(result.body.formdata[1].value).to.eql('{\"hello\":\"world\"}');
+    done();
+  });
+
+  it('[GitHub #5299]: should correctly import file references for formdata', function(done) {
+    var result = Converter.convertCurlToRequest('curl -F "content=@/Users/John/file.txt" google.com');
+    expect(result.body).to.have.property('mode', 'formdata');
+    expect(result.body.formdata[0]).to.eql({
+      key: 'content',
+      value: '/Users/John/file.txt',
+      type: 'file'
+    });
+    done();
+  });
+
+  it('[GitHub #8506]: should correctly add content type field for formdata', function(done) {
+    var result = Converter.convertCurlToRequest(`curl --location --request POST 'https://httpbin.org/post' \\
+    --header 'Content-Type: multipart/form-data' \\
+    --form 'request={ "title": "My template" };type=application/json' \\
+    --form 'contentFile=@/tmp/archive.zip;type=application/octet-stream'`);
+
+    expect(result.body).to.have.property('mode', 'formdata');
+    expect(result.body.formdata[0]).to.eql({
+      key: 'request',
+      value: '{ "title": "My template" }',
+      contentType: 'application/json',
+      type: 'text'
+    });
+    expect(result.body.formdata[1]).to.eql({
+      key: 'contentFile',
+      value: '/tmp/archive.zip',
+      contentType: 'application/octet-stream',
+      type: 'file'
+    });
+    done();
+  });
 });

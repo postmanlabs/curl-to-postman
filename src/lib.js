@@ -1,9 +1,11 @@
-var commander = require('commander'),
+const commander = require('commander'),
   _ = require('lodash').noConflict(),
   shellQuote = require('../assets/shell-quote'),
   unnecessaryOptions = require('../assets/unnecessaryOptions'),
   supportedOptions = require('../assets/supportedOptions'),
-  program,
+  formDataOptions = ['-d', '--data', '--data-raw', '--data-binary', '--data-ascii'];
+
+var program,
 
   curlConverter = {
     requestUrl: '',
@@ -197,14 +199,17 @@ var commander = require('commander'),
       this.requestUrl = '';
     },
 
-    getDataForForm: function(dataArray, toDecodeUri) {
+    getDataForForm: function(dataArray, toDecodeUri, mode) {
       var numElems = dataArray.length,
         retVal = [],
         equalIndex,
         key = '',
-        val = '';
+        val = '',
+        headerMatch;
+
       for (let i = 0; i < numElems; i++) {
-        let thisElem = dataArray[i];
+        let thisElem = dataArray[i],
+          paramObj = { type: 'text' };
 
         if (dataArray[i] === '') { continue; }
 
@@ -218,6 +223,35 @@ var commander = require('commander'),
         else {
           key = thisElem.substring(0, equalIndex);
           val = thisElem.substring(equalIndex + 1, thisElem.length);
+
+          if (mode === 'formdata') {
+            /**
+             * Following regexp tries to find sytax like "";type=application/json" from value.
+             * Here first matching group is type of content-type (i.e. "application") and
+             * second matching group is subtype of content type (i.e. "json")
+             * Similar to usecase: https://github.com/postmanlabs/openapi-to-postman/blob/develop/lib/schemaUtils.js
+             */
+            headerMatch = val.match(/;\s*type=([^\s\/;]+)\/([^;\s]+)\s*(?:;(.*))?$/);
+
+            // remove content type header from value
+            if (headerMatch) {
+              paramObj.contentType = headerMatch[1] + '/' + headerMatch[2];
+              val = val.slice(0, headerMatch.index);
+            }
+
+            // set type of param as file for value starting with @
+            if (val.startsWith('@')) {
+              paramObj.type = 'file';
+              val = val.slice(1);
+            }
+
+            // remove starting and ending double quotes if present
+            if (val.length > 1 && val.startsWith('"') && val.endsWith('"')) {
+              val = val.slice(1, -1);
+              // unescape all double quotes as we have removed starting and ending double quotes
+              val = val.replace(/\\\"/gm, '"');
+            }
+          }
         }
 
         if (toDecodeUri) {
@@ -225,11 +259,8 @@ var commander = require('commander'),
           val = decodeURIComponent(val);
         }
 
-        retVal.push({
-          key: key,
-          value: val,
-          type: 'text'
-        });
+        _.assign(paramObj, { key, value: val });
+        retVal.push(paramObj);
       }
 
       return retVal;
@@ -361,6 +392,75 @@ var commander = require('commander'),
       }
     },
 
+    /**
+     * Parses raw data and generates object from it by understanding content present in it
+     *
+     * @param {String} data - Raw data string
+     * @param {String} contentType - Content type header value
+     * @returns {Object} Parsed data in key-value pairs as object
+     */
+    parseFormBoundryData: function (data, contentType) {
+      var m,
+        boundary,
+        parts,
+        parsedFormData = [];
+
+      // Examples for content types:
+      //      multipart/form-data; boundary="----7dd322351017c"; ...
+      //      multipart/form-data; boundary=----7dd322351017c; ...
+      m = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
+
+      // \r\n is part of the boundary.
+      boundary = '\r\n--' + (m[1] || m[2]);
+
+      // split data based on boundary string
+      parts = data.split(new RegExp(boundary));
+
+      _.forEach(parts, (part) => {
+        var subparts = part.split('\r\n\r\n'),
+          headers,
+          formDataRow = {};
+
+        if (subparts.length < 2) {
+          return;
+        }
+
+        // identify key/name from subpart 1
+        headers = subparts[0].split('\r\n');
+        _.forEach(headers, (header) => {
+          // first try to identify if header contains both name and filename
+          var matchResult = header.match(/^.*name="([^"]*)"\s*;\s*filename="([^"]*)"$/);
+
+          if (matchResult) {
+            // keep formdata row type as file if filename is present
+            formDataRow = {
+              key: matchResult[1],
+              value: matchResult[2],
+              type: 'file'
+            };
+          }
+          else {
+            // if both name and filename is not present, use "name" as key and data present in subpart[1] as value
+            matchResult = header.match(/^.*name="([^"]*)"$/);
+            if (matchResult) {
+              formDataRow = {
+                key: matchResult[1],
+                value: subparts[1],
+                type: 'text'
+              };
+            }
+          }
+        });
+
+        // assign key values to parsed data
+        if (!_.isEmpty(formDataRow)) {
+          parsedFormData.push(formDataRow);
+        }
+      });
+
+      return parsedFormData;
+    },
+
     convertCurlToRequest: function(curlString) {
       try {
         this.initialize();
@@ -376,7 +476,8 @@ var commander = require('commander'),
           dataString,
           dataRawString,
           dataAsciiString,
-          dataUrlencode;
+          dataUrlencode,
+          formData;
 
         this.headerPairs = {};
 
@@ -421,11 +522,11 @@ var commander = require('commander'),
           request.body.mode = 'raw';
           request.body.raw = curlObj.dataBinary;
         }
-        if (curlObj.form && curlObj.form.length !== 0) {
+        else if (curlObj.form && curlObj.form.length !== 0) {
           request.body.mode = 'formdata';
-          request.body.formdata = this.getDataForForm(curlObj.form, false);
+          request.body.formdata = this.getDataForForm(curlObj.form, false, request.body.mode);
         }
-        if ((curlObj.data && curlObj.data.length !== 0) || (curlObj.dataAscii && curlObj.dataAscii.length !== 0) ||
+        else if ((curlObj.data && curlObj.data.length !== 0) || (curlObj.dataAscii && curlObj.dataAscii.length !== 0) ||
           (curlObj.dataRaw && curlObj.dataRaw.length !== 0) ||
           (curlObj.dataUrlencode && curlObj.dataUrlencode.length !== 0)) {
           if (content_type === '' || content_type === 'application/x-www-form-urlencoded') {
@@ -462,6 +563,30 @@ var commander = require('commander'),
 
             urlData = request.data;
           }
+        }
+        else if (_.toLower(content_type).startsWith('multipart/form-data')) {
+          /**
+           * get data arg value from raw args as formdata boundary separated string
+           * is not parsed as any of data options by commander
+           */
+          _.forEach(curlObj.rawArgs, (arg, index) => {
+            if (_.includes(formDataOptions, arg)) {
+              formData = _.get(curlObj.rawArgs, index + 1);
+              return false;
+            }
+          });
+          request.body.mode = 'formdata';
+          request.body.formdata = this.parseFormBoundryData(formData, content_type);
+        }
+
+        if (request.body.mode === 'formdata') {
+          /**
+           * remove content-type header for form-data body type as it overrides the header added by postman
+           * resulting in incorrect boundary details in header value
+           */
+          _.remove(request.header, (h) => {
+            return _.toLower(h.key) === 'content-type';
+          });
         }
 
         // add data to query parameteres in the URL from --data or -d option
