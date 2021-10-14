@@ -546,4 +546,52 @@ describe('Curl converter should', function() {
     });
     done();
   });
+
+  it('[GitHub #10068]: should correctly handle raw form data with boundry separated body', function (done) {
+    var result = Converter.convertCurlToRequest(`curl --location --request POST 'https://httpbin.org/post' \\
+    --header 'Content-Type: multipart/form-data' \\
+    --form 'name="value"' \\
+    --form 'request="{\"hello\":\"world\"}"'`);
+
+    expect(result.body).to.have.property('mode', 'formdata');
+    expect(result.body.formdata.length).to.eql(2);
+    expect(result.body.formdata[0].key).to.eql('name');
+    expect(result.body.formdata[0].value).to.eql('value');
+    expect(result.body.formdata[1].key).to.eql('request');
+    expect(result.body.formdata[1].value).to.eql('{\"hello\":\"world\"}');
+    done();
+  });
+
+  it('[GitHub #5299]: should correctly import file references for formdata', function(done) {
+    var result = Converter.convertCurlToRequest('curl -F "content=@/Users/John/file.txt" google.com');
+    expect(result.body).to.have.property('mode', 'formdata');
+    expect(result.body.formdata[0]).to.eql({
+      key: 'content',
+      value: '/Users/John/file.txt',
+      type: 'file'
+    });
+    done();
+  });
+
+  it('[GitHub #8506]: should correctly add content type field for formdata', function(done) {
+    var result = Converter.convertCurlToRequest(`curl --location --request POST 'https://httpbin.org/post' \\
+    --header 'Content-Type: multipart/form-data' \\
+    --form 'request={ "title": "My template" };type=application/json' \\
+    --form 'contentFile=@/tmp/archive.zip;type=application/octet-stream'`);
+
+    expect(result.body).to.have.property('mode', 'formdata');
+    expect(result.body.formdata[0]).to.eql({
+      key: 'request',
+      value: '{ "title": "My template" }',
+      contentType: 'application/json',
+      type: 'text'
+    });
+    expect(result.body.formdata[1]).to.eql({
+      key: 'contentFile',
+      value: '/tmp/archive.zip',
+      contentType: 'application/octet-stream',
+      type: 'file'
+    });
+    done();
+  });
 });
