@@ -1,6 +1,6 @@
 {
   "name": "curl-to-postmanv2",
-  "version": "0.5.1",
+  "version": "1.0.0",
   "description": "Convert a given CURL command to a Postman request",
   "main": "index.js",
   "com_postman_plugin": {
@@ -9,7 +9,7 @@
     "source_format": "cURL"
   },
   "dependencies": {
-    "commander": "2.15.1",
+    "commander": "2.20.3",
     "lodash": "^4.17.11",
     "shell-quote": "1.6.1",
     "uuid": "3.2.1"
@@ -30,6 +30,7 @@
     "test": "./scripts/test.sh",
     "test-unit": "./scripts/test-unit.sh",
     "test-lint": "./scripts/test-lint.sh",
-    "coverage": "nyc report --reporter=html --reporter=text mocha"
+    "coverage": "nyc report --reporter=html --reporter=text mocha",
+    "release": "./scripts/release.sh"
   }
 }

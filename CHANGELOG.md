@@ -1,4 +1,14 @@
-CHANGELOG
+# cURL to Postman Importer Changelog
+
+#### v1.0.0 (October 18, 2021)
+* Fixed issue where file references were not present in imported cURL.
+* Fixed issue where formdata value were not un-escaped correctly.
+* Fixed issue where raw formdata string with boundary were not converted as formdata body.
+* Fixed issue where escaped single character sequence were not correctly represented in request body.
+* Fixed issue where some characters were not escaped correctly.
+* Updated README with installation and use cases and added LICENSE.
+* Added script for automating release process.
+
 #### 0.5.1: Apr 29, 2020
 * Added getMetaData function in root exports
 
