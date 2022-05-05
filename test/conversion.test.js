@@ -594,4 +594,115 @@ describe('Curl converter should', function() {
     });
     done();
   });
+
+  describe('[Github #8843]: It should recognize non-apostrophed ("...") url with multi-param', function() {
+    it('in case where there is multiple params with & in between in the url (https)', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "x-storefront-id: 1" \\
+        -H "x-application-id: 5" \\
+        -H "Build: 4.6.4.459" \\
+        -H "Platform: Android" \\
+        -H "Gender: M" \\
+        -H "SearchSegment: 98" \\
+        -H "OSVersion: 10" \\
+        -H "DeviceId: b147ee89" \\
+        -H "pid: bdb5748e" \\
+        -H "sid: 5096fd6e" \\
+        -H "x-features: FEATURE1_ENABLED" \\
+        -H "Accept-Language: tr-TR" \\
+        -H "Content-Type: application/json" \\
+        https://test.com/test/foo?bar=1&baz=2`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        done();
+      });
+    });
+    it('in case where there is multiple params with & in between in the url in apostrophes (https)', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "x-storefront-id: 1" \\
+        -H "x-application-id: 5" \\
+        -H "Build: 4.6.4.459" \\
+        -H "Platform: Android" \\
+        -H "Gender: M" \\
+        -H "SearchSegment: 98" \\
+        -H "OSVersion: 10" \\
+        -H "DeviceId: b147ee89" \\
+        -H "pid: bdb5748e" \\
+        -H "sid: 5096fd6e" \\
+        -H "x-features: FEATURE1_ENABLED" \\
+        -H "Accept-Language: tr-TR" \\
+        -H "Content-Type: application/json" \\
+        "https://test.com/test/foo?bar=1&baz=2"`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        done();
+      });
+    });
+    it('in case where there is multiple params with & in between in the url (http)', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "x-storefront-id: 1" \\
+        -H "x-application-id: 5" \\
+        -H "Build: 4.6.4.459" \\
+        -H "Platform: Android" \\
+        -H "Gender: M" \\
+        -H "SearchSegment: 98" \\
+        -H "OSVersion: 10" \\
+        -H "DeviceId: b147ee89" \\
+        -H "pid: bdb5748e" \\
+        -H "sid: 5096fd6e" \\
+        -H "x-features: FEATURE1_ENABLED" \\
+        -H "Accept-Language: tr-TR" \\
+        -H "Content-Type: application/json" \\
+        http://test.com/test/foo?bar=1&baz=2`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        done();
+      });
+    });
+    it('in case where there is multiple params with & in between in the url in apostrophes (http)', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "x-storefront-id: 1" \\
+        -H "x-application-id: 5" \\
+        -H "Build: 4.6.4.459" \\
+        -H "Platform: Android" \\
+        -H "Gender: M" \\
+        -H "SearchSegment: 98" \\
+        -H "OSVersion: 10" \\
+        -H "DeviceId: b147ee89" \\
+        -H "pid: bdb5748e" \\
+        -H "sid: 5096fd6e" \\
+        -H "x-features: FEATURE1_ENABLED" \\
+        -H "Accept-Language: tr-TR" \\
+        -H "Content-Type: application/json" \\
+        "http://test.com/test/foo?bar=1&baz=2"`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        done();
+      });
+    });
+  });
 });

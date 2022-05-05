@@ -25,6 +25,7 @@ var META = '|&;()<> \\t';
 var BAREWORD = '(\\\\[\'"' + META + ']|[^\\s\'"' + META + '])+';
 var SINGLE_QUOTE = '"((\\\\"|[^"])*?)"';
 var DOUBLE_QUOTE = '\'((\\\\\'|[^\'])*?)\'';
+var HTTP_URL_MATCHER  = "http[^ ]+";
 
 var TOKEN = '';
 for (var i = 0; i < 4; i++) {
@@ -73,6 +74,7 @@ exports.parse = function (s, env, opts) {
 
 function parse(s, env, opts) {
   var chunker = new RegExp([
+    '(' + HTTP_URL_MATCHER + ')',
     '(' + CONTROL + ')', // control chars
     '(' + BAREWORD + '|' + SINGLE_QUOTE + '|' + DOUBLE_QUOTE + ')*'
   ].join('|'), 'g');
@@ -170,6 +172,9 @@ function parse(s, env, opts) {
         quote = c;
       }
       else if (RegExp('^' + CONTROL + '$').test(c)) {
+        if (RegExp('(' + HTTP_URL_MATCHER + ')').test(s)) {
+          return s;
+        }
         return { op: s };
       }
       else if (RegExp('^#$').test(c)) {
