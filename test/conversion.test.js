@@ -600,19 +600,10 @@ describe('Curl converter should', function() {
       convert({
         type: 'string',
         data: `curl -X GET \\
-        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "User-Agent: Dalvik/2.1.0 (SM-A705FN Build/QP1A.190711.020)" \\
         -H "Authorization: bearer XXX" \\
-        -H "x-storefront-id: 1" \\
-        -H "x-application-id: 5" \\
         -H "Build: 4.6.4.459" \\
         -H "Platform: Android" \\
-        -H "Gender: M" \\
-        -H "SearchSegment: 98" \\
-        -H "OSVersion: 10" \\
-        -H "DeviceId: b147ee89" \\
-        -H "pid: bdb5748e" \\
-        -H "sid: 5096fd6e" \\
-        -H "x-features: FEATURE1_ENABLED" \\
         -H "Accept-Language: tr-TR" \\
         -H "Content-Type: application/json" \\
         https://test.com/test/foo?bar=1&baz=2`
@@ -620,6 +611,12 @@ describe('Curl converter should', function() {
         expect(result.result).to.equal(true);
         expect(result.output.length).to.equal(1);
         expect(result.output[0].type).to.equal('request');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[0].key).to.equal('User-Agent');
+        expect(headerArr[0].value).to.equal('Dalvik/2.1.0 (SM-A705FN Build/QP1A.190711.020)');
+        expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
+        expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
+        expect(result.output[0].data.url).to.equal('https://test.com/test/foo?bar=1&baz=2');
         done();
       });
     });
@@ -627,19 +624,10 @@ describe('Curl converter should', function() {
       convert({
         type: 'string',
         data: `curl -X GET \\
-        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "User-Agent: Dalvik/2.1.0 (SM-A705FN Build/QP1A.190711.020)" \\
         -H "Authorization: bearer XXX" \\
-        -H "x-storefront-id: 1" \\
-        -H "x-application-id: 5" \\
         -H "Build: 4.6.4.459" \\
         -H "Platform: Android" \\
-        -H "Gender: M" \\
-        -H "SearchSegment: 98" \\
-        -H "OSVersion: 10" \\
-        -H "DeviceId: b147ee89" \\
-        -H "pid: bdb5748e" \\
-        -H "sid: 5096fd6e" \\
-        -H "x-features: FEATURE1_ENABLED" \\
         -H "Accept-Language: tr-TR" \\
         -H "Content-Type: application/json" \\
         "https://test.com/test/foo?bar=1&baz=2"`
@@ -647,6 +635,12 @@ describe('Curl converter should', function() {
         expect(result.result).to.equal(true);
         expect(result.output.length).to.equal(1);
         expect(result.output[0].type).to.equal('request');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[0].key).to.equal('User-Agent');
+        expect(headerArr[0].value).to.equal('Dalvik/2.1.0 (SM-A705FN Build/QP1A.190711.020)');
+        expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
+        expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
+        expect(result.output[0].data.url).to.equal('https://test.com/test/foo?bar=1&baz=2');
         done();
       });
     });
@@ -656,17 +650,8 @@ describe('Curl converter should', function() {
         data: `curl -X GET \\
         -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
         -H "Authorization: bearer XXX" \\
-        -H "x-storefront-id: 1" \\
-        -H "x-application-id: 5" \\
         -H "Build: 4.6.4.459" \\
         -H "Platform: Android" \\
-        -H "Gender: M" \\
-        -H "SearchSegment: 98" \\
-        -H "OSVersion: 10" \\
-        -H "DeviceId: b147ee89" \\
-        -H "pid: bdb5748e" \\
-        -H "sid: 5096fd6e" \\
-        -H "x-features: FEATURE1_ENABLED" \\
         -H "Accept-Language: tr-TR" \\
         -H "Content-Type: application/json" \\
         http://test.com/test/foo?bar=1&baz=2`
@@ -674,6 +659,10 @@ describe('Curl converter should', function() {
         expect(result.result).to.equal(true);
         expect(result.output.length).to.equal(1);
         expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('http://test.com/test/foo?bar=1&baz=2');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
+        expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
         done();
       });
     });
@@ -683,17 +672,8 @@ describe('Curl converter should', function() {
         data: `curl -X GET \\
         -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
         -H "Authorization: bearer XXX" \\
-        -H "x-storefront-id: 1" \\
-        -H "x-application-id: 5" \\
         -H "Build: 4.6.4.459" \\
         -H "Platform: Android" \\
-        -H "Gender: M" \\
-        -H "SearchSegment: 98" \\
-        -H "OSVersion: 10" \\
-        -H "DeviceId: b147ee89" \\
-        -H "pid: bdb5748e" \\
-        -H "sid: 5096fd6e" \\
-        -H "x-features: FEATURE1_ENABLED" \\
         -H "Accept-Language: tr-TR" \\
         -H "Content-Type: application/json" \\
         "http://test.com/test/foo?bar=1&baz=2"`
@@ -701,6 +681,88 @@ describe('Curl converter should', function() {
         expect(result.result).to.equal(true);
         expect(result.output.length).to.equal(1);
         expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('http://test.com/test/foo?bar=1&baz=2');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
+        expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
+        done();
+      });
+    });
+    it('in case where there is multiple params with & in between in the url (www)', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "Content-Type: application/json" \\
+        "www.test.com/test/foo?bar=1&baz=2"`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('www.test.com/test/foo?bar=1&baz=2');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
+        expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
+        done();
+      });
+    });
+    it('in case where there is multiple params with & in between in the url (without www)', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (SM-A705FN Build/QP1A.190711.020)" \\
+        -H "Authorization: bearer XXX" \\
+        -H "Content-Type: application/json" \\
+        "test.com/test/foo?bar=1&baz=2"`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[0].key).to.equal('User-Agent');
+        expect(headerArr[0].value).to.equal('Dalvik/2.1.0 (SM-A705FN Build/QP1A.190711.020)');
+        expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
+        expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
+        expect(result.output[0].data.url).to.equal('test.com/test/foo?bar=1&baz=2');
+        done();
+      });
+    });
+    it('in case where there is multiple params with & in between in the url (direct param)', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "Content-Type: application/json" \\
+        "test.com?bar=1&baz=2"`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('test.com?bar=1&baz=2');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
+        expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
+        done();
+      });
+    });
+    it('in case where there is multiple params with & in between in the url (param after route)', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "Content-Type: application/json" \\
+        "test.com/?bar=1&baz=2"`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('test.com/?bar=1&baz=2');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
+        expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
         done();
       });
     });

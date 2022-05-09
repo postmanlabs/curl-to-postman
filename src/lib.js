@@ -466,7 +466,11 @@ var program,
         this.initialize();
         this.requestUrl = '';
 
-        var sanitizedArgs = this.sanitizeArgs(curlString),
+        // [Github #8843] - RegEx to fix malformed cURLs with unquoted multi-param URLs
+        const multiParamUrlRegEx = /[^ ]+\.[^ ]+&[^ ]+/gm;
+
+        var cleanedCurlString = curlString.replace(multiParamUrlRegEx, `'${curlString.match(multiParamUrlRegEx)}'`),
+          sanitizedArgs = this.sanitizeArgs(cleanedCurlString),
           curlObj = program.parse(sanitizedArgs),
           request = {},
           basicAuthParts,
