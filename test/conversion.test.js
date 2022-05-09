@@ -666,6 +666,48 @@ describe('Curl converter should', function() {
         done();
       });
     });
+    it('in case where there is multiple params (3-4) with & in between in the url (https)', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "Build: 4.6.4.459" \\
+        -H "Platform: Android" \\
+        -H "Accept-Language: tr-TR" \\
+        -H "Content-Type: application/json" \\
+        https://test.com/test/foo?bar=1&baz=2&bax=3`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://test.com/test/foo?bar=1&baz=2&bax=3');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
+        expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
+        // done();
+      });
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "Build: 4.6.4.459" \\
+        -H "Platform: Android" \\
+        -H "Accept-Language: tr-TR" \\
+        -H "Content-Type: application/json" \\
+        https://test.com/test/foo?bar=1&baz=2&bax=3&bay=4`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://test.com/test/foo?bar=1&baz=2&bax=3&bay=4');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
+        expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
+        done();
+      });
+    });
     it('in case where there is multiple params with & in between in the url in apostrophes (http)', function(done) {
       convert({
         type: 'string',
@@ -763,6 +805,56 @@ describe('Curl converter should', function() {
         const headerArr = result.output[0].data.header;
         expect(headerArr[headerArr.length - 1].key).to.equal('Content-Type');
         expect(headerArr[headerArr.length - 1].value).to.equal('application/json');
+        done();
+      });
+    });
+    it('in case where there is a header with URL in it and the URL is unquoted', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "Content-Type: application/json" \\
+        -H "Referrer: test.com/?bar=1&baz=2" \\
+        test.com/?bar=1&baz=2`
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('test.com/?bar=1&baz=2');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[headerArr.length - 1].key).to.equal('Referrer');
+        expect(headerArr[headerArr.length - 1].value).to.equal('test.com/?bar=1&baz=2');
+        done();
+      });
+    });
+    it('in case where there is a malformed URL with &(amp) in it, it should throw error', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "Content-Type: application/json" \\
+        test?bar=1&baz=2`
+      }, function (err, result) {
+        expect(result.result).to.equal(false);
+        expect(result.reason).to.equal('Please check your cURL string for malformed URL, ' +
+          'unsanitized &(ampersands) character.');
+        done();
+      });
+    });
+    it('in case where there is a malformed URL (variant 2) with &(amp) in it, it should throw error', function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "Content-Type: application/json" \\
+        bar=1&baz=2`
+      }, function (err, result) {
+        expect(result.result).to.equal(false);
+        expect(result.reason).to.equal('Please check your cURL string for malformed URL, ' +
+          'unsanitized &(ampersands) character.');
         done();
       });
     });
