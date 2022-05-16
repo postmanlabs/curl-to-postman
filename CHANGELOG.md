@@ -1,5 +1,8 @@
 # cURL to Postman Importer Changelog
 
+#### v1.1.0 (May 16, 2022)
+* Fixes #8433 - non-apostrophed ('...') url with multiple params support in cURL import.
+
 #### v1.0.0 (October 18, 2021)
 * Fixed issue where file references were not present in imported cURL.
 * Fixed issue where formdata value were not un-escaped correctly.
