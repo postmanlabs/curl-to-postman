@@ -466,7 +466,11 @@ var program,
         this.initialize();
         this.requestUrl = '';
 
-        var sanitizedArgs = this.sanitizeArgs(curlString),
+        // [Github #8843] - RegEx to fix malformed cURLs with unquoted multi-param URLs
+        const multiParamUrlRegEx = /([^'` "\n]+)\.([^ \n]+)&((?!["'])[^ "`'\n])+($|(?=\s))/gm;
+
+        var cleanedCurlString = curlString.replace(multiParamUrlRegEx, `'${curlString.match(multiParamUrlRegEx)}'`),
+          sanitizedArgs = this.sanitizeArgs(cleanedCurlString),
           curlObj = program.parse(sanitizedArgs),
           request = {},
           basicAuthParts,
@@ -598,6 +602,14 @@ var program,
         if (e.message === 'process.exit is not a function') {
         // happened because of
           e.message = 'Invalid format for cURL.';
+        }
+        else if (e.message === 'arg.startsWith is not a function') {
+          const inCorrectlyFormedcURLRegex1 = /[^ "]+\?[^ "]+&[^ "]+($|(?=\s))/g, // foo/bar?foo=1&bar=2
+            inCorrectlyFormedcURLRegex2 = /(\w+=\w+&?)/g; // foo?bar=1&baz=2
+
+          if (curlString.match(inCorrectlyFormedcURLRegex1) || curlString.match(inCorrectlyFormedcURLRegex2)) {
+            e.message = 'Please check your cURL string for malformed URL, unsanitized &(ampersands) character.';
+          }
         }
         return { error: e };
       }
