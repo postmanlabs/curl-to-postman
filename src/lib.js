@@ -308,6 +308,15 @@ var program,
             // converting the arg to cookie: abc instead of op: $'cookie: abc'
             return arg.op.substring(2, arg.op.length - 1);
           }
+          else if (typeof (arg) !== 'string' && arg.op === '&') {
+            // non-string data should not be here, might be a case of malformed URL or unsanitized characters
+            const inCorrectlyFormedcURLRegex1 = /[^ "]+\?[^ "]+&[^ "]+($|(?=\s))/g, // checks - foo/bar?foo=1&bar=2
+              inCorrectlyFormedcURLRegex2 = /(\w+=\w+&?)/g; // checks - foo?bar=1&baz=2
+
+            if (string.match(inCorrectlyFormedcURLRegex1) || string.match(inCorrectlyFormedcURLRegex2)) {
+              throw Error('Please check your cURL string for malformed URL');
+            }
+          }
           else if (arg.startsWith('$') && arg.length > 1) {
             // removing $ before every arg like $'POST' and
             // converting the arg to 'POST'
@@ -602,14 +611,6 @@ var program,
         if (e.message === 'process.exit is not a function') {
         // happened because of
           e.message = 'Invalid format for cURL.';
-        }
-        else if (e.message === 'arg.startsWith is not a function') {
-          const inCorrectlyFormedcURLRegex1 = /[^ "]+\?[^ "]+&[^ "]+($|(?=\s))/g, // foo/bar?foo=1&bar=2
-            inCorrectlyFormedcURLRegex2 = /(\w+=\w+&?)/g; // foo?bar=1&baz=2
-
-          if (curlString.match(inCorrectlyFormedcURLRegex1) || curlString.match(inCorrectlyFormedcURLRegex2)) {
-            e.message = 'Please check your cURL string for malformed URL, unsanitized &(ampersands) character.';
-          }
         }
         return { error: e };
       }

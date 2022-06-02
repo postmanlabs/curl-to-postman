@@ -838,8 +838,7 @@ describe('Curl converter should', function() {
         test?bar=1&baz=2`
       }, function (err, result) {
         expect(result.result).to.equal(false);
-        expect(result.reason).to.equal('Please check your cURL string for malformed URL, ' +
-          'unsanitized &(ampersands) character.');
+        expect(result.reason).to.equal('Please check your cURL string for malformed URL');
         done();
       });
     });
@@ -853,8 +852,7 @@ describe('Curl converter should', function() {
         bar=1&baz=2`
       }, function (err, result) {
         expect(result.result).to.equal(false);
-        expect(result.reason).to.equal('Please check your cURL string for malformed URL, ' +
-          'unsanitized &(ampersands) character.');
+        expect(result.reason).to.equal('Please check your cURL string for malformed URL');
         done();
       });
     });
