@@ -1,5 +1,5 @@
 # cURL to Postman Importer Changelog
-#### v1.1.1 (May 16, 2022)
+#### v1.1.1 (June 2, 2022)
 * Updated how error was handled in case of malformed URL.
 
 #### v1.1.0 (May 16, 2022)

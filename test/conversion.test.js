@@ -62,11 +62,10 @@ describe('Curl converter should', function() {
       convert({
         type: 'string',
         // eslint-disable-next-line quotes
-        data: `curl http://example.com -H 'Content-type: application/json' -d $'{"a":"\\'\""}'`
+        data: `curl http://example.com -d $'{"a":"\\'\""}' -H 'Content-type: application/json'`
       }, function (err, result) {
         expect(result.result).to.equal(true);
-        // eslint-disable-next-line quotes
-        expect(result.output[0].data.body.raw).to.equal(`{"a":"'\""}`);
+        expect(result.output[0].data.body.raw).to.equal('{"a":"\'\""}');
         done();
       });
     });
