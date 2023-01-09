@@ -1,3 +1,5 @@
+const largeRequest = require('./large-request');
+
 var Converter = require('../src/lib'),
   convert = require('../src/convert'),
   getMetaData = require('../index').getMetaData,
@@ -867,6 +869,18 @@ describe('Curl converter should', function() {
       }, function (err, result) {
         expect(result.result).to.equal(false);
         expect(result.reason).to.equal('Please check your cURL string for malformed URL');
+        done();
+      });
+    });
+    it('properly formed large requests shouldn\'t hang the process', function(done) {
+      convert({
+        type: 'string',
+        data: largeRequest
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://www.example.com/views/ajax?etc_category_tid=5&d=1');
         done();
       });
     });
