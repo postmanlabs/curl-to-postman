@@ -497,13 +497,14 @@ var program,
           // [Github #8843] - RegEx to fix malformed cURLs with unquoted multi-param URLs
           const multiParamUrlRegEx = /\s([^'` "\n]+)\.([^ \n]+)&((?!["'])[^ "`'\n])+($|(?=\s))/gm;
           let matchedStrings = curlString.match(multiParamUrlRegEx),
-            matchedString = '';
+            matchedString = '',
+            prefixString = '';
 
           if (matchedStrings && matchedStrings.length > 0) {
+            prefixString = matchedStrings[0].slice(0, 1);
             matchedString = matchedStrings[0].slice(1);
           }
-
-          cleanedCurlString = curlString.replace(multiParamUrlRegEx, ` '${matchedString}'`);
+          cleanedCurlString = curlString.replace(multiParamUrlRegEx, `${prefixString}'${matchedString}'`);
           sanitizedArgs = this.sanitizeArgs(cleanedCurlString);
           curlObj = program.parse(sanitizedArgs);
         }
