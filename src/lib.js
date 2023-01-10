@@ -475,12 +475,9 @@ var program,
         this.initialize();
         this.requestUrl = '';
 
-        // [Github #8843] - RegEx to fix malformed cURLs with unquoted multi-param URLs
-        const multiParamUrlRegEx = /([^'` "\n]+)\.([^ \n]+)&((?!["'])[^ "`'\n])+($|(?=\s))/gm;
-
-        var cleanedCurlString = curlString.replace(multiParamUrlRegEx, `'${curlString.match(multiParamUrlRegEx)}'`),
-          sanitizedArgs = this.sanitizeArgs(cleanedCurlString),
-          curlObj = program.parse(sanitizedArgs),
+        var cleanedCurlString = curlString,
+          sanitizedArgs,
+          curlObj,
           request = {},
           basicAuthParts,
           content_type,
@@ -491,6 +488,26 @@ var program,
           dataAsciiString,
           dataUrlencode,
           formData;
+
+        try {
+          sanitizedArgs = this.sanitizeArgs(cleanedCurlString);
+          curlObj = program.parse(sanitizedArgs);
+        }
+        catch (e) {
+          // [Github #8843] - RegEx to fix malformed cURLs with unquoted multi-param URLs
+          const multiParamUrlRegEx = /\s([^'` "\n]+)\.([^ \n]+)&((?!["'])[^ "`'\n])+($|(?=\s))/gm;
+          let matchedStrings = curlString.match(multiParamUrlRegEx),
+            matchedString = '',
+            prefixString = '';
+
+          if (matchedStrings && matchedStrings.length > 0) {
+            prefixString = matchedStrings[0].slice(0, 1);
+            matchedString = matchedStrings[0].slice(1);
+          }
+          cleanedCurlString = curlString.replace(multiParamUrlRegEx, `${prefixString}'${matchedString}'`);
+          sanitizedArgs = this.sanitizeArgs(cleanedCurlString);
+          curlObj = program.parse(sanitizedArgs);
+        }
 
         this.headerPairs = {};
 

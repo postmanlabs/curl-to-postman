@@ -1,3 +1,5 @@
+const largeRequest = require('./large-request');
+
 var Converter = require('../src/lib'),
   convert = require('../src/convert'),
   getMetaData = require('../index').getMetaData,
@@ -852,6 +854,33 @@ describe('Curl converter should', function() {
       }, function (err, result) {
         expect(result.result).to.equal(false);
         expect(result.reason).to.equal('Please check your cURL string for malformed URL');
+        done();
+      });
+    });
+    it(`in case where there is a malformed URL (variant 2) with &(amp) in it and no prefix space or
+        newline,it should throw error`, function(done) {
+      convert({
+        type: 'string',
+        data: `curl -X GET \\
+        -H "User-Agent: Dalvik/2.1.0 (Linux; U; Android 10; SM-A705FN Build/QP1A.190711.020) Test/4.6.4.459" \\
+        -H "Authorization: bearer XXX" \\
+        -H "Content-Type: application/json" \\
+        "test.com/?bar=1&baz=2`
+      }, function (err, result) {
+        expect(result.result).to.equal(false);
+        expect(result.reason).to.equal('Please check your cURL string for malformed URL');
+        done();
+      });
+    });
+    it('properly formed large requests shouldn\'t hang the process', function(done) {
+      convert({
+        type: 'string',
+        data: largeRequest
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://www.example.com/views/ajax?etc_category_tid=5&d=1');
         done();
       });
     });
