@@ -885,4 +885,19 @@ describe('Curl converter should', function() {
       });
     });
   });
+  it('in case where there is a invalid character at the end it should throw an error', function(done) {
+    convert({
+      type: 'string',
+      data: `curl --location --request POST \\
+      "postman-echo.com/post?qwerty=One" \\
+      -H 'Cookie: sails.sid=s%3AGntztErGu9IDGjIBVu2-w7vTipGS3zsf.j9%2BHttqloZ2UJFwtSQbTx6tTTkOz2k6NkNq4NGCaDLI' \\
+      ;`
+    }, function (err, result) {
+      expect(result.result).to.equal(false);
+      expect(result.reason).to.equal(
+        'Only the URL can be provided without an option preceding it.All other inputs must be specified via options.'
+      );
+      done();
+    });
+  });
 });
