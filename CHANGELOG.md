@@ -1,4 +1,7 @@
 # cURL to Postman Importer Changelog
+#### v1.1.3 (February 03, 2023)
+* Fix an issue where a correct error is thrown if curl string has invalid args
+
 #### v1.1.2 (January 10, 2023)
 * Changed regex to check for prefix space in url with query parameters for given curl string
 
