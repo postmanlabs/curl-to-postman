@@ -885,4 +885,62 @@ describe('Curl converter should', function() {
       });
     });
   });
+
+  describe('[Github #5182]: It should correctly import cURL commands compatible with Windows cmd', function() {
+
+    it('containing double quotes escaped with ^ (caret)', function(done) {
+      convert({
+        type: 'string',
+        data: 'curl "https://trello.com/1/cards" --data-binary ' +
+          '"^{^\\^"name^\\^":^\\^"hello world^\\^",^\\^"pos^\\^":65535,^\\^"closed^\\^":false,' +
+          '^\\^"idLabels^\\^":^[^],^\\^"idMembers^\\^":^[^],^\\^"dateLastActivity^\\^":1536871503239,' +
+          '^\\^"idBoard^\\^":^\\^"5a84a94fc77d9f99cf9ecd8a^\\^",^\\^"idList^\\^":^\\^"a^\\^",' +
+          '^\\^"token^\\^":^\\^"a/L8nmd9rC5gyBYaBx6RVXGjHuMIRfMQS4b3p3zIhKWin8ejxTzJ5E5ERACxT2IILp^\\^"^}" --compressed'
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://trello.com/1/cards');
+        done();
+      });
+    });
+
+    it('containing double quotes escaped with " (double quotes)', function(done) {
+      convert({
+        type: 'string',
+        data: `curl "https://www.youtube.com/youtubei/v1/guide?key=321456467855697&prettyPrint=false" ^
+        -H "authority: www.youtube.com" ^
+        -H "sec-ch-ua: ^\\^"Not_A Brand^\\^";v=^\\^"99^\\^", ^\\^"Chromium^\\^";v=^\\^"109^\\^"" ^
+        -H "sec-ch-ua-arch: ^\\^"arm^\\^"" ^
+        -H "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) (KHTML, like Gecko) Chrome/109.0.0.0" ^
+        -H "content-type: application/json" ^
+        --data-raw "^{^\\^"context^\\^":^{^\\^"client^\\^":^{^\\^"hl^\\^":^\\^"en^\\^"^}^},^\\^"state^\\^":true^}" ^
+        --compressed
+      `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        const headerArr = result.output[0].data.header;
+        expect(headerArr[0].key).to.equal('authority');
+        expect(headerArr[0].value).to.equal('www.youtube.com');
+        expect(headerArr[1].key).to.equal('sec-ch-ua');
+        expect(headerArr[1].value).to.equal(
+          '\"Not_A Brand\";v=\"99\", \"Chromium\";v=\"109\"');
+        expect(headerArr[2].key).to.equal('sec-ch-ua-arch');
+        expect(headerArr[2].value).to.equal('\"arm\"');
+        expect(headerArr[3].key).to.equal('user-agent');
+        expect(headerArr[3].value).to.equal(
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) (KHTML, like Gecko) Chrome/109.0.0.0');
+        expect(headerArr[4].key).to.equal('content-type');
+        expect(headerArr[4].value).to.equal('application/json');
+        expect(result.output[0].data.url).to.equal(
+          'https://www.youtube.com/youtubei/v1/guide?key=321456467855697&prettyPrint=false');
+        expect(result.output[0].data.body.mode).to.equal('raw');
+        expect(result.output[0].data.body.raw).to.equal(
+          '{\"context\":{\"client\":{\"hl\":\"en\"}},\"state\":true}');
+        done();
+      });
+    });
+  });
 });
