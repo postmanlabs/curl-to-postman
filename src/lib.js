@@ -317,7 +317,7 @@ var program,
               throw Error('Please check your cURL string for malformed URL');
             }
           }
-          else if (arg.startsWith('$') && arg.length > 1) {
+          else if (_.isFunction(arg.startsWith) && arg.startsWith('$') && arg.length > 1) {
             // removing $ before every arg like $'POST' and
             // converting the arg to 'POST'
             // link of RFC- http://www.gnu.org/software/bash/manual/html_node/ANSI_002dC-Quoting.html
@@ -336,7 +336,7 @@ var program,
       for (i = 0; i < sanitizedArgs.length; i++) {
         let arg = sanitizedArgs[i];
         // check for not exact equal to -X also, as it can be of the form -X POST
-        if (arg.startsWith('-X') && arg !== '-X') {
+        if (_.isFunction(arg.startsWith) && arg.startsWith('-X') && arg !== '-X') {
           // suppose arg = -XPOST
           // the arg preceding isn't a commander option(e.g. -H)
           if (!validArgs.includes(sanitizedArgs[i - 1])) {
