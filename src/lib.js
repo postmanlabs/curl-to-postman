@@ -118,13 +118,13 @@ var program,
          curlObj.dataBinary || curlObj.dataUrlencode.length > 0) &&
             curlObj.head && !curlObj.get) {
         throw new Error('Error while parsing cURL: Both (--head/-I) and' +
-         '(-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
+         ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       }
 
       // must have a URL
       if (curlObj.args.length > 1 && !curlObj.url) {
         throw new Error('Only the URL can be provided without an option preceding it.' +
-         'All other inputs must be specified via options.');
+         ' All other inputs must be specified via options.');
       }
     },
 
