@@ -118,13 +118,13 @@ var program,
          curlObj.dataBinary || curlObj.dataUrlencode.length > 0) &&
             curlObj.head && !curlObj.get) {
         throw new Error('Error while parsing cURL: Both (--head/-I) and' +
-         '(-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
+         ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       }
 
       // must have a URL
       if (curlObj.args.length > 1 && !curlObj.url) {
         throw new Error('Only the URL can be provided without an option preceding it.' +
-         'All other inputs must be specified via options.');
+         ' All other inputs must be specified via options.');
       }
     },
 
@@ -402,6 +402,28 @@ var program,
     },
 
     /**
+     * Transforms corresponding cURL in Windows CMD format to Bash compatible version,
+     * via unescaping escaped characters for Windows CMD.
+     *
+     * @param {String} curlString - curL string to be transformed into respectivve bash version
+     * @returns {String} - Transformed cURL in Bash format
+     */
+    transformCmdToBash: function (curlString) {
+      /**
+       * three kinds of matching groups can be captured with following regexp.
+       * 1. Certain characters that can be escaped by ^ (caret). Namely ^,{,},[,],<,>,\,",|,&,\n(new line)
+       *    These will be replaced with character itself resulting in removal of escape char (^)
+       * 2. ^%^ specifically will be replaced with % due to special escape rule
+       * 3. "" will be replaced with "
+       *    (single quotations are escaped with double quotes when inside string that's wrapped in double quotes)
+       *
+       * Ref: https://ss64.com/nt/syntax-esc.html
+       * See detail regexp composition over here: https://regex101.com/r/Xbiqbq/1
+       */
+      return curlString.replace(new RegExp(/\^(\^|{|}|\[|\]|<|>|\\|"|\||&|\n)|\^(%)\^|"(")/, 'g'), '$1$2$3');
+    },
+
+    /**
      * Parses raw data and generates object from it by understanding content present in it
      *
      * @param {String} data - Raw data string
@@ -470,7 +492,26 @@ var program,
       return parsedFormData;
     },
 
-    convertCurlToRequest: function(curlString) {
+    /**
+     * Converts cURL string that's in windows cmd compatible format into collection request
+     *
+     * @param {String} curlString - Windows cmd compatible cURL string
+     * @returns {Object} Collection request JSON
+     */
+    convertForCMDFormat: function (curlString) {
+      try {
+        const bashCurlString = this.transformCmdToBash(curlString),
+          request = this.convertCurlToRequest(bashCurlString, false);
+
+        request.description = 'Generated from a curl request: \n' + curlString.split('"').join('\\\"');
+        return request;
+      }
+      catch (error) {
+        throw e;
+      }
+    },
+
+    convertCurlToRequest: function(curlString, shouldRetry = true) {
       try {
         this.initialize();
         this.requestUrl = '';
@@ -625,8 +666,16 @@ var program,
         return request;
       }
       catch (e) {
+        if (shouldRetry) {
+          try {
+            // Retry conversion again by considering cURL to be in windows cmd compatible format
+            return this.convertForCMDFormat(curlString);
+          }
+          catch (error) {
+            // Retry error is not reported
+          }
+        }
         if (e.message === 'process.exit is not a function') {
-        // happened because of
           e.message = 'Invalid format for cURL.';
         }
         return { error: e };
