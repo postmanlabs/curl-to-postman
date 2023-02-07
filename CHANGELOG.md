@@ -1,5 +1,9 @@
 # cURL to Postman Importer Changelog
+
 #### v1.1.3 (February 03, 2023)
+* Fixed issue [#5182](https://github.com/postmanlabs/postman-app-support/issues/5182) where cURL in Windows cmd formats were not imported correctly.
+
+#### v1.2.0 (February 07, 2023)
 * Fix an issue where a correct error is thrown if curl string has invalid args
 
 #### v1.1.2 (January 10, 2023)
