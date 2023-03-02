@@ -195,6 +195,53 @@ var program,
       return retVal;
     },
 
+    /**
+     * Generates the auth object for the request
+     *
+     * @param {Object} curlObj The curl object
+     * @returns {Object} The auth object
+     */
+    getAuth: function(curlObj) {
+      let authObject;
+
+      // It is a valid cURL to have only username, in that case keep password empty
+      const userParts = curlObj.user.split(':') || [];
+      if (userParts.length === 1) {
+        userParts[1] = '';
+      }
+
+      if (curlObj.digest === true) {
+        authObject = {
+          type: 'digest',
+          digest: [
+            { key: 'username', value: userParts[0], type: 'string' },
+            { key: 'password', value: userParts[1], type: 'string' }
+          ]
+        };
+      }
+      else if (curlObj.ntlm === true) {
+        authObject = {
+          type: 'ntlm',
+          ntlm: [
+            { key: 'username', value: userParts[0], type: 'string' },
+            { key: 'password', value: userParts[1], type: 'string' }
+          ]
+        };
+      }
+      else {
+        // Fallback to basic auth
+        authObject = {
+          type: 'basic',
+          basic: [
+            { key: 'username', value: userParts[0], type: 'string' },
+            { key: 'password', value: userParts[1], type: 'string' }
+          ]
+        };
+      }
+
+      return authObject;
+    },
+
     resetProgram: function() {
       this.requestUrl = '';
     },
@@ -520,7 +567,6 @@ var program,
           sanitizedArgs,
           curlObj,
           request = {},
-          basicAuthParts,
           content_type,
           urlData = '',
           bodyArr = [],
@@ -575,16 +621,7 @@ var program,
         request.body = {};
 
         if (curlObj.user) {
-          basicAuthParts = curlObj.user.split(':') || [];
-          if (basicAuthParts.length >= 2) {
-            request.auth = {
-              type: 'basic',
-              basic: [
-                { key: 'username', value: basicAuthParts[0], type: 'string' },
-                { key: 'password', value: basicAuthParts[1], type: 'string' }
-              ]
-            };
-          }
+          request.auth = this.getAuth(curlObj);
         }
 
         content_type = this.getLowerCaseHeader('content-type', this.headerPairs);
