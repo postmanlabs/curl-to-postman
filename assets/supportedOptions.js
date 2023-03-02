@@ -87,13 +87,23 @@ let supportedOptions = [
   },
   {
     long: '--basic',
-    description: 'Overrides previous auth settings',
+    description: 'Use HTTP Basic authentication',
+    collectValues: false
+  },
+  {
+    long: '--digest',
+    description: 'Use HTTP Digest authentication',
+    collectValues: false
+  },
+  {
+    long: '--ntlm',
+    description: 'Use NTLM Digest authentication',
     collectValues: false
   },
   {
     short: '-u',
     long: '--user',
-    description: 'Basic auth ( -u <username:password>)',
+    description: 'Username and password for server authentication',
     format: '[string]',
     collectValues: false
   }

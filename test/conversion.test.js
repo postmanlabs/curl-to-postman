@@ -235,14 +235,46 @@ describe('Curl converter should', function() {
     done();
   });
 
-  it('convert a simple GET request with Basic auth', function (done) {
-    var result = Converter.convertCurlToRequest('curl --request GET -u testUser:testPass --url http://www.google.com');
+  describe('auth', function () {
+    it('convert a simple GET request with Basic auth', function () {
+      const result = Converter.convertCurlToRequest('curl -u testUser:testPass --url "http://postman-echo.com/get"');
 
-    expect(result.auth.type).to.equal('basic');
-    expect(result.auth.basic[0].key).to.equal('username');
-    expect(result.auth.basic[1].key).to.equal('password');
+      expect(result.auth.type).to.equal('basic');
+      expect(result.auth.basic[0].key).to.equal('username');
+      expect(result.auth.basic[0].value).to.equal('testUser');
+      expect(result.auth.basic[1].key).to.equal('password');
+      expect(result.auth.basic[1].value).to.equal('testPass');
+    });
 
-    done();
+    it('convert a simple GET request with Digest auth', function () {
+      const result = Converter.convertCurlToRequest('curl -u testUser:testPass --digest "http://postman-echo.com/get"');
+
+      expect(result.auth.type).to.equal('digest');
+      expect(result.auth.digest[0].key).to.equal('username');
+      expect(result.auth.digest[0].value).to.equal('testUser');
+      expect(result.auth.digest[1].key).to.equal('password');
+      expect(result.auth.digest[1].value).to.equal('testPass');
+    });
+
+    it('convert a simple GET request with NTLM auth', function () {
+      const result = Converter.convertCurlToRequest('curl -u testUser:testPass --ntlm "http://postman-echo.com/get"');
+
+      expect(result.auth.type).to.equal('ntlm');
+      expect(result.auth.ntlm[0].key).to.equal('username');
+      expect(result.auth.ntlm[0].value).to.equal('testUser');
+      expect(result.auth.ntlm[1].key).to.equal('password');
+      expect(result.auth.ntlm[1].value).to.equal('testPass');
+    });
+
+    it('convert a simple GET request with Basic auth with only username', function () {
+      const result = Converter.convertCurlToRequest('curl -u testUser --url "http://postman-echo.com/get"');
+
+      expect(result.auth.type).to.equal('basic');
+      expect(result.auth.basic[0].key).to.equal('username');
+      expect(result.auth.basic[0].value).to.equal('testUser');
+      expect(result.auth.basic[1].key).to.equal('password');
+      expect(result.auth.basic[1].value).to.equal('');
+    });
   });
 
   it('convert a request with a forced POST', function (done) {
@@ -896,7 +928,7 @@ describe('Curl converter should', function() {
     }, function (err, result) {
       expect(result.result).to.equal(false);
       expect(result.reason).to.equal(
-        'Only the URL can be provided without an option preceding it.All other inputs must be specified via options.'
+        'Only the URL can be provided without an option preceding it. All other inputs must be specified via options.'
       );
       done();
     });

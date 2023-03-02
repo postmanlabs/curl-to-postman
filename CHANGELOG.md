@@ -1,10 +1,13 @@
 # cURL to Postman Importer Changelog
 
-#### v1.1.3 (February 03, 2023)
-* Fixed issue [#5182](https://github.com/postmanlabs/postman-app-support/issues/5182) where cURL in Windows cmd formats were not imported correctly.
+#### v1.3.0 (March 02, 2023)
+* Fix for [#8087](https://github.com/postmanlabs/postman-app-support/issues/8087) - Add support to convert digest and NTLM auth types
 
 #### v1.2.0 (February 07, 2023)
 * Fix an issue where a correct error is thrown if curl string has invalid args
+
+#### v1.1.3 (February 03, 2023)
+* Fixed issue [#5182](https://github.com/postmanlabs/postman-app-support/issues/5182) where cURL in Windows cmd formats were not imported correctly.
 
 #### v1.1.2 (January 10, 2023)
 * Changed regex to check for prefix space in url with query parameters for given curl string
@@ -16,7 +19,7 @@
 * Fixes #8433 - non-apostrophed ('...') url with multiple params support in cURL import.
 
 #### v1.0.0 (October 18, 2021)
-* Fixed issue where file references were not present in imported cURL.
+* Fixed issue where file references were not present in imported cURL.◊
 * Fixed issue where formdata value were not un-escaped correctly.
 * Fixed issue where raw formdata string with boundary were not converted as formdata body.
 * Fixed issue where escaped single character sequence were not correctly represented in request body.
