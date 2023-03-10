@@ -82,7 +82,8 @@ var program,
       // checking if the user has mentioned any of these (-d, --data, --data-raw
       // --data-binary, --data-ascii) in curl command
       else if (curlObj.data.length > 0 || curlObj.dataAscii.length > 0 ||
-         curlObj.dataUrlencode.length > 0 || curlObj.dataRaw.length > 0 || curlObj.dataBinary) {
+         curlObj.dataUrlencode.length > 0 || curlObj.dataRaw.length > 0 ||
+         curlObj.dataBinary || curlObj.form.length > 0) {
         return 'POST';
       }
       // set method to GET if no param is present
@@ -574,7 +575,8 @@ var program,
           dataRawString,
           dataAsciiString,
           dataUrlencode,
-          formData;
+          formData,
+          isMethodGuessed = false;
 
         try {
           sanitizedArgs = this.sanitizeArgs(cleanedCurlString);
@@ -601,6 +603,7 @@ var program,
         // if method is not given in the curl command
         if (!curlObj.request) {
           curlObj.request = this.getRequestMethod(curlObj);
+          isMethodGuessed = true;
         }
 
         curlObj.request = this.trimQuotesFromString(curlObj.request);
@@ -685,6 +688,12 @@ var program,
           });
           request.body.mode = 'formdata';
           request.body.formdata = this.parseFormBoundryData(formData, content_type);
+
+          /**
+           * As we are parsing raw args here to detect form-data body, make sure we are also
+           * defining method if not already defined in cURL
+           */
+          (!_.isEmpty(request.body.formdata) && isMethodGuessed) && (request.method = 'POST');
         }
 
         if (request.body.mode === 'formdata') {

@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const largeRequest = require('./large-request');
 
 var Converter = require('../src/lib'),
@@ -987,6 +988,83 @@ describe('Curl converter should', function() {
         expect(result.output[0].data.body.mode).to.equal('raw');
         expect(result.output[0].data.body.raw).to.equal(
           '{\"context\":{\"client\":{\"hl\":\"en\"}},\"state\":true}');
+        done();
+      });
+    });
+  });
+
+  describe('[Github #8296]: It should correctly generate request for form-data body', function() {
+
+    it('containing form-data boundry with correct method', function(done) {
+      convert({
+        type: 'string',
+        data: `curl 'https://httpbin.org/anything' \
+        -H 'authority: httpbin.org' \
+        -H 'accept: application/json, text/plain, */*' \
+        -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundaryDjpz6jUyMpfzNVCh' \
+        --data-raw $'------WebKitFormBoundaryDjpz6jUyMpfzNVCh\r\nContent-Disposition: form-data; name="hello"\r\n\r\nworld\r\n------WebKitFormBoundaryDjpz6jUyMpfzNVCh\r\nContent-Disposition: form-data; name="contact[phone]"\r\n\r\n12345\r\n------WebKitFormBoundaryDjpz6jUyMpfzNVCh\r\nContent-Disposition: form-data; name="data"; filename="wsdl1.wsdl"\r\nContent-Type: application/octet-stream\r\n\r\n\r\n------WebKitFormBoundaryDjpz6jUyMpfzNVCh--\r\n' \
+        --compressed
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything');
+        expect(result.output[0].data.method).to.equal('POST');
+        expect(result.output[0].data.body.mode).to.equal('formdata');
+        expect(result.output[0].data.body.formdata).to.eql([
+          {
+            key: 'hello',
+            value: 'world',
+            type: 'text'
+          },
+          {
+            key: 'contact[phone]',
+            value: '12345',
+            type: 'text'
+          },
+          {
+            key: 'data',
+            value: 'wsdl1.wsdl',
+            type: 'file'
+          }
+        ]);
+        done();
+      });
+    });
+
+    it('containing form params with correct method', function(done) {
+      convert({
+        type: 'string',
+        data: `curl --location "https://httpbin.org/anything" \
+        --form "hello=\"world\"" \
+        --form "contact[phone]=\"12345\"" \
+        --form "data=@\"wsdl1.wsdl\""
+      `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything');
+        expect(result.output[0].data.method).to.equal('POST');
+        expect(result.output[0].data.body.mode).to.equal('formdata');
+        expect(result.output[0].data.body.formdata).to.eql([
+          {
+            key: 'hello',
+            value: 'world',
+            type: 'text'
+          },
+          {
+            key: 'contact[phone]',
+            value: '12345',
+            type: 'text'
+          },
+          {
+            key: 'data',
+            value: 'wsdl1.wsdl',
+            type: 'file'
+          }
+        ]);
         done();
       });
     });
