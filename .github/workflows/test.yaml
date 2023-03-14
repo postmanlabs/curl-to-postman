@@ -1,0 +1,18 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  Unit-Tests:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Get Code
+        uses: actions/checkout@v3
+      - name: Setup Node JS
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm run test
