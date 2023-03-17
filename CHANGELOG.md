@@ -1,5 +1,8 @@
 # cURL to Postman Importer Changelog
 
+#### v1.4.0 (March 17, 2023)
+* Fixed issue [#7895](https://github.com/postmanlabs/postman-app-support/issues/7895) where cURL with no specific method defined for formdata type of body were not converted correctly.
+
 #### v1.3.0 (March 02, 2023)
 * Fix for [#8087](https://github.com/postmanlabs/postman-app-support/issues/8087) - Add support to convert digest and NTLM auth types
 
