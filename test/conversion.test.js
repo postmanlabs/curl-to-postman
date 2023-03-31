@@ -1283,4 +1283,39 @@ describe('Curl converter should', function() {
       done();
     });
   });
+
+  describe('It should correctly generate request for cURL with various postman id formats in URL', function() {
+
+    it('containing path variable with ":" character', function(done) {
+      convert({
+        type: 'string',
+        data: `curl https://httpbin.org/team/:teamId/user/:userId \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/team/:teamId/user/:userId');
+        expect(result.output[0].data.method).to.equal('GET');
+        done();
+      });
+    });
+
+    it('containing collection/environment variable in URL', function(done) {
+      convert({
+        type: 'string',
+        data: `curl {{baseUrl}}/user/{{userId}} \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('{{baseUrl}}/user/{{userId}}');
+        expect(result.output[0].data.method).to.equal('GET');
+        done();
+      });
+    });
+  });
 });
