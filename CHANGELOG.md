@@ -1,5 +1,9 @@
 # cURL to Postman Importer Changelog
 
+#### v1.5.0 (March 31, 2023)
+* Fixed an issue where request generation failed for certain bash operators.
+* Fixed an issue where cURL with comments described was converted incorrectly.
+
 #### v1.4.0 (March 17, 2023)
 * Fixed issue [#7895](https://github.com/postmanlabs/postman-app-support/issues/7895) where cURL with no specific method defined for formdata type of body were not converted correctly.
 
