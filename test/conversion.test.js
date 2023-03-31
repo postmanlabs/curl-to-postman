@@ -1252,4 +1252,35 @@ describe('Curl converter should', function() {
       done();
     });
   });
+
+  it('It should correctly generate request for cURL with allowed operators not in URL correctly', function(done) {
+    convert({
+      type: 'string',
+      data: `curl 'https://httpbin.org/anything' \
+      -H 'authority: httpbin.org' \
+      -H "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) (KHTML, like Gecko) Chrome/109.0.0.0" \
+      -H 'accept: application/json, text/plain, */*' \
+      -H 'content-type: application/json' \
+      --data "{\"context\":{\"client\":{\"hl\":\"en\"}},\"state\":true}"
+    `
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output.length).to.equal(1);
+      expect(result.output[0].type).to.equal('request');
+      expect(result.output[0].data.url).to.equal('https://httpbin.org/anything');
+      expect(result.output[0].data.method).to.equal('POST');
+
+      const headerArr = result.output[0].data.header;
+      expect(headerArr.length).to.equal(4);
+      expect(headerArr[0].key).to.equal('authority');
+      expect(headerArr[0].value).to.equal('httpbin.org');
+      expect(headerArr[1].key).to.equal('user-agent');
+      expect(headerArr[1].value).to.equal('Mozilla/5.0 (Windows NT 10.0; Win64; x64) (KHTML, like Gecko) Chrome/109.0.0.0');
+      expect(headerArr[2].key).to.equal('accept');
+      expect(headerArr[2].value).to.equal('application/json, text/plain, */*');
+      expect(headerArr[3].key).to.equal('content-type');
+      expect(headerArr[3].value).to.equal('application/json');
+      done();
+    });
+  });
 });

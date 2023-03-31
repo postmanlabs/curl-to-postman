@@ -453,16 +453,25 @@ var program,
         let argStr = typeof curlObj.url === 'string' ? curlObj.url : '';
 
         _.forEach(curlObj.args, (arg, index) => {
-          if (typeof arg === 'string') {
-            const previousArgOp = _.get(curlObj.args, `${index - 1}.op`, ''),
-              shouldAddCurrentArg = index === 0 || allowedOperators.includes(previousArgOp);
+          const previousArgOp = _.get(curlObj.args, `${index - 1}.op`, ''),
+            shouldAddCurrentArg = index === 0 || allowedOperators.includes(previousArgOp);
 
+          if (typeof arg === 'string' && shouldAddCurrentArg) {
             /**
              * Add current string arg only if previous arg is an allowed op.
              * For URL like "hello.com/<id>", as "<" and ">" are treated as bash operators,
              * we'll add such operator and next arg that was split up by it in URL
              */
-            shouldAddCurrentArg && (argStr += (previousArgOp + arg));
+            argStr += arg;
+          }
+          else if (typeof arg === 'object' && allowedOperators.includes(arg.op)) {
+            argStr += arg.op;
+          }
+          else {
+            /**
+             * Stop adding more args as soon as we know that args are not split by allowed operators.
+             */
+            return false;
           }
         });
         this.requestUrl = argStr;
