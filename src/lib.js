@@ -3,7 +3,8 @@ const commander = require('commander'),
   shellQuote = require('../assets/shell-quote'),
   unnecessaryOptions = require('../assets/unnecessaryOptions'),
   supportedOptions = require('../assets/supportedOptions'),
-  formDataOptions = ['-d', '--data', '--data-raw', '--data-binary', '--data-ascii'];
+  formDataOptions = ['-d', '--data', '--data-raw', '--data-binary', '--data-ascii'],
+  allowedOperators = ['<', '>', '(', ')'];
 
 var program,
 
@@ -122,8 +123,12 @@ var program,
          ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       }
 
-      // must have a URL
-      if (curlObj.args.length > 1 && !curlObj.url) {
+      /**
+       * For cURL with ^ as line termination character, each such line termination char will be an separate arg.
+       * throw an error as we have separate handling for parsing such cURLs
+       * once it fails here using convertForCMDFormat()
+       */
+      if (curlObj.args.length > 1 && _.includes(curlObj.args, '^')) {
         throw new Error('Only the URL can be provided without an option preceding it.' +
          ' All other inputs must be specified via options.');
       }
@@ -444,8 +449,23 @@ var program,
         }
         /* eslint-enable */
       }
-      else {
-        this.requestUrl = curlObj.args[0];
+      else if (curlObj.args.length > 0) {
+        let argStr = typeof curlObj.url === 'string' ? curlObj.url : '';
+
+        _.forEach(curlObj.args, (arg, index) => {
+          if (typeof arg === 'string') {
+            const previousArgOp = _.get(curlObj.args, `${index - 1}.op`, ''),
+              shouldAddCurrentArg = index === 0 || allowedOperators.includes(previousArgOp);
+
+            /**
+             * Add current string arg only if previous arg is an allowed op.
+             * For URL like "hello.com/<id>", as "<" and ">" are treated as bash operators,
+             * we'll add such operator and next arg that was split up by it in URL
+             */
+            shouldAddCurrentArg && (argStr += (previousArgOp + arg));
+          }
+        });
+        this.requestUrl = argStr;
       }
     },
 
