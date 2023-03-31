@@ -452,6 +452,7 @@ var program,
       else if (curlObj.args.length > 0) {
         let argStr = typeof curlObj.url === 'string' ? curlObj.url : '';
 
+        // eslint-disable-next-line consistent-return
         _.forEach(curlObj.args, (arg, index) => {
           const previousArgOp = _.get(curlObj.args, `${index - 1}.op`, ''),
             shouldAddCurrentArg = index === 0 || allowedOperators.includes(previousArgOp);
