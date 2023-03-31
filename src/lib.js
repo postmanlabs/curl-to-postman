@@ -444,8 +444,11 @@ var program,
         }
         /* eslint-enable */
       }
-      else {
+      else if (_.isString(curlObj.args[0])) {
         this.requestUrl = curlObj.args[0];
+      }
+      else {
+        throw new Error('Could not detect the URL from cURL. Please make sure it\'s a valid cURL');
       }
     },
 
@@ -597,6 +600,12 @@ var program,
           sanitizedArgs = this.sanitizeArgs(cleanedCurlString);
           curlObj = program.parse(sanitizedArgs);
         }
+
+        // Filter out comments from Args
+        curlObj.args = _.filter(curlObj.args, (arg) => {
+          // Each arg should be string itself, for comment we receive an object from parser
+          return !(typeof arg === 'object' && typeof arg.comment === 'string');
+        });
 
         this.headerPairs = {};
 
