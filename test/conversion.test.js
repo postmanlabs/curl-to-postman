@@ -49,6 +49,18 @@ describe('Curl converter should', function() {
     });
   });
 
+  it('throw an error for a cURL without URL defined correctly', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl -X POST -H \'Content-type: application/json\' #{reply_url} --data \'#{response.to_json}\''
+    }, function (err, result) {
+      expect(result.result).to.equal(false);
+      expect(result.reason).to.equal('Error while parsing cURL: Could not identify the URL.' +
+       ' Please use the --url option.');
+      done();
+    });
+  });
+
   it('[Github #7390]: set request URL correctly irrespective of where it is mentioned', function (done) {
     convert({
       type: 'string',
@@ -155,6 +167,23 @@ describe('Curl converter should', function() {
     convert({
       type: 'string',
       data: 'curl --request GET --url http://www.google.com'
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+
+      expect(result.output.length).to.equal(1);
+      expect(result.output[0].type).to.equal('request');
+
+      var request = result.output[0].data;
+      expect(request.method).to.equal('GET');
+      expect(request.url).to.equal('http://www.google.com');
+      done();
+    });
+  });
+
+  it('convert a simple request with comment at the end correctly', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --request GET --url http://www.google.com #comment1'
     }, function (err, result) {
       expect(result.result).to.equal(true);
 
