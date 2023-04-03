@@ -119,7 +119,7 @@ var program,
       if ((curlObj.data.length > 0 || curlObj.dataAscii.length > 0 ||
          curlObj.dataBinary || curlObj.dataUrlencode.length > 0) &&
             curlObj.head && !curlObj.get) {
-        throw new Error('Error while parsing cURL: Both (--head/-I) and' +
+        throw new Error('Unable to parse: Both (--head/-I) and' +
          ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       }
 
@@ -440,7 +440,7 @@ var program,
             }
           }
           catch (e) {
-            throw new Error('Error while parsing cURL: Could not identify the URL. Please use the --url option.');
+            throw new Error('Unable to parse: Could not identify the URL. Please use the --url option.');
           }
         }
         /* eslint-enable */

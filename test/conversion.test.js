@@ -28,7 +28,19 @@ describe('getMetaData', function () {
       data: 'curl --request'
     }, function (err, result) {
       expect(result.result).to.equal(false);
-      expect(result.reason).to.equal('Error while parsing cURL: Could not identify the URL.' +
+      expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
+        ' Please use the --url option.');
+      done();
+    });
+  });
+
+  it('return false result requests that do not contain a URL', function (done) {
+    getMetaData({
+      type: 'string',
+      data: 'curl --location --request POST --header "Content-Type: application/json"'
+    }, function (err, result) {
+      expect(result.result).to.equal(false);
+      expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
         ' Please use the --url option.');
       done();
     });
@@ -43,8 +55,20 @@ describe('Curl converter should', function() {
       data: 'curl --request'
     }, function (err, result) {
       expect(result.result).to.equal(false);
-      expect(result.reason).to.equal('Error while parsing cURL: Could not identify the URL.' +
+      expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
        ' Please use the --url option.');
+      done();
+    });
+  });
+
+  it('return false result requests that do not contain a URL', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --location --request POST --header "Content-Type: application/json"'
+    }, function (err, result) {
+      expect(result.result).to.equal(false);
+      expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
+        ' Please use the --url option.');
       done();
     });
   });
@@ -181,7 +205,7 @@ describe('Curl converter should', function() {
       data: 'curl -I http://example.com -d "a=b"'
     }, function (err, result) {
       expect(result.result).to.equal(false);
-      expect(result.reason).to.equal('Error while parsing cURL: Both (--head/-I) and' +
+      expect(result.reason).to.equal('Unable to parse: Both (--head/-I) and' +
        ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       done();
     });
