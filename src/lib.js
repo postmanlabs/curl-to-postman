@@ -593,6 +593,12 @@ var program,
       }
     },
 
+    /**
+     * Sanitise and parse the input cURl string
+     *
+     * @param {string} curlString - Input cURL string
+     * @returns {object} - Parsed cURL Object
+     */
     getCurlObject: function (curlString) {
       let cleanedCurlString = curlString,
         sanitizedArgs,
@@ -641,6 +647,13 @@ var program,
       return { isMethodGuessed, curlObj };
     },
 
+    /**
+     * Valid if the input cURL string is valid or not
+     *
+     * @param {string} curlString - Input cURL string
+     * @param {boolean} shouldRetry - Whether we should retry parsing for Windows CMD style cURL input
+     * @returns {Object} - { result: true } if cURL is valid otherwise { result: false } with reason
+     */
     validate: function (curlString, shouldRetry = true) {
       try {
         this.initialize();
@@ -650,7 +663,7 @@ var program,
       catch (e) {
         if (shouldRetry) {
           curlString = this.transformCmdToBash(curlString);
-          return program.validate(curlString, false);
+          return this.validate(curlString, false);
         }
 
         return { result: false, reason: e.message };

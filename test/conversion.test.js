@@ -4,8 +4,19 @@ const largeRequest = require('./large-request');
 var Converter = require('../src/lib'),
   convert = require('../src/convert'),
   getMetaData = require('../index').getMetaData,
+  validate = require('../index').validate,
   expect = require('expect.js'),
   _ = require('lodash');
+
+describe('validate', function () {
+  it('return false result for malformed curl snippet', function (done) {
+    const result = validate('curl --request');
+    expect(result.result).to.equal(false);
+    expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
+      ' Please use the --url option.');
+    done();
+  });
+});
 
 describe('getMetaData', function () {
   it('get meta data for a correct simple request', function (done) {
