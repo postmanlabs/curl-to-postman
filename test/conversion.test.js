@@ -73,6 +73,19 @@ describe('Curl converter should', function() {
     });
   });
 
+
+  it('throw an error for a cURL without URL defined correctly', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl -X POST -H \'Content-type: application/json\' #{reply_url} --data \'#{response.to_json}\''
+    }, function (err, result) {
+      expect(result.result).to.equal(false);
+      expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
+       ' Please use the --url option.');
+      done();
+    });
+  });
+
   it('[Github #7390]: set request URL correctly irrespective of where it is mentioned', function (done) {
     convert({
       type: 'string',
@@ -179,6 +192,23 @@ describe('Curl converter should', function() {
     convert({
       type: 'string',
       data: 'curl --request GET --url http://www.google.com'
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+
+      expect(result.output.length).to.equal(1);
+      expect(result.output[0].type).to.equal('request');
+
+      var request = result.output[0].data;
+      expect(request.method).to.equal('GET');
+      expect(request.url).to.equal('http://www.google.com');
+      done();
+    });
+  });
+
+  it('convert a simple request with comment at the end correctly', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --request GET --url http://www.google.com #comment1'
     }, function (err, result) {
       expect(result.result).to.equal(true);
 
@@ -943,7 +973,7 @@ describe('Curl converter should', function() {
     });
   });
 
-  it('in case where there is a invalid character at the end it should throw an error', function(done) {
+  it('in case where there is a invalid character at the end it should safely generate request', function(done) {
     convert({
       type: 'string',
       data: `curl --location --request POST \\
@@ -951,10 +981,14 @@ describe('Curl converter should', function() {
       -H 'Cookie: sails.sid=s%3AGntztErGu9IDGjIBVu2-w7vTipGS3zsf.j9%2BHttqloZ2UJFwtSQbTx6tTTkOz2k6NkNq4NGCaDLI' \\
       ;`
     }, function (err, result) {
-      expect(result.result).to.equal(false);
-      expect(result.reason).to.equal(
-        'Only the URL can be provided without an option preceding it. All other inputs must be specified via options.'
-      );
+      expect(result.result).to.equal(true);
+      expect(result.output.length).to.equal(1);
+      expect(result.output[0].type).to.equal('request');
+      expect(result.output[0].data.url).to.equal('postman-echo.com/post?qwerty=One');
+
+      const headerArr = result.output[0].data.header;
+      expect(headerArr[0].key).to.equal('Cookie');
+      expect(headerArr[0].value).to.equal('sails.sid=s%3AGntztErGu9IDGjIBVu2-w7vTipGS3zsf.j9%2BHttqloZ2UJFwtSQbTx6tTTkOz2k6NkNq4NGCaDLI');
       done();
     });
   });
@@ -1089,6 +1123,222 @@ describe('Curl converter should', function() {
             type: 'file'
           }
         ]);
+        done();
+      });
+    });
+  });
+
+  describe('It should correctly generate request for cURL with allowed bash operators', function() {
+
+    it('containing "<" or/and ">" in URL', function(done) {
+      convert({
+        type: 'string',
+        data: `curl https://httpbin.org/anything/<userId>/team \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything/<userId>/team');
+        expect(result.output[0].data.method).to.equal('GET');
+        done();
+      });
+    });
+
+    it('containing "(" or/and ")" in URL', function(done) {
+      convert({
+        type: 'string',
+        data: `curl https://httpbin.org/anything/(userId)/team \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything/(userId)/team');
+        expect(result.output[0].data.method).to.equal('GET');
+        done();
+      });
+    });
+
+    it('containing allowed character with url option defined in URL', function(done) {
+      convert({
+        type: 'string',
+        data: `curl --url https://httpbin.org/anything/<userId>/team \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything/<userId>/team');
+        expect(result.output[0].data.method).to.equal('GET');
+        done();
+      });
+    });
+  });
+
+  describe('It should correctly generate request for cURL with non-allowed bash operators without error', function() {
+
+    it('containing non allowed operator "|" in URL', function(done) {
+      convert({
+        type: 'string',
+        data: `curl https://httpbin.org/anything/user|id/team \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything/user');
+        expect(result.output[0].data.method).to.equal('GET');
+        done();
+      });
+    });
+
+    it('containing non allowed operator "&" in URL host part', function(done) {
+      convert({
+        type: 'string',
+        data: `curl https://httpbin.org/anything/user&id/team \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything/user');
+        expect(result.output[0].data.method).to.equal('GET');
+        done();
+      });
+    });
+
+    it('containing "&" in URL query part', function(done) {
+      convert({
+        type: 'string',
+        data: `curl https://httpbin.org/anything?hello=world&how=areyou \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything?hello=world&how=areyou');
+        expect(result.output[0].data.method).to.equal('GET');
+        done();
+      });
+    });
+
+    it('containing non allowed operator ";" in URL', function(done) {
+      convert({
+        type: 'string',
+        data: `curl https://httpbin.org/anything/user;id/team \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything/user');
+        expect(result.output[0].data.method).to.equal('GET');
+        done();
+      });
+    });
+  });
+
+  it('It should correctly generate request for cURL with special characters in URL without error', function(done) {
+    convert({
+      type: 'string',
+      data: `curl https://httpbin.org/anything/!@$%^*-_=+.,\\{}[]/team \
+      -H 'authority: httpbin.org'
+      `
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output.length).to.equal(1);
+      expect(result.output[0].type).to.equal('request');
+      expect(result.output[0].data.url).to.equal('https://httpbin.org/anything/!@$%^*-_=+.,\{}[]/team');
+      expect(result.output[0].data.method).to.equal('GET');
+      done();
+    });
+  });
+
+  it('It should correctly generate request for cURL with extra arguments apart from URL without error', function(done) {
+    convert({
+      type: 'string',
+      data: `curl https://httpbin.org/anything/team 5678 \
+      -H 'authority: httpbin.org'
+      `
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output.length).to.equal(1);
+      expect(result.output[0].type).to.equal('request');
+      expect(result.output[0].data.url).to.equal('https://httpbin.org/anything/team');
+      expect(result.output[0].data.method).to.equal('GET');
+      done();
+    });
+  });
+
+  it('It should correctly generate request for cURL with allowed operators not in URL correctly', function(done) {
+    convert({
+      type: 'string',
+      data: `curl 'https://httpbin.org/anything' \
+      -H 'authority: httpbin.org' \
+      -H "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) (KHTML, like Gecko) Chrome/109.0.0.0" \
+      -H 'accept: application/json, text/plain, */*' \
+      -H 'content-type: application/json' \
+      --data "{\"context\":{\"client\":{\"hl\":\"en\"}},\"state\":true}"
+    `
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output.length).to.equal(1);
+      expect(result.output[0].type).to.equal('request');
+      expect(result.output[0].data.url).to.equal('https://httpbin.org/anything');
+      expect(result.output[0].data.method).to.equal('POST');
+
+      const headerArr = result.output[0].data.header;
+      expect(headerArr.length).to.equal(4);
+      expect(headerArr[0].key).to.equal('authority');
+      expect(headerArr[0].value).to.equal('httpbin.org');
+      expect(headerArr[1].key).to.equal('user-agent');
+      expect(headerArr[1].value).to.equal('Mozilla/5.0 (Windows NT 10.0; Win64; x64) (KHTML, like Gecko) Chrome/109.0.0.0');
+      expect(headerArr[2].key).to.equal('accept');
+      expect(headerArr[2].value).to.equal('application/json, text/plain, */*');
+      expect(headerArr[3].key).to.equal('content-type');
+      expect(headerArr[3].value).to.equal('application/json');
+      done();
+    });
+  });
+
+  describe('It should correctly generate request for cURL with various postman id formats in URL', function() {
+
+    it('containing path variable with ":" character', function(done) {
+      convert({
+        type: 'string',
+        data: `curl https://httpbin.org/team/:teamId/user/:userId \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/team/:teamId/user/:userId');
+        expect(result.output[0].data.method).to.equal('GET');
+        done();
+      });
+    });
+
+    it('containing collection/environment variable in URL', function(done) {
+      convert({
+        type: 'string',
+        data: `curl {{baseUrl}}/user/{{userId}} \
+        -H 'authority: httpbin.org'
+        `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('{{baseUrl}}/user/{{userId}}');
+        expect(result.output[0].data.method).to.equal('GET');
         done();
       });
     });

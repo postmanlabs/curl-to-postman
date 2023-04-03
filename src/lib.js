@@ -4,7 +4,8 @@ const commander = require('commander'),
   shellQuote = require('../assets/shell-quote'),
   unnecessaryOptions = require('../assets/unnecessaryOptions'),
   supportedOptions = require('../assets/supportedOptions'),
-  formDataOptions = ['-d', '--data', '--data-raw', '--data-binary', '--data-ascii'];
+  formDataOptions = ['-d', '--data', '--data-raw', '--data-binary', '--data-ascii'],
+  allowedOperators = ['<', '>', '(', ')'];
 
 var program,
 
@@ -123,8 +124,12 @@ var program,
          ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       }
 
-      // must have a URL
-      if (curlObj.args.length > 1 && !curlObj.url) {
+      /**
+       * For cURL with ^ as line termination character, each such line termination char will be an separate arg.
+       * throw an error as we have separate handling for parsing such cURLs
+       * once it fails here using convertForCMDFormat()
+       */
+      if (curlObj.args.length > 1 && _.includes(curlObj.args, '^')) {
         throw new Error('Only the URL can be provided without an option preceding it.' +
          ' All other inputs must be specified via options.');
       }
@@ -445,8 +450,36 @@ var program,
         }
         /* eslint-enable */
       }
+      else if (curlObj.args.length > 0) {
+        let argStr = typeof curlObj.url === 'string' ? curlObj.url : '';
+
+        // eslint-disable-next-line consistent-return
+        _.forEach(curlObj.args, (arg, index) => {
+          const previousArgOp = _.get(curlObj.args, `${index - 1}.op`, ''),
+            shouldAddCurrentArg = index === 0 || allowedOperators.includes(previousArgOp);
+
+          if (typeof arg === 'string' && shouldAddCurrentArg) {
+            /**
+             * Add current string arg only if previous arg is an allowed op.
+             * For URL like "hello.com/<id>", as "<" and ">" are treated as bash operators,
+             * we'll add such operator and next arg that was split up by it in URL
+             */
+            argStr += arg;
+          }
+          else if (typeof arg === 'object' && allowedOperators.includes(arg.op)) {
+            argStr += arg.op;
+          }
+          else {
+            /**
+             * Stop adding more args as soon as we know that args are not split by allowed operators.
+             */
+            return false;
+          }
+        });
+        this.requestUrl = argStr;
+      }
       else {
-        this.requestUrl = curlObj.args[0];
+        throw new Error('Could not detect the URL from cURL. Please make sure it\'s a valid cURL');
       }
     },
 
@@ -584,6 +617,12 @@ var program,
         sanitizedArgs = this.sanitizeArgs(cleanedCurlString);
         curlObj = program.parse(sanitizedArgs);
       }
+
+      // Filter out comments from Args
+      curlObj.args = _.filter(curlObj.args, (arg) => {
+        // Each arg should be string itself, for comment we receive an object from parser
+        return !(typeof arg === 'object' && typeof arg.comment === 'string');
+      });
 
       this.headerPairs = {};
 
