@@ -4,8 +4,19 @@ const largeRequest = require('./large-request');
 var Converter = require('../src/lib'),
   convert = require('../src/convert'),
   getMetaData = require('../index').getMetaData,
+  validate = require('../index').validate,
   expect = require('expect.js'),
   _ = require('lodash');
+
+describe('validate', function () {
+  it('return false result for malformed curl snippet', function (done) {
+    const result = validate('curl --request');
+    expect(result.result).to.equal(false);
+    expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
+      ' Please use the --url option.');
+    done();
+  });
+});
 
 describe('getMetaData', function () {
   it('get meta data for a correct simple request', function (done) {
@@ -28,7 +39,19 @@ describe('getMetaData', function () {
       data: 'curl --request'
     }, function (err, result) {
       expect(result.result).to.equal(false);
-      expect(result.reason).to.equal('Error while parsing cURL: Could not identify the URL.' +
+      expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
+        ' Please use the --url option.');
+      done();
+    });
+  });
+
+  it('return false result requests that do not contain a URL', function (done) {
+    getMetaData({
+      type: 'string',
+      data: 'curl --location --request POST --header "Content-Type: application/json"'
+    }, function (err, result) {
+      expect(result.result).to.equal(false);
+      expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
         ' Please use the --url option.');
       done();
     });
@@ -43,11 +66,24 @@ describe('Curl converter should', function() {
       data: 'curl --request'
     }, function (err, result) {
       expect(result.result).to.equal(false);
-      expect(result.reason).to.equal('Error while parsing cURL: Could not identify the URL.' +
+      expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
        ' Please use the --url option.');
       done();
     });
   });
+
+  it('return false result requests that do not contain a URL', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --location --request POST --header "Content-Type: application/json"'
+    }, function (err, result) {
+      expect(result.result).to.equal(false);
+      expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
+        ' Please use the --url option.');
+      done();
+    });
+  });
+
 
   it('throw an error for a cURL without URL defined correctly', function (done) {
     convert({
@@ -55,7 +91,7 @@ describe('Curl converter should', function() {
       data: 'curl -X POST -H \'Content-type: application/json\' #{reply_url} --data \'#{response.to_json}\''
     }, function (err, result) {
       expect(result.result).to.equal(false);
-      expect(result.reason).to.equal('Error while parsing cURL: Could not identify the URL.' +
+      expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
        ' Please use the --url option.');
       done();
     });
@@ -210,7 +246,7 @@ describe('Curl converter should', function() {
       data: 'curl -I http://example.com -d "a=b"'
     }, function (err, result) {
       expect(result.result).to.equal(false);
-      expect(result.reason).to.equal('Error while parsing cURL: Both (--head/-I) and' +
+      expect(result.reason).to.equal('Unable to parse: Both (--head/-I) and' +
        ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       done();
     });

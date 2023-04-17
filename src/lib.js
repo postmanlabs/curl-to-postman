@@ -1,4 +1,5 @@
 const commander = require('commander'),
+  validUrl = require('valid-url'),
   _ = require('lodash').noConflict(),
   shellQuote = require('../assets/shell-quote'),
   unnecessaryOptions = require('../assets/unnecessaryOptions'),
@@ -119,7 +120,7 @@ var program,
       if ((curlObj.data.length > 0 || curlObj.dataAscii.length > 0 ||
          curlObj.dataBinary || curlObj.dataUrlencode.length > 0) &&
             curlObj.head && !curlObj.get) {
-        throw new Error('Error while parsing cURL: Both (--head/-I) and' +
+        throw new Error('Unable to parse: Both (--head/-I) and' +
          ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       }
 
@@ -438,13 +439,13 @@ var program,
           try {
             this.requestUrl = curlObj.rawArgs.slice(-1)[0];
             /* eslint-disable max-depth */
-            if (this.requestUrl.startsWith('-')) {
+            if (!validUrl.isUri(this.requestUrl)) {
               // eslint-disable-next-line no-throw-literal
               throw 'No valid URL found';
             }
           }
           catch (e) {
-            throw new Error('Error while parsing cURL: Could not identify the URL. Please use the --url option.');
+            throw new Error('Unable to parse: Could not identify the URL. Please use the --url option.');
           }
         }
         /* eslint-enable */
@@ -592,14 +593,89 @@ var program,
       }
     },
 
+    /**
+     * Sanitise and parse the input cURl string
+     *
+     * @param {string} curlString - Input cURL string
+     * @returns {object} - Parsed cURL Object
+     */
+    getCurlObject: function (curlString) {
+      let cleanedCurlString = curlString,
+        sanitizedArgs,
+        isMethodGuessed = false,
+        curlObj;
+      try {
+        sanitizedArgs = this.sanitizeArgs(cleanedCurlString);
+        curlObj = program.parse(sanitizedArgs);
+      }
+      catch (e) {
+        // [Github #8843] - RegEx to fix malformed cURLs with unquoted multi-param URLs
+        const multiParamUrlRegEx = /\s([^'` "\n]+)\.([^ \n]+)&((?!["'])[^ "`'\n])+($|(?=\s))/gm;
+        let matchedStrings = curlString.match(multiParamUrlRegEx),
+          matchedString = '',
+          prefixString = '';
+
+        if (matchedStrings && matchedStrings.length > 0) {
+          prefixString = matchedStrings[0].slice(0, 1);
+          matchedString = matchedStrings[0].slice(1);
+        }
+        cleanedCurlString = curlString.replace(multiParamUrlRegEx, `${prefixString}'${matchedString}'`);
+        sanitizedArgs = this.sanitizeArgs(cleanedCurlString);
+        curlObj = program.parse(sanitizedArgs);
+      }
+
+      // Filter out comments from Args
+      curlObj.args = _.filter(curlObj.args, (arg) => {
+        // Each arg should be string itself, for comment we receive an object from parser
+        return !(typeof arg === 'object' && typeof arg.comment === 'string');
+      });
+
+      this.headerPairs = {};
+
+      // if method is not given in the curl command
+      if (!curlObj.request) {
+        curlObj.request = this.getRequestMethod(curlObj);
+        isMethodGuessed = true;
+      }
+
+      curlObj.request = this.trimQuotesFromString(curlObj.request);
+
+      this.validateCurlRequest(curlObj);
+
+      this.getRequestUrl(curlObj);
+
+      return { isMethodGuessed, curlObj };
+    },
+
+    /**
+     * Valid if the input cURL string is valid or not
+     *
+     * @param {string} curlString - Input cURL string
+     * @param {boolean} shouldRetry - Whether we should retry parsing for Windows CMD style cURL input
+     * @returns {Object} - { result: true } if cURL is valid otherwise { result: false } with reason
+     */
+    validate: function (curlString, shouldRetry = true) {
+      try {
+        this.initialize();
+        this.getCurlObject(curlString);
+        return { result: true };
+      }
+      catch (e) {
+        if (shouldRetry) {
+          curlString = this.transformCmdToBash(curlString);
+          return this.validate(curlString, false);
+        }
+
+        return { result: false, reason: e.message };
+      }
+    },
+
     convertCurlToRequest: function(curlString, shouldRetry = true) {
       try {
         this.initialize();
         this.requestUrl = '';
 
-        var cleanedCurlString = curlString,
-          sanitizedArgs,
-          curlObj,
+        let { isMethodGuessed, curlObj } = this.getCurlObject(curlString),
           request = {},
           content_type,
           urlData = '',
@@ -608,48 +684,7 @@ var program,
           dataRawString,
           dataAsciiString,
           dataUrlencode,
-          formData,
-          isMethodGuessed = false;
-
-        try {
-          sanitizedArgs = this.sanitizeArgs(cleanedCurlString);
-          curlObj = program.parse(sanitizedArgs);
-        }
-        catch (e) {
-          // [Github #8843] - RegEx to fix malformed cURLs with unquoted multi-param URLs
-          const multiParamUrlRegEx = /\s([^'` "\n]+)\.([^ \n]+)&((?!["'])[^ "`'\n])+($|(?=\s))/gm;
-          let matchedStrings = curlString.match(multiParamUrlRegEx),
-            matchedString = '',
-            prefixString = '';
-
-          if (matchedStrings && matchedStrings.length > 0) {
-            prefixString = matchedStrings[0].slice(0, 1);
-            matchedString = matchedStrings[0].slice(1);
-          }
-          cleanedCurlString = curlString.replace(multiParamUrlRegEx, `${prefixString}'${matchedString}'`);
-          sanitizedArgs = this.sanitizeArgs(cleanedCurlString);
-          curlObj = program.parse(sanitizedArgs);
-        }
-
-        // Filter out comments from Args
-        curlObj.args = _.filter(curlObj.args, (arg) => {
-          // Each arg should be string itself, for comment we receive an object from parser
-          return !(typeof arg === 'object' && typeof arg.comment === 'string');
-        });
-
-        this.headerPairs = {};
-
-        // if method is not given in the curl command
-        if (!curlObj.request) {
-          curlObj.request = this.getRequestMethod(curlObj);
-          isMethodGuessed = true;
-        }
-
-        curlObj.request = this.trimQuotesFromString(curlObj.request);
-
-        this.validateCurlRequest(curlObj);
-
-        this.getRequestUrl(curlObj);
+          formData;
 
         request.method = 'GET';
         if (curlObj.request && curlObj.request.length !== 0) {
