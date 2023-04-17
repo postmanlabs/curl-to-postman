@@ -8,6 +8,9 @@
     "name": "cURL",
     "source_format": "cURL"
   },
+  "engines": {
+    "node": ">=12"
+  },
   "dependencies": {
     "commander": "2.20.3",
     "lodash": "^4.17.11",
