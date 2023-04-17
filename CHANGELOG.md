@@ -1,9 +1,24 @@
 # cURL to Postman Importer Changelog
 
-#### v1.5.0 (March 31, 2023)
-* Fixed an issue where request generation failed for certain bash operators.
-* Fixed an issue where cURL with comments described was converted incorrectly.
+## [Unreleased]
 
+### Added
+
+-   Add url validation in validate and convert functions
+-   GitHub Actions for Release management.
+
+### Changed
+
+-   Bumped up minimum Node version to 12.
+-   Unit tests now run on Node versions 12, 16 and 18.
+
+## [v1.5.0] - 2023-03-31
+
+-   Fixed an issue where request generation failed for certain bash operators.
+-   Fixed an issue where cURL with comments described was converted incorrectly.
+
+## Previous Releases
+Newer releases follow the [Keep a Changelog](https://keepachangelog.com) format.
 #### v1.4.0 (March 17, 2023)
 * Fixed issue [#7895](https://github.com/postmanlabs/postman-app-support/issues/7895) where cURL with no specific method defined for formdata type of body were not converted correctly.
 
@@ -66,3 +81,7 @@
 * First public (beta) release
 * Conforming to the internal Postman plugin interface
 * Fixes for Github issues - 4770,3623,3135,4018,5737,5286, among others
+
+[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/1.5.0...HEAD
+
+[v1.5.0]: https://github.com/postmanlabs/curl-to-postman/compare/1.4.0...1.5.0
