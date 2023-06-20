@@ -746,6 +746,15 @@ var program,
               return !ele;
             }), '&');
 
+            var rawDataObj = _.attempt(JSON.parse, request.body.raw.replace(/\r\n/g, ''));
+
+            if (rawDataObj && !_.isError(rawDataObj) && _.keys(rawDataObj).length === 2) {
+              // eslint-disable-next-line max-depth
+              if (_.has(rawDataObj, 'query') && _.has(rawDataObj, 'variables') && typeof rawDataObj.query === 'string' && typeof rawDataObj.variables === 'object') {
+                request.body.mode = 'graphql';
+              }
+            }
+
             urlData = request.data;
           }
         }
