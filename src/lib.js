@@ -4,6 +4,7 @@ const commander = require('commander'),
   shellQuote = require('../assets/shell-quote'),
   unnecessaryOptions = require('../assets/unnecessaryOptions'),
   supportedOptions = require('../assets/supportedOptions'),
+  UserError = require('./UserError'),
   formDataOptions = ['-d', '--data', '--data-raw', '--data-binary', '--data-ascii'],
   allowedOperators = ['<', '>', '(', ')'];
 
@@ -13,6 +14,13 @@ var program,
     requestUrl: '',
 
     initialize: function() {
+      /**
+       * Collects values from the command line arguments and adds them to the memo array.
+       *
+       * @param {string} str - The argument value to collect.
+       * @param {Array} memo - The array to add the collected values to.
+       * @returns {Array} - The updated memo array.
+       */
       function collectValues(str, memo) {
         memo.push(str);
         return memo;
@@ -111,7 +119,7 @@ var program,
 
         if (validMethods.indexOf(curlObj.request.toUpperCase()) === -1) {
         // the method is still not valid
-          throw new Error('The method ' + curlObj.request + ' is not supported');
+          throw new UserError('The method ' + curlObj.request + ' is not supported');
         }
       }
 
@@ -120,7 +128,7 @@ var program,
       if ((curlObj.data.length > 0 || curlObj.dataAscii.length > 0 ||
          curlObj.dataBinary || curlObj.dataUrlencode.length > 0) &&
             curlObj.head && !curlObj.get) {
-        throw new Error('Unable to parse: Both (--head/-I) and' +
+        throw new UserError('Unable to parse: Both (--head/-I) and' +
          ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
       }
 
@@ -130,7 +138,7 @@ var program,
        * once it fails here using convertForCMDFormat()
        */
       if (curlObj.args.length > 1 && _.includes(curlObj.args, '^')) {
-        throw new Error('Only the URL can be provided without an option preceding it.' +
+        throw new UserError('Only the URL can be provided without an option preceding it.' +
          ' All other inputs must be specified via options.');
       }
     },
@@ -368,7 +376,7 @@ var program,
               inCorrectlyFormedcURLRegex2 = /(\w+=\w+&?)/g; // checks - foo?bar=1&baz=2
 
             if (string.match(inCorrectlyFormedcURLRegex1) || string.match(inCorrectlyFormedcURLRegex2)) {
-              throw Error('Please check your cURL string for malformed URL');
+              throw new UserError('Please check your cURL string for malformed URL');
             }
           }
           else if (_.isFunction(arg.startsWith) && arg.startsWith('$') && arg.length > 1) {
@@ -420,8 +428,8 @@ var program,
       }
       catch (e) {
         if (e.message === 'process.exit is not a function') {
-        // happened because of
-          e.message = 'Invalid format for cURL.';
+          // happened because of
+          return { error: new UserError('Invalid format for cURL.') };
         }
         return { error: e };
       }
@@ -445,7 +453,7 @@ var program,
             }
           }
           catch (e) {
-            throw new Error('Unable to parse: Could not identify the URL. Please use the --url option.');
+            throw new UserError('Unable to parse: Could not identify the URL. Please use the --url option.');
           }
         }
         /* eslint-enable */
@@ -666,7 +674,7 @@ var program,
           return this.validate(curlString, false);
         }
 
-        return { result: false, reason: e.message };
+        return { result: false, reason: e };
       }
     },
 
@@ -796,7 +804,7 @@ var program,
           }
         }
         if (e.message === 'process.exit is not a function') {
-          e.message = 'Invalid format for cURL.';
+          return { error: new UserError('Invalid format for cURL.') };
         }
         return { error: e };
       }
