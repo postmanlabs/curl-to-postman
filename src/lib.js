@@ -11,8 +11,14 @@ var program,
 
   curlConverter = {
     requestUrl: '',
-
     initialize: function() {
+      /**
+       * Collects values from the command line arguments and adds them to the memo array.
+       *
+       * @param {string} str - The argument value to collect.
+       * @param {Array} memo - The array to add the collected values to.
+       * @returns {Array} - The updated memo array.
+       */
       function collectValues(str, memo) {
         memo.push(str);
         return memo;
@@ -750,8 +756,12 @@ var program,
 
             if (rawDataObj && !_.isError(rawDataObj) && _.keys(rawDataObj).length === 2) {
               // eslint-disable-next-line max-depth
-              if (_.has(rawDataObj, 'query') && _.has(rawDataObj, 'variables') && typeof rawDataObj.query === 'string' && typeof rawDataObj.variables === 'object') {
-                request.body.mode = 'graphql';
+              if (_.has(rawDataObj, 'query') && _.has(rawDataObj, 'variables')) {
+                // eslint-disable-next-line max-depth
+                if (typeof rawDataObj.query === 'string' && typeof rawDataObj.variables === 'object') {
+                  request.body.mode = 'graphql';
+                  request.body.graphql = request.body.raw;
+                }
               }
             }
 
