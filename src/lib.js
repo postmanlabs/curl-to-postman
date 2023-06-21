@@ -760,7 +760,10 @@ var program,
                 // eslint-disable-next-line max-depth
                 if (typeof rawDataObj.query === 'string' && typeof rawDataObj.variables === 'object') {
                   request.body.mode = 'graphql';
-                  request.body.graphql = request.body.raw;
+                  request.body.graphql = {
+                    query: rawDataObj.query,
+                    variables: rawDataObj.variables
+                  };
                 }
               }
             }
