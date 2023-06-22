@@ -14,6 +14,7 @@ describe('validate', function () {
     expect(result.result).to.equal(false);
     expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
       ' Please use the --url option.');
+    expect(result.error).to.have.property('message', result.reason);
     done();
   });
 });
@@ -41,6 +42,7 @@ describe('getMetaData', function () {
       expect(result.result).to.equal(false);
       expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
         ' Please use the --url option.');
+      expect(result.error).to.have.property('message', result.reason);
       done();
     });
   });
@@ -53,6 +55,7 @@ describe('getMetaData', function () {
       expect(result.result).to.equal(false);
       expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
         ' Please use the --url option.');
+      expect(result.error).to.have.property('message', result.reason);
       done();
     });
   });
@@ -68,6 +71,7 @@ describe('Curl converter should', function() {
       expect(result.result).to.equal(false);
       expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
        ' Please use the --url option.');
+      expect(result.error).to.have.property('message', result.reason);
       done();
     });
   });
@@ -80,10 +84,22 @@ describe('Curl converter should', function() {
       expect(result.result).to.equal(false);
       expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
         ' Please use the --url option.');
+      expect(result.error).to.have.property('message', result.reason);
       done();
     });
   });
 
+  it('throw an error when an invalid method is specificied', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --request INVALIDMETHOD --url http://www.google.com'
+    }, function (err, result) {
+      expect(result.result).to.equal(false);
+      expect(result.reason).to.equal('The method INVALIDMETHOD is not supported.');
+      expect(result.error).to.have.property('message', result.reason);
+      done();
+    });
+  });
 
   it('throw an error for a cURL without URL defined correctly', function (done) {
     convert({
@@ -93,6 +109,7 @@ describe('Curl converter should', function() {
       expect(result.result).to.equal(false);
       expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
        ' Please use the --url option.');
+      expect(result.error).to.have.property('message', result.reason);
       done();
     });
   });
@@ -247,7 +264,8 @@ describe('Curl converter should', function() {
     }, function (err, result) {
       expect(result.result).to.equal(false);
       expect(result.reason).to.equal('Unable to parse: Both (--head/-I) and' +
-       ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported');
+       ' (-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode) are not supported.');
+      expect(result.error).to.have.property('message', result.reason);
       done();
     });
   });
@@ -937,7 +955,8 @@ describe('Curl converter should', function() {
         test?bar=1&baz=2`
       }, function (err, result) {
         expect(result.result).to.equal(false);
-        expect(result.reason).to.equal('Please check your cURL string for malformed URL');
+        expect(result.reason).to.equal('Please check your cURL string for malformed URL.');
+        expect(result.error).to.have.property('message', result.reason);
         done();
       });
     });
@@ -951,7 +970,8 @@ describe('Curl converter should', function() {
         bar=1&baz=2`
       }, function (err, result) {
         expect(result.result).to.equal(false);
-        expect(result.reason).to.equal('Please check your cURL string for malformed URL');
+        expect(result.reason).to.equal('Please check your cURL string for malformed URL.');
+        expect(result.error).to.have.property('message', result.reason);
         done();
       });
     });
@@ -966,7 +986,8 @@ describe('Curl converter should', function() {
         "test.com/?bar=1&baz=2`
       }, function (err, result) {
         expect(result.result).to.equal(false);
-        expect(result.reason).to.equal('Please check your cURL string for malformed URL');
+        expect(result.reason).to.equal('Please check your cURL string for malformed URL.');
+        expect(result.error).to.have.property('message', result.reason);
         done();
       });
     });
