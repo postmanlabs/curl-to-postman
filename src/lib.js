@@ -676,6 +676,35 @@ var program,
       }
     },
 
+    /**
+     *
+     * @param {string} dataString - Input data string to check if it is a graphql query
+     * @returns {Object} - { result: true, graphql: {Object} } if dataString is a graphql query else { result: false }
+    */
+    checkIfGraphql: function (dataString) {
+      try {
+        const rawDataObj = _.attempt(JSON.parse, dataString.replace(/\r\n/g, ''));
+        if (rawDataObj && !_.isError(rawDataObj) && _.keys(rawDataObj).length === 2) {
+          if (_.has(rawDataObj, 'query') && _.has(rawDataObj, 'variables')) {
+            if (typeof rawDataObj.query === 'string' && typeof rawDataObj.variables === 'object') {
+              return {
+                result: true,
+                graphql: {
+                  query: dataString.match(/"query":"([^"]*)"/)[1],
+                  variables: rawDataObj.variables
+                }
+              };
+            }
+          }
+        }
+        return { result: false };
+      }
+      catch (e) {
+        return { result: false };
+      }
+    },
+
+
     convertCurlToRequest: function(curlString, shouldRetry = true) {
       try {
         this.initialize();
@@ -747,25 +776,18 @@ var program,
             bodyArr.push(this.trimQuotesFromString(dataUrlencode));
             bodyArr.push(this.trimQuotesFromString(dataAsciiString));
 
-            request.body.mode = 'raw';
-            request.body.raw = _.join(_.reject(bodyArr, (ele) => {
-              return !ele;
-            }), '&');
+            const rawDataString = _.join(_.reject(bodyArr, (ele) => {
+                return !ele;
+              }), '&'),
+              isGraphqlBody = this.checkIfGraphql(rawDataString);
 
-            var rawDataObj = _.attempt(JSON.parse, request.body.raw.replace(/\r\n/g, ''));
-
-            if (rawDataObj && !_.isError(rawDataObj) && _.keys(rawDataObj).length === 2) {
-              // eslint-disable-next-line max-depth
-              if (_.has(rawDataObj, 'query') && _.has(rawDataObj, 'variables')) {
-                // eslint-disable-next-line max-depth
-                if (typeof rawDataObj.query === 'string' && typeof rawDataObj.variables === 'object') {
-                  request.body.mode = 'graphql';
-                  request.body.graphql = {
-                    query: rawDataObj.query,
-                    variables: rawDataObj.variables
-                  };
-                }
-              }
+            if (isGraphqlBody.result) {
+              request.body.mode = 'graphql';
+              request.body.graphql = isGraphqlBody.graphql;
+            }
+            else {
+              request.body.mode = 'raw';
+              request.body.raw = rawDataString;
             }
 
             urlData = request.data;
