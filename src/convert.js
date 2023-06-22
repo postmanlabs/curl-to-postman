@@ -15,6 +15,7 @@ module.exports = function (input, cb) {
     if (result.error) {
       return cb(null, {
         result: false,
+        error: result.error,
         reason: result.error.message
       });
     }

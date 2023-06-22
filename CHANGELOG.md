@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+-   Assigned user errors for various handled errors
+
 ## [v1.6.0] - 2023-04-17
 
 ### Added
