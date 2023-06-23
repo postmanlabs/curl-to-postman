@@ -691,6 +691,7 @@ var program,
                 result: true,
                 graphql: {
                   query: rawDataObj.query,
+                  // eslint-disable-next-line max-len
                   variables: JSON.stringify(rawDataObj.variables, null, 2) === '{}' ? '' : JSON.stringify(rawDataObj.variables, null, 2)
                 }
               };
