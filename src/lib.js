@@ -689,14 +689,18 @@ var program,
           if (!_.has(rawDataObj, 'variables')) {
             rawDataObj.variables = {};
           }
-          if (_.keys(rawDataObj).length === 2 && _.has(rawDataObj, 'query') && _.has(rawDataObj, 'variables')) {
+          if (!_.has(rawDataObj, 'operationName')) {
+            rawDataObj.operationName = '';
+          }
+          if (_.keys(rawDataObj).length === 3 && _.has(rawDataObj, 'query') && _.has(rawDataObj, 'variables')) {
             if (typeof rawDataObj.query === 'string' && typeof rawDataObj.variables === 'object') {
+              const graphqlVariables = JSON.stringify(rawDataObj.variables, null, 2);
               return {
                 result: true,
                 graphql: {
                   query: rawDataObj.query,
-                  // eslint-disable-next-line max-len
-                  variables: JSON.stringify(rawDataObj.variables, null, 2) === '{}' ? '' : JSON.stringify(rawDataObj.variables, null, 2)
+                  operationName: rawDataObj.operationName,
+                  variables: graphqlVariables === '{}' ? '' : graphqlVariables
                 }
               };
             }
