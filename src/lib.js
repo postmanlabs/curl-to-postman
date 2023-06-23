@@ -723,16 +723,6 @@ var program,
             }
           }
         }
-        else if (contentType === 'application/graphql') {
-          return {
-            result: true,
-            graphql: {
-              query: dataString.replace(/[\r\n]/g, ''),
-              operationName: '',
-              variables: ''
-            }
-          };
-        }
         return { result: false };
       }
       catch (e) {
