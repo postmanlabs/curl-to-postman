@@ -680,20 +680,37 @@ var program,
      * Identifies whether the input data string is a graphql query or not
      *
      * @param {string} dataString - Input data string to check if it is a graphql query
+     * @param {string} contentType - Content type header value
      * @returns {Object} - { result: true, graphql: {Object} } if dataString is a graphql query else { result: false }
     */
-    identifyGraphqlRequest: function (dataString) {
+    identifyGraphqlRequest: function (dataString, contentType) {
       try {
-        const rawDataObj = _.attempt(JSON.parse, dataString.replace(/\r\n/g, ''));
-        if (rawDataObj && !_.isError(rawDataObj)) {
-          if (!_.has(rawDataObj, 'variables')) {
+        const rawDataObj = _.attempt(JSON.parse, dataString.replace(/[\r\n]/g, ''));
+        if (contentType === 'application/json' && rawDataObj && !_.isError(rawDataObj)) {
+          if (!_.has(rawDataObj, 'query') || !_.isString(rawDataObj.query)) {
+            return { result: false };
+          }
+          if (!(/^\{[\s\w]+[^]*\{[\:\s\w]+\}[^]*\}$/g).test(rawDataObj.query)) {
+            return { result: false };
+          }
+          if (_.has(rawDataObj, 'variables')) {
+            if (!_.isObject(rawDataObj.variables)) {
+              return { result: false };
+            }
+          }
+          else {
             rawDataObj.variables = {};
           }
-          if (!_.has(rawDataObj, 'operationName')) {
+          if (_.has(rawDataObj, 'operationName')) {
+            if (!_.isString(rawDataObj.operationName)) {
+              return { result: false };
+            }
+          }
+          else {
             rawDataObj.operationName = '';
           }
-          if (_.keys(rawDataObj).length === 3 && _.has(rawDataObj, 'query') && _.has(rawDataObj, 'variables')) {
-            if (typeof rawDataObj.query === 'string' && typeof rawDataObj.variables === 'object') {
+          if (_.keys(rawDataObj).length === 3) {
+            if (_.intersection(_.keys(rawDataObj), ['query', 'variables', 'operationName']).length === 3) {
               const graphqlVariables = JSON.stringify(rawDataObj.variables, null, 2);
               return {
                 result: true,
@@ -705,6 +722,16 @@ var program,
               };
             }
           }
+        }
+        else if (contentType === 'application/graphql') {
+          return {
+            result: true,
+            graphql: {
+              query: dataString.replace(/[\r\n]/g, ''),
+              operationName: '',
+              variables: ''
+            }
+          };
         }
         return { result: false };
       }
@@ -788,7 +815,7 @@ var program,
             const rawDataString = _.join(_.reject(bodyArr, (ele) => {
                 return !ele;
               }), '&'),
-              graphqlRequestData = this.identifyGraphqlRequest(rawDataString);
+              graphqlRequestData = this.identifyGraphqlRequest(rawDataString, content_type);
 
             if (graphqlRequestData.result) {
               request.body.mode = 'graphql';
