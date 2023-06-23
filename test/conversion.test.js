@@ -712,6 +712,17 @@ describe('Curl converter should', function() {
     done();
   });
 
+  it('[Github #9941]: should correctly identify graphql queries', function(done) {
+    var result = Converter.convertCurlToRequest(`curl -L 'https://countries.trevorblades.com' \\
+    -H 'Content-Type: application/json' \\
+    -d '{"query":"{\r\n  countries {\r\n    code\r\n    name\r\n    emoji\r\n  }\r\n}","variables":{}}'`);
+
+    expect(result.body).to.have.property('mode', 'graphql');
+    expect(result.body.graphql.query).to.eql('{  countries {    code    name    emoji  }}');
+    expect(result.body.graphql.variables).to.eql('');
+    done();
+  });
+
   describe('[Github #8843]: It should recognize non-apostrophed ("...") url with multi-param', function() {
     it('in case where there is multiple params with & in between in the url (https)', function(done) {
       convert({
