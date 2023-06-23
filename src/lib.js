@@ -691,7 +691,7 @@ var program,
                 result: true,
                 graphql: {
                   query: rawDataObj.query,
-                  variables: JSON.stringify(rawDataObj.variables, null, 2)
+                  variables: JSON.stringify(rawDataObj.variables, null, 2) === '{}' ? '' : JSON.stringify(rawDataObj.variables, null, 2)
                 }
               };
             }
