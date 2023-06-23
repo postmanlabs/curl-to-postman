@@ -677,15 +677,19 @@ var program,
     },
 
     /**
+     * Identifies whether the input data string is a graphql query or not
      *
      * @param {string} dataString - Input data string to check if it is a graphql query
      * @returns {Object} - { result: true, graphql: {Object} } if dataString is a graphql query else { result: false }
     */
-    checkIfGraphql: function (dataString) {
+    identifyGraphqlRequest: function (dataString) {
       try {
         const rawDataObj = _.attempt(JSON.parse, dataString.replace(/\r\n/g, ''));
-        if (rawDataObj && !_.isError(rawDataObj) && _.keys(rawDataObj).length === 2) {
-          if (_.has(rawDataObj, 'query') && _.has(rawDataObj, 'variables')) {
+        if (rawDataObj && !_.isError(rawDataObj)) {
+          if (!_.has(rawDataObj, 'variables')) {
+            rawDataObj.variables = {};
+          }
+          if (_.keys(rawDataObj).length === 2 && _.has(rawDataObj, 'query') && _.has(rawDataObj, 'variables')) {
             if (typeof rawDataObj.query === 'string' && typeof rawDataObj.variables === 'object') {
               return {
                 result: true,
@@ -780,11 +784,11 @@ var program,
             const rawDataString = _.join(_.reject(bodyArr, (ele) => {
                 return !ele;
               }), '&'),
-              isGraphqlBody = this.checkIfGraphql(rawDataString);
+              graphqlRequestData = this.identifyGraphqlRequest(rawDataString);
 
-            if (isGraphqlBody.result) {
+            if (graphqlRequestData.result) {
               request.body.mode = 'graphql';
-              request.body.graphql = isGraphqlBody.graphql;
+              request.body.graphql = graphqlRequestData.graphql;
             }
             else {
               request.body.mode = 'raw';
