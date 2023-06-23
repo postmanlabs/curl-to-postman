@@ -677,6 +677,7 @@ var program,
     },
 
     /**
+     * Identifies whether the input data string is a graphql query or not
      *
      * @param {string} dataString - Input data string to check if it is a graphql query
      * @returns {Object} - { result: true, graphql: {Object} } if dataString is a graphql query else { result: false }
