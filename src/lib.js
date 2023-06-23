@@ -690,8 +690,8 @@ var program,
               return {
                 result: true,
                 graphql: {
-                  query: dataString.match(/"query":"([^"]*)"/)[1],
-                  variables: rawDataObj.variables
+                  query: rawDataObj.query,
+                  variables: JSON.stringify(rawDataObj.variables, null, 2)
                 }
               };
             }
