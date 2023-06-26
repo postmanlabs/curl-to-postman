@@ -718,7 +718,7 @@ describe('Curl converter should', function() {
     -d '{"query":"{\r\n  countries {\r\n    code\r\n    name\r\n    emoji\r\n  }\r\n}","variables":{}}'`);
 
     expect(result.body).to.have.property('mode', 'graphql');
-    expect(result.body.graphql.query).to.eql('{  countries {    code    name    emoji  }}');
+    expect(result.body.graphql.query).to.eql('{\r\n  countries {\r\n    code\r\n    name\r\n    emoji\r\n  }\r\n}');
     expect(result.body.graphql.variables).to.eql('');
     done();
   });
