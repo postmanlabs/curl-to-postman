@@ -749,7 +749,6 @@ var program,
         return { result: false };
       }
       catch (e) {
-        console.log(e);
         return { result: false };
       }
     },
