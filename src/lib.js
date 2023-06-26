@@ -677,6 +677,25 @@ var program,
     },
 
     /**
+     * Escape JSON strings before JSON.parse
+     *
+     * @param {string} jsonString - Input JSON string
+     * @returns {string} - JSON string with escaped characters
+     */
+    escapeJson: function (jsonString) {
+      // eslint-disable-next-line no-implicit-globals
+      meta = { // table of character substitutions
+        '\t': '\\t',
+        '\n': '\\n',
+        '\f': '\\f',
+        '\r': '\\r'
+      };
+      return jsonString.replace(/[\t\n\f\r]/g, (char) => {
+        return meta[char];
+      });
+    },
+
+    /**
      * Identifies whether the input data string is a graphql query or not
      *
      * @param {string} dataString - Input data string to check if it is a graphql query
@@ -685,7 +704,7 @@ var program,
     */
     identifyGraphqlRequest: function (dataString, contentType) {
       try {
-        const rawDataObj = _.attempt(JSON.parse, dataString.replace(/[\r\n]/g, ''));
+        const rawDataObj = _.attempt(JSON.parse, this.escapeJson(dataString));
         if (contentType === 'application/json' && rawDataObj && !_.isError(rawDataObj)) {
           if (!_.has(rawDataObj, 'query') || !_.isString(rawDataObj.query)) {
             return { result: false };
@@ -730,6 +749,7 @@ var program,
         return { result: false };
       }
       catch (e) {
+        console.log(e);
         return { result: false };
       }
     },
