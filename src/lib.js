@@ -690,7 +690,11 @@ var program,
           if (!_.has(rawDataObj, 'query') || !_.isString(rawDataObj.query)) {
             return { result: false };
           }
-          if (!(/^\{[\s\w]+[^]*\{[\:\s\w]+\}[^]*\}$/g).test(rawDataObj.query)) {
+          if (!(/^[^]*\{[^]*\}$/g).test(rawDataObj.query)) {
+            return { result: false };
+          }
+          const queryToJson = _.attempt(JSON.parse, rawDataObj.query);
+          if (queryToJson && !_.isError(queryToJson)) {
             return { result: false };
           }
           if (_.has(rawDataObj, 'variables')) {
