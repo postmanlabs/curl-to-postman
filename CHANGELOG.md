@@ -4,7 +4,7 @@
 
 ### Added
 
-- Add method to identify GraphQL requests from body data
+- Fix for - [#9941](https://github.com/postmanlabs/postman-app-support/issues/9941) Add method to identify GraphQL requests from body data
 
 ### Changed
 
