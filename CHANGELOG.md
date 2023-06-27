@@ -2,9 +2,11 @@
 
 ## [Unreleased]
 
+## [v1.7.0] - 2023-06-27
+
 ### Added
 
-- Fix for - [#9941](https://github.com/postmanlabs/postman-app-support/issues/9941) Add method to identify GraphQL requests from body data
+-   Fix for - [#9941](https://github.com/postmanlabs/postman-app-support/issues/9941) Add method to identify GraphQL requests from body data
 
 ### Changed
 
@@ -111,7 +113,9 @@ Newer releases follow the [Keep a Changelog](https://keepachangelog.com) format.
 -   Conforming to the internal Postman plugin interface
 -   Fixes for Github issues - 4770,3623,3135,4018,5737,5286, among others
 
-[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.7.0...HEAD
+
+[v1.7.0]: https://github.com/postmanlabs/curl-to-postman/compare/v1.6.0...v1.7.0
 
 [v1.6.0]: https://github.com/postmanlabs/curl-to-postman/compare/v1.5.0...v1.6.0
 
