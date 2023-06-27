@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add method to identify GraphQL requests from body data
+
 ### Changed
 
 -   Assigned user errors for various handled errors
