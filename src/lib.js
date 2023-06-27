@@ -726,17 +726,15 @@ var program,
             rawDataObj.operationName = '';
           }
           if (_.keys(rawDataObj).length === 3) {
-            if (_.intersection(_.keys(rawDataObj), ['query', 'variables', 'operationName']).length === 3) {
-              const graphqlVariables = JSON.stringify(rawDataObj.variables, null, 2);
-              return {
-                result: true,
-                graphql: {
-                  query: rawDataObj.query,
-                  operationName: rawDataObj.operationName,
-                  variables: graphqlVariables === '{}' ? '' : graphqlVariables
-                }
-              };
-            }
+            const graphqlVariables = JSON.stringify(rawDataObj.variables, null, 2);
+            return {
+              result: true,
+              graphql: {
+                query: rawDataObj.query,
+                operationName: rawDataObj.operationName,
+                variables: graphqlVariables === '{}' ? '' : graphqlVariables
+              }
+            };
           }
         }
         return { result: false };
