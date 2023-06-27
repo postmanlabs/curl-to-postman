@@ -13,7 +13,6 @@ var program,
 
   curlConverter = {
     requestUrl: '',
-
     initialize: function() {
       /**
        * Collects values from the command line arguments and adds them to the memo array.
@@ -677,6 +676,75 @@ var program,
       }
     },
 
+    /**
+     * Escape JSON strings before JSON.parse
+     *
+     * @param {string} jsonString - Input JSON string
+     * @returns {string} - JSON string with escaped characters
+     */
+    escapeJson: function (jsonString) {
+      // eslint-disable-next-line no-implicit-globals
+      meta = { // table of character substitutions
+        '\t': '\\t',
+        '\n': '\\n',
+        '\f': '\\f',
+        '\r': '\\r'
+      };
+      return jsonString.replace(/[\t\n\f\r]/g, (char) => {
+        return meta[char];
+      });
+    },
+
+    /**
+     * Identifies whether the input data string is a graphql query or not
+     *
+     * @param {string} dataString - Input data string to check if it is a graphql query
+     * @param {string} contentType - Content type header value
+     * @returns {Object} - { result: true, graphql: {Object} } if dataString is a graphql query else { result: false }
+    */
+    identifyGraphqlRequest: function (dataString, contentType) {
+      try {
+        const rawDataObj = _.attempt(JSON.parse, this.escapeJson(dataString));
+        if (contentType === 'application/json' && rawDataObj && !_.isError(rawDataObj)) {
+          if (!_.has(rawDataObj, 'query') || !_.isString(rawDataObj.query)) {
+            return { result: false };
+          }
+          if (_.has(rawDataObj, 'variables')) {
+            if (!_.isObject(rawDataObj.variables)) {
+              return { result: false };
+            }
+          }
+          else {
+            rawDataObj.variables = {};
+          }
+          if (_.has(rawDataObj, 'operationName')) {
+            if (!_.isString(rawDataObj.operationName)) {
+              return { result: false };
+            }
+          }
+          else {
+            rawDataObj.operationName = '';
+          }
+          if (_.keys(rawDataObj).length === 3) {
+            const graphqlVariables = JSON.stringify(rawDataObj.variables, null, 2);
+            return {
+              result: true,
+              graphql: {
+                query: rawDataObj.query,
+                operationName: rawDataObj.operationName,
+                variables: graphqlVariables === '{}' ? '' : graphqlVariables
+              }
+            };
+          }
+        }
+        return { result: false };
+      }
+      catch (e) {
+        return { result: false };
+      }
+    },
+
+
     convertCurlToRequest: function(curlString, shouldRetry = true) {
       try {
         this.initialize();
@@ -748,10 +816,19 @@ var program,
             bodyArr.push(this.trimQuotesFromString(dataUrlencode));
             bodyArr.push(this.trimQuotesFromString(dataAsciiString));
 
-            request.body.mode = 'raw';
-            request.body.raw = _.join(_.reject(bodyArr, (ele) => {
-              return !ele;
-            }), '&');
+            const rawDataString = _.join(_.reject(bodyArr, (ele) => {
+                return !ele;
+              }), '&'),
+              graphqlRequestData = this.identifyGraphqlRequest(rawDataString, content_type);
+
+            if (graphqlRequestData.result) {
+              request.body.mode = 'graphql';
+              request.body.graphql = graphqlRequestData.graphql;
+            }
+            else {
+              request.body.mode = 'raw';
+              request.body.raw = rawDataString;
+            }
 
             urlData = request.data;
           }
