@@ -528,6 +528,26 @@ describe('Curl converter should', function() {
     done();
   });
 
+  it('should import body data with --data-raw argument containing "+"', function (done) {
+    var result = Converter.convertCurlToRequest(`curl --location --request POST "https://sample.com"
+    --header "Content-Type: application/x-www-form-urlencoded"
+    --data-raw 'a=hello+world&key+with+space=hello%20world'`);
+
+    expect(result.body).to.have.property('mode', 'urlencoded');
+    expect(result.body.urlencoded[0]).to.eql({
+      key: 'a',
+      value: 'hello world',
+      type: 'text'
+    });
+    expect(result.body.urlencoded[1]).to.eql({
+      key: 'key with space',
+      value: 'hello world',
+      type: 'text'
+    });
+
+    done();
+  });
+
   it('[GitHub #7806]: should parse -X method correctly', function (done) {
     var result = Converter.convertCurlToRequest('curl -H "X-XSRF-Token: token_value" https://domain.com');
     expect(result.method).to.eql('GET');

@@ -315,8 +315,8 @@ var program,
         }
 
         if (toDecodeUri) {
-          key = decodeURIComponent(key);
-          val = decodeURIComponent(val);
+          key = decodeURIComponent(key.replace(/\+/g, '%20'));
+          val = decodeURIComponent(val.replace(/\+/g, '%20'));
         }
 
         _.assign(paramObj, { key, value: val });

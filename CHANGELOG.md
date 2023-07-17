@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [v1.7.1] - 2023-07-17
+
 ## [v1.7.0] - 2023-06-27
 
 ### Added
@@ -113,7 +115,9 @@ Newer releases follow the [Keep a Changelog](https://keepachangelog.com) format.
 -   Conforming to the internal Postman plugin interface
 -   Fixes for Github issues - 4770,3623,3135,4018,5737,5286, among others
 
-[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.7.1...HEAD
+
+[v1.7.1]: https://github.com/postmanlabs/curl-to-postman/compare/v1.7.0...v1.7.1
 
 [v1.7.0]: https://github.com/postmanlabs/curl-to-postman/compare/v1.6.0...v1.7.0
 
