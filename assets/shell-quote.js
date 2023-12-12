@@ -44,7 +44,7 @@ for (var i = 0; i < 4; i++) {
  */
 const unicodeRegExp = /\\x([0-9A-Fa-f]{2})|\\u([0-9A-Fa-f]{4})|\\u\{([0-9A-Fa-f]{1,6})\}|\\([\s\S])/gm;
 
-// Single character escape sequence mapping to corresponding character 
+// Single character escape sequence mapping to corresponding character
 const escapeCharMap = {
   'b': '\b',
   'f': '\f',
@@ -210,7 +210,6 @@ function parse(s, env, opts) {
       }
       else if (/[*@#?$!_\-]/.test(s.charAt(i))) {
         varname = s.charAt(i);
-        i += 1;
       }
       else {
         varend = s.substr(i).match(/[^\w\d_]/);
