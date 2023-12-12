@@ -705,6 +705,7 @@ var program,
     identifyGraphqlRequest: function (dataString, contentType) {
       try {
         const rawDataObj = _.attempt(JSON.parse, this.escapeJson(dataString));
+
         if (contentType === 'application/json' && rawDataObj && !_.isError(rawDataObj)) {
           if (!_.has(rawDataObj, 'query') || !_.isString(rawDataObj.query)) {
             return { result: false };
@@ -721,17 +722,14 @@ var program,
             if (!_.isString(rawDataObj.operationName)) {
               return { result: false };
             }
+            delete rawDataObj.operationName;
           }
-          else {
-            rawDataObj.operationName = '';
-          }
-          if (_.keys(rawDataObj).length === 3) {
+          if (_.keys(rawDataObj).length === 2) {
             const graphqlVariables = JSON.stringify(rawDataObj.variables, null, 2);
             return {
               result: true,
               graphql: {
                 query: rawDataObj.query,
-                operationName: rawDataObj.operationName,
                 variables: graphqlVariables === '{}' ? '' : graphqlVariables
               }
             };
