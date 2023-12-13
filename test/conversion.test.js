@@ -663,6 +663,13 @@ describe('Curl converter should', function() {
     done();
   });
 
+  it('[GitHub #11888]: should correctly handle characters after `$`', function (done) {
+    var result = Converter.convertCurlToRequest('curl -X GET "https://alextest.com" -H "5f005074: [jKanrLih$!]SooCV5u)aI!pt9"');
+
+    expect(result.header).to.eql([{ key: '5f005074', value: '[jKanrLih$!]SooCV5u)aI!pt9' }]);
+    done();
+  });
+
   it('[GitHub #7895]: should correctly handle raw form data with boundry separated body', function (done) {
     var result = Converter.convertCurlToRequest(`curl 'https://httpbin.org/post'
     -H 'Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7oJTsSWYoA2LdaPx' --data $'` +
