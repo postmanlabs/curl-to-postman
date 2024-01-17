@@ -1,6 +1,6 @@
 {
   "name": "curl-to-postmanv2",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "Convert a given CURL command to a Postman request",
   "main": "index.js",
   "com_postman_plugin": {
@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "commander": "2.20.3",
-    "lodash": "^4.17.11",
+    "lodash": "4.17.21",
     "shell-quote": "1.6.1",
     "uuid": "3.2.1",
     "valid-url": "^1.0.9"

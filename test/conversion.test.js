@@ -743,6 +743,18 @@ describe('Curl converter should', function() {
     done();
   });
 
+  it('[Github #12349]: should correctly convert graphql queries without operationName', function(done) {
+    var result = Converter.convertCurlToRequest(`curl --location 'https://spacex-production.up.railway.app' \\
+    --header 'Content-Type: application/json' \\
+    --data '{"query":"query getCompanyData {\r\n    company {\r\n        ceo\r\n    }\r\n}","variables":{}}'`);
+
+    expect(result.body).to.have.property('mode', 'graphql');
+    expect(result.body.graphql.query).to.eql('query getCompanyData {\r\n    company {\r\n        ceo\r\n    }\r\n}');
+    expect(result.body.graphql.variables).to.eql('');
+    expect(result.body.graphql).to.not.have.property('operationName');
+    done();
+  });
+
   describe('[Github #8843]: It should recognize non-apostrophed ("...") url with multi-param', function() {
     it('in case where there is multiple params with & in between in the url (https)', function(done) {
       convert({
