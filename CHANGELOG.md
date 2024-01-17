@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+-   Fix for - [#12349](https://github.com/postmanlabs/postman-app-support/issues/12349) Fixed issue where GraphQL requests were failing to send correct data.
+-   Fixed various TypeErrors that were occurring frequently for users.
+
 ## [v1.7.1] - 2023-07-17
 
 ## [v1.7.0] - 2023-06-27
