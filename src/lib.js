@@ -105,19 +105,26 @@ var program,
       var validMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'COPY', 'HEAD',
           'OPTIONS', 'LINK', 'UNLINK', 'PURGE', 'LOCK', 'UNLOCK', 'PROPFIND'],
         singleWordXMethod,
-        singleWordMethodPrefix = '-X';
-      if (validMethods.indexOf(curlObj.request.toUpperCase()) === -1) {
+        singleWordMethodPrefix = '-X',
+        reqMethod = _.toUpper(curlObj.request);
+
+      if (validMethods.indexOf(reqMethod) === -1) {
 
         // no valid method
         // -XPOST might have been used
         // try the POST part again
-        singleWordXMethod = _.find(curlObj.rawArgs, function (arg) { return arg.startsWith(singleWordMethodPrefix); });
+        singleWordXMethod = _.find(curlObj.rawArgs, function (arg) {
+          return typeof arg === 'string' && arg.startsWith(singleWordMethodPrefix);
+        });
+
         if (singleWordXMethod) {
         // try to re-set curlObj.request to the newly extracted method
           curlObj.request = singleWordXMethod.substring(singleWordMethodPrefix.length);
         }
 
-        if (validMethods.indexOf(curlObj.request.toUpperCase()) === -1) {
+        reqMethod = _.toUpper(curlObj.request);
+
+        if (validMethods.indexOf(reqMethod) === -1) {
         // the method is still not valid
           throw new UserError(USER_ERRORS.METHOD_NOT_SUPPORTED`${curlObj.request}`);
         }
@@ -218,7 +225,7 @@ var program,
       let authObject;
 
       // It is a valid cURL to have only username, in that case keep password empty
-      const userParts = curlObj.user.split(':') || [];
+      const userParts = (typeof curlObj.user === 'string' && curlObj.user.split(':')) || [];
       if (userParts.length === 1) {
         userParts[1] = '';
       }
@@ -529,6 +536,11 @@ var program,
       //      multipart/form-data; boundary=----7dd322351017c; ...
       m = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
 
+      // if correct boundary match is not found, keep formdata fields empty
+      if (!m || typeof data !== 'string') {
+        return parsedFormData;
+      }
+
       // \r\n is part of the boundary.
       boundary = '\r\n--' + (m[1] || m[2]);
 
@@ -639,7 +651,7 @@ var program,
       this.headerPairs = {};
 
       // if method is not given in the curl command
-      if (!curlObj.request) {
+      if (typeof curlObj.request !== 'string' || !curlObj.request) {
         curlObj.request = this.getRequestMethod(curlObj);
         isMethodGuessed = true;
       }
