@@ -852,11 +852,19 @@ var program,
 
               request.body.options = {};
               request.body.options.raw = {};
-              request.body.options.raw.language = Object.keys(LANGUAGE_REGEX_MATCH)
-                .find((key) => {
-                  return LANGUAGE_REGEX_MATCH[key].test(content_type);
-                }) || REQUEST_BODY_LANGUAGE_TEXT;
 
+              /* eslint-disable max-depth */
+              try {
+                request.body.options.raw.language = Object.keys(LANGUAGE_REGEX_MATCH)
+                  .find((key) => {
+                    return LANGUAGE_REGEX_MATCH[key].test(content_type);
+                  }) || REQUEST_BODY_LANGUAGE_TEXT;
+              }
+              catch (err) {
+                // In case of error, set language to text as default
+                request.body.options.raw.language = REQUEST_BODY_LANGUAGE_TEXT;
+              }
+              /* eslint-enable max-depth */
             }
 
             urlData = request.data;
