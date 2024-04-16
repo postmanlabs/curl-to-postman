@@ -755,6 +755,32 @@ describe('Curl converter should', function() {
     done();
   });
 
+  it('should convert a POST request and assign json language using content-type header', function(done) {
+    var result = Converter.convertCurlToRequest(`curl -X POST -H "Content-Type: application/json" \\
+    -d \'{"key":"value"}\' https://www.example.com`);
+
+    expect(result.body).to.eql({
+      mode: 'raw',
+      raw: '{"key":"value"}',
+      options: { raw: { language: 'json' } }
+    });
+
+    done();
+  });
+
+  it('should convert a POST request and assign xml language using content-type header', function(done) {
+    var result = Converter.convertCurlToRequest(`curl -X POST -H "Content-Type: application/xml" \\
+    -d \'<root><key>value</key></root>\' https://www.example.com`);
+
+    expect(result.body).to.eql({
+      mode: 'raw',
+      raw: '<root><key>value</key></root>',
+      options: { raw: { language: 'xml' } }
+    });
+
+    done();
+  });
+
   describe('[Github #8843]: It should recognize non-apostrophed ("...") url with multi-param', function() {
     it('in case where there is multiple params with & in between in the url (https)', function(done) {
       convert({

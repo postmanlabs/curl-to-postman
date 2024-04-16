@@ -7,7 +7,18 @@ const commander = require('commander'),
   UserError = require('./UserError'),
   { USER_ERRORS } = require('./constants'),
   formDataOptions = ['-d', '--data', '--data-raw', '--data-binary', '--data-ascii'],
-  allowedOperators = ['<', '>', '(', ')'];
+  allowedOperators = ['<', '>', '(', ')'],
+  REQUEST_BODY_LANGUAGE_TEXT = 'text',
+  REQUEST_BODY_LANGUAGE_JSON = 'json',
+  REQUEST_BODY_LANGUAGE_JAVASCRIPT = 'javascript',
+  REQUEST_BODY_LANGUAGE_HTML = 'html',
+  REQUEST_BODY_LANGUAGE_XML = 'xml',
+  LANGUAGE_REGEX_MATCH = {
+    [REQUEST_BODY_LANGUAGE_JSON]: /^application\/(\S+\+)?json/,
+    [REQUEST_BODY_LANGUAGE_JAVASCRIPT]: /^(text|application)\/(\S+\+)?javascript/,
+    [REQUEST_BODY_LANGUAGE_XML]: /^(text|application)\/(\S+\+)?xml/,
+    [REQUEST_BODY_LANGUAGE_HTML]: /^text\/html/
+  };
 
 var program,
 
@@ -838,6 +849,14 @@ var program,
             else {
               request.body.mode = 'raw';
               request.body.raw = rawDataString;
+
+              request.body.options = {};
+              request.body.options.raw = {};
+              request.body.options.raw.language = Object.keys(LANGUAGE_REGEX_MATCH)
+                .find((key) => {
+                  return LANGUAGE_REGEX_MATCH[key].test(content_type);
+                }) || REQUEST_BODY_LANGUAGE_TEXT;
+
             }
 
             urlData = request.data;
