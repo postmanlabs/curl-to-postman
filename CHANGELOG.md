@@ -4,6 +4,10 @@
 
 ## [v1.8.1] - 2024-04-17
 
+### Added
+
+-   Added support for determining raw body language based on content-type header.
+
 ## [v1.8.0] - 2024-01-17
 
 ### Changed
