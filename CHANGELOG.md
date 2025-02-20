@@ -4,6 +4,10 @@
 
 ## [v1.8.2] - 2025-02-20
 
+### Added
+
+-   [#13455](https://github.com/postmanlabs/postman-app-support/issues/13455) Added support for -b and --cookie options and create relavant cookie header.
+
 ## [v1.8.1] - 2024-04-17
 
 ### Added
