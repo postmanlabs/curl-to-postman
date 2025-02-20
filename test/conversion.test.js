@@ -1444,4 +1444,84 @@ describe('Curl converter should', function() {
       });
     });
   });
+
+  describe('It should correctly generate request with cookie header', function() {
+    it('containing -b option', function(done) {
+      convert({
+        type: 'string',
+        data: `curl 'https://httpbin.org/anything' \
+        -b 'dashboard_beta=yes; postman-beta.track=default' \
+        -H 'authority: httpbin.org'
+        --data "{\"context\":{\"client\":{\"hl\":\"en\"}},\"state\":true}"
+      `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything');
+        expect(result.output[0].data.method).to.equal('POST');
+
+        const headerArr = result.output[0].data.header;
+        expect(headerArr.length).to.equal(2);
+        expect(headerArr[0].key).to.equal('authority');
+        expect(headerArr[0].value).to.equal('httpbin.org');
+        expect(headerArr[1].key).to.equal('Cookie');
+        expect(headerArr[1].value).to.equal('dashboard_beta=yes; postman-beta.track=default');
+        done();
+      });
+    });
+
+    it('containing --cookie option', function(done) {
+      convert({
+        type: 'string',
+        data: `curl 'https://httpbin.org/anything' \
+        --cookie 'dashboard_beta=yes; postman-beta.track=default' \
+        -H 'authority: httpbin.org'
+        --data "{\"context\":{\"client\":{\"hl\":\"en\"}},\"state\":true}"
+      `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything');
+        expect(result.output[0].data.method).to.equal('POST');
+
+        const headerArr = result.output[0].data.header;
+        expect(headerArr.length).to.equal(2);
+        expect(headerArr[0].key).to.equal('authority');
+        expect(headerArr[0].value).to.equal('httpbin.org');
+        expect(headerArr[1].key).to.equal('Cookie');
+        expect(headerArr[1].value).to.equal('dashboard_beta=yes; postman-beta.track=default');
+        done();
+      });
+    });
+
+    it('containing multiple cookies', function(done) {
+      convert({
+        type: 'string',
+        data: `curl 'https://httpbin.org/anything' \
+        -b 'dashboard_beta=yes; postman-beta.track=default' \
+        -b 'name=JohnDoe' \
+        -H 'authority: httpbin.org' \
+        --data "{\"context\":{\"client\":{\"hl\":\"en\"}},\"state\":true}"
+      `
+      }, function (err, result) {
+        expect(result.result).to.equal(true);
+        expect(result.output.length).to.equal(1);
+        expect(result.output[0].type).to.equal('request');
+        expect(result.output[0].data.url).to.equal('https://httpbin.org/anything');
+        expect(result.output[0].data.method).to.equal('POST');
+
+        const headerArr = result.output[0].data.header;
+        expect(headerArr.length).to.equal(3);
+        expect(headerArr[0].key).to.equal('authority');
+        expect(headerArr[0].value).to.equal('httpbin.org');
+        expect(headerArr[1].key).to.equal('Cookie');
+        expect(headerArr[1].value).to.equal('dashboard_beta=yes; postman-beta.track=default');
+        expect(headerArr[2].key).to.equal('Cookie');
+        expect(headerArr[2].value).to.equal('name=JohnDoe');
+        done();
+      });
+    });
+  });
 });

@@ -18,7 +18,8 @@ const commander = require('commander'),
     [REQUEST_BODY_LANGUAGE_JAVASCRIPT]: /^(text|application)\/(\S+\+)?javascript/,
     [REQUEST_BODY_LANGUAGE_XML]: /^(text|application)\/(\S+\+)?xml/,
     [REQUEST_BODY_LANGUAGE_HTML]: /^text\/html/
-  };
+  },
+  ALLOWED_DUPLICATE_HEADERS = ['cookie'];
 
 var program,
 
@@ -177,6 +178,13 @@ var program,
         });
       }
 
+      // If any cookies are added under -b or --cookie arg, add them as Cookie header
+      if (curlObj.cookie && Array.isArray(curlObj.cookie)) {
+        curlObj.cookie.forEach((cookieVal) => {
+          headerArray.push('Cookie: ' + this.trimQuotesFromString(cookieVal));
+        });
+      }
+
       if (headerArray === null || headerArray.length === 0) {
         return retVal;
       }
@@ -210,7 +218,7 @@ var program,
         value = thisHeader.substring(keyIndex + 1, thisHeader.length).trim();
         /* eslint-enable */
 
-        if (this.headerPairs.hasOwnProperty(key)) {
+        if (this.headerPairs.hasOwnProperty(key) && !ALLOWED_DUPLICATE_HEADERS.includes(key.toLowerCase())) {
         // don't add the same header twice
           continue;
         }
