@@ -106,6 +106,13 @@ let supportedOptions = [
     description: 'Username and password for server authentication',
     format: '[string]',
     collectValues: false
+  },
+  {
+    short: '-b',
+    long: '--cookie',
+    description: 'Specifies cookies to be used in the format "NAME=VALUE" or a file to read cookies from',
+    format: '[string]',
+    collectValues: true
   }
 ];
 module.exports = supportedOptions;
