@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [v1.8.2] - 2025-02-20
+
+### Added
+
+-   [#13455](https://github.com/postmanlabs/postman-app-support/issues/13455) Added support for -b and --cookie options and create relavant cookie header.
+
 ## [v1.8.1] - 2024-04-17
 
 ### Added
@@ -128,7 +134,9 @@ Newer releases follow the [Keep a Changelog](https://keepachangelog.com) format.
 -   Conforming to the internal Postman plugin interface
 -   Fixes for Github issues - 4770,3623,3135,4018,5737,5286, among others
 
-[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.2...HEAD
+
+[v1.8.2]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.1...v1.8.2
 
 [v1.8.1]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.0...v1.8.1
 
