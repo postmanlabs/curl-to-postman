@@ -4,6 +4,10 @@
 
 ## [v1.8.3] - 2025-09-30
 
+### Changed
+
+-   Upgrade dep: shell-quote
+
 ## [v1.8.2] - 2025-02-20
 
 ### Added
