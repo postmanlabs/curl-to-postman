@@ -462,12 +462,26 @@ var program,
     getRequestUrl: function(curlObj) {
       this.requestUrl = '';
       if (curlObj.args.length === 0) {
-        if (curlObj.url) {
+
+        if (typeof curlObj.url === 'string') {
         // url is populated if there's no unknown option
-          this.requestUrl = curlObj.url;
+          this.requestUrl = curlObj.url.trim();
         }
         else {
         // if there is an unknown option, we have to take it from the rawArgs
+          const rawArgs = Array.isArray(curlObj.rawArgs) ? curlObj.rawArgs : [],
+            urlArgIndex = rawArgs.lastIndexOf('--url'),
+            hasUrlOption = urlArgIndex > -1,
+            explicitUrlValue = rawArgs[urlArgIndex + 1],
+            normalizedExplicitUrl = typeof explicitUrlValue === 'string' ? explicitUrlValue.trim() : '',
+            hasUrlArgument = Boolean(normalizedExplicitUrl && !normalizedExplicitUrl.startsWith('-'));
+
+          // Allow conversion to an empty-URL request when --url is present without a usable URL argument.
+          if (hasUrlOption && !hasUrlArgument) {
+            this.requestUrl = '';
+            return;
+          }
+
           try {
             this.requestUrl = curlObj.rawArgs.slice(-1)[0];
             /* eslint-disable max-depth */

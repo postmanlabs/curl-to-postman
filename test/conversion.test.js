@@ -17,6 +17,30 @@ describe('validate', function () {
     expect(result.error).to.have.property('message', result.reason);
     done();
   });
+
+  it('return true result for explicit empty --url value', function (done) {
+    const result = validate('curl --request GET --url \'\'');
+    expect(result.result).to.equal(true);
+    done();
+  });
+
+  it('return true result for --url without value', function (done) {
+    const result = validate('curl --request GET --url');
+    expect(result.result).to.equal(true);
+    done();
+  });
+
+  it('return true result for --url followed by another option', function (done) {
+    const result = validate('curl --url --request GET');
+    expect(result.result).to.equal(true);
+    done();
+  });
+
+  it('return true result for whitespace-only --url value', function (done) {
+    const result = validate('curl --request GET --url \'     \'');
+    expect(result.result).to.equal(true);
+    done();
+  });
 });
 
 describe('getMetaData', function () {
@@ -59,6 +83,54 @@ describe('getMetaData', function () {
       done();
     });
   });
+
+  it('return true result for explicit empty --url value', function (done) {
+    getMetaData({
+      type: 'string',
+      data: 'curl --request GET --url \'\''
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.name).to.equal('');
+      expect(result.output[0].data).to.equal('');
+      done();
+    });
+  });
+
+  it('return true result for --url without value', function (done) {
+    getMetaData({
+      type: 'string',
+      data: 'curl --request GET --url'
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.name).to.equal('');
+      expect(result.output[0].data).to.equal('');
+      done();
+    });
+  });
+
+  it('return true result for --url followed by another option', function (done) {
+    getMetaData({
+      type: 'string',
+      data: 'curl --url --request GET'
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.name).to.equal('');
+      expect(result.output[0].data).to.equal('');
+      done();
+    });
+  });
+
+  it('return true result for whitespace-only --url value', function (done) {
+    getMetaData({
+      type: 'string',
+      data: 'curl --request GET --url \'     \''
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.name).to.equal('');
+      expect(result.output[0].data).to.equal('');
+      done();
+    });
+  });
 });
 
 describe('Curl converter should', function() {
@@ -85,6 +157,70 @@ describe('Curl converter should', function() {
       expect(result.reason).to.equal('Unable to parse: Could not identify the URL.' +
         ' Please use the --url option.');
       expect(result.error).to.have.property('message', result.reason);
+      done();
+    });
+  });
+
+  it('convert request with explicit empty --url value', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --request GET --url \'\''
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output[0].data.url).to.equal('');
+      expect(result.output[0].data.method).to.equal('GET');
+      done();
+    });
+  });
+
+  it('convert request with explicit empty --url and headers', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --request GET --url \'\' --header \'Accept: application/json\''
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output[0].data.url).to.equal('');
+      expect(result.output[0].data.method).to.equal('GET');
+      expect(result.output[0].data.header).to.eql([{
+        key: 'Accept',
+        value: 'application/json'
+      }]);
+      done();
+    });
+  });
+
+  it('convert request with --url without value', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --request GET --url'
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output[0].data.url).to.equal('');
+      expect(result.output[0].data.method).to.equal('GET');
+      done();
+    });
+  });
+
+  it('convert request with --url followed by another option', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --url --request GET'
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output[0].data.url).to.equal('');
+      expect(result.output[0].data.method).to.equal('GET');
+      done();
+    });
+  });
+
+  it('convert request with whitespace-only --url value', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --request GET --url \'     \''
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output[0].data.url).to.equal('');
+      expect(result.output[0].data.method).to.equal('GET');
       done();
     });
   });
