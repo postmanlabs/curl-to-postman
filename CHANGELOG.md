@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [v1.8.4] - 2026-03-30
+
 ## [v1.8.3] - 2025-09-30
 
 ### Changed
@@ -140,7 +142,9 @@ Newer releases follow the [Keep a Changelog](https://keepachangelog.com) format.
 -   Conforming to the internal Postman plugin interface
 -   Fixes for Github issues - 4770,3623,3135,4018,5737,5286, among others
 
-[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.3...HEAD
+[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.4...HEAD
+
+[v1.8.4]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.3...v1.8.4
 
 [v1.8.3]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.2...v1.8.3
 
