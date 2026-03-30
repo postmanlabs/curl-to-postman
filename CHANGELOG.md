@@ -4,6 +4,10 @@
 
 ## [v1.8.4] - 2026-03-30
 
+### Changed
+
+-   validate() now supports validating an empty URL as a valid one.
+
 ## [v1.8.3] - 2025-09-30
 
 ### Changed
