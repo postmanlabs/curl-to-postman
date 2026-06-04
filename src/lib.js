@@ -363,6 +363,10 @@ var program,
      * For --data-urlencode, each array entry is a single key=value pair.
      * Unlike --data/--data-raw where & separates multiple params within one value,
      * --data-urlencode treats & as a literal character in the value.
+     *
+     * @param {Array} dataArray - array of --data-urlencode argument values
+     * @param {Boolean} enableDecoding - whether to URI-decode keys and values
+     * @returns {Array} parsed key-value parameter objects
      */
     getDataForUrlEncodedParams: function(dataArray, enableDecoding) {
       var retVal = [],
@@ -393,6 +397,9 @@ var program,
     /**
      * For --data-urlencode entries, encode & within each entry so it
      * doesn't get confused with the separator between entries.
+     *
+     * @param {Array} arr - array of --data-urlencode argument values
+     * @returns {String} ampersand-joined string with values URL-encoded
      */
     convertUrlEncodeArrayToAmpersandString: function(arr) {
       return arr.map((entry) => {
