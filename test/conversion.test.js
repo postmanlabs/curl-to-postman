@@ -746,6 +746,32 @@ describe('Curl converter should', function() {
     done();
   });
 
+  it('should preserve & character in --data-urlencode values', function (done) {
+    var result = Converter.convertCurlToRequest('curl --location \'https://postman-echo.com/post\'' +
+    ' --header \'Content-Type: application/x-www-form-urlencoded\'' +
+    ' --data-urlencode \'client_id=test-agentic-external-uat\'' +
+    ' --data-urlencode \'grant_type=urn:ietf:params:oauth:grant-type:token-exchange\'' +
+    ' --data-urlencode \'client_secret=HeLlO-T=1RlR\'');
+    expect(result.body).to.have.property('mode', 'urlencoded');
+    expect(result.body.urlencoded.length).to.equal(3);
+    expect(result.body.urlencoded[0]).to.eql({
+      key: 'client_id',
+      value: 'test-agentic-external-uat',
+      type: 'text'
+    });
+    expect(result.body.urlencoded[1]).to.eql({
+      key: 'grant_type',
+      value: 'urn:ietf:params:oauth:grant-type:token-exchange',
+      type: 'text'
+    });
+    expect(result.body.urlencoded[2]).to.eql({
+      key: 'client_secret',
+      value: 'HeLlO-T=1RlR',
+      type: 'text'
+    });
+    done();
+  });
+
   it('[GitHub #8505] [GitHub #8953]: should correctly handle unicode characters present in data', function (done) {
     var result = Converter.convertCurlToRequest(`curl 'http://localhost:4000/graphql' \\
     --data-binary $'[{"operationName":"someMutation","variables":{"aRequiredVar":"foo\\x78bar\\u{1064A9}"},"query":` +
