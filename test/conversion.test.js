@@ -751,7 +751,7 @@ describe('Curl converter should', function() {
     ' --header \'Content-Type: application/x-www-form-urlencoded\'' +
     ' --data-urlencode \'client_id=test-agentic-external-uat\'' +
     ' --data-urlencode \'grant_type=urn:ietf:params:oauth:grant-type:token-exchange\'' +
-    ' --data-urlencode \'client_secret=WUcjGDcl3RZ-T&gw9wlsA=1qCkilkRlR\'');
+    ' --data-urlencode \'client_secret=HeLlO-T=1RlR\'');
     expect(result.body).to.have.property('mode', 'urlencoded');
     expect(result.body.urlencoded.length).to.equal(3);
     expect(result.body.urlencoded[0]).to.eql({
@@ -766,7 +766,7 @@ describe('Curl converter should', function() {
     });
     expect(result.body.urlencoded[2]).to.eql({
       key: 'client_secret',
-      value: 'WUcjGDcl3RZ-T&gw9wlsA=1qCkilkRlR',
+      value: 'HeLlO-T=1RlR',
       type: 'text'
     });
     done();
