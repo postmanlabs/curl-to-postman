@@ -4,6 +4,10 @@
 
 ## [v1.8.5] - 2026-06-04
 
+### Changed
+
+-   Fixed issue where URL Encoded body wih = char was not creating correct headers in request.
+
 ## [v1.8.4] - 2026-03-30
 
 ### Changed
