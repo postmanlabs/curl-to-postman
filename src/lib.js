@@ -359,6 +359,22 @@ var program,
       return this.getDataForForm(dataArray, enableDecoding);
     },
 
+    /**
+     * For --data-urlencode, each array entry is a single key=value pair.
+     * Unlike --data/--data-raw where & separates multiple params within one value,
+     * --data-urlencode treats & as a literal character in the value.
+     */
+    getDataForUrlEncodedParams: function(dataArray, enableDecoding) {
+      var retVal = [],
+        trimmed;
+      for (let i = 0; i < dataArray.length; i++) {
+        trimmed = this.trimQuotesFromString(dataArray[i]);
+        if (trimmed === '') { continue; }
+        retVal = retVal.concat(this.getDataForForm([trimmed], enableDecoding));
+      }
+      return retVal;
+    },
+
     getLowerCaseHeader: function(hk, rHeaders) {
       for (var hKey in rHeaders) {
         if (rHeaders.hasOwnProperty(hKey)) {
@@ -372,6 +388,21 @@ var program,
 
     convertArrayToAmpersandString: function(arr) {
       return arr.join('&');
+    },
+
+    /**
+     * For --data-urlencode entries, encode & within each entry so it
+     * doesn't get confused with the separator between entries.
+     */
+    convertUrlEncodeArrayToAmpersandString: function(arr) {
+      return arr.map((entry) => {
+        var trimmed = this.trimQuotesFromString(entry),
+          eqIndex = trimmed.indexOf('=');
+        if (eqIndex === -1) {
+          return encodeURIComponent(trimmed);
+        }
+        return trimmed.substring(0, eqIndex) + '=' + encodeURIComponent(trimmed.substring(eqIndex + 1));
+      }).join('&');
     },
 
     sanitizeArgs: function(string) {
@@ -838,12 +869,12 @@ var program,
             request.body.mode = 'urlencoded';
             request.body.urlencoded = this.getDataForUrlEncoded(curlObj.data, true)
               .concat(this.getDataForUrlEncoded(curlObj.dataRaw, true))
-              .concat(this.getDataForUrlEncoded(curlObj.dataUrlencode, true))
+              .concat(this.getDataForUrlEncodedParams(curlObj.dataUrlencode, true))
               .concat(this.getDataForUrlEncoded(curlObj.dataAscii, false));
 
             bodyArr.push(this.convertArrayToAmpersandString(curlObj.data));
             bodyArr.push(this.convertArrayToAmpersandString(curlObj.dataRaw));
-            bodyArr.push(this.convertArrayToAmpersandString(curlObj.dataUrlencode));
+            bodyArr.push(this.convertUrlEncodeArrayToAmpersandString(curlObj.dataUrlencode));
             bodyArr.push(this.convertArrayToAmpersandString(curlObj.dataAscii));
             urlData = _.join(_.reject(bodyArr, (ele) => {
               return !ele;
@@ -852,7 +883,7 @@ var program,
           else {
             dataString = this.convertArrayToAmpersandString(curlObj.data);
             dataRawString = this.convertArrayToAmpersandString(curlObj.dataRaw);
-            dataUrlencode = this.convertArrayToAmpersandString(curlObj.dataUrlencode);
+            dataUrlencode = this.convertUrlEncodeArrayToAmpersandString(curlObj.dataUrlencode);
             dataAsciiString = this.convertArrayToAmpersandString(curlObj.dataAscii);
             bodyArr.push(this.trimQuotesFromString(dataString));
             bodyArr.push(this.trimQuotesFromString(dataRawString));
