@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+-   Support importing cURL commands that use the HTTP QUERY method (RFC 9110-style safe, idempotent query method).
+
 ## [v1.8.5] - 2026-06-04
 
 ### Changed

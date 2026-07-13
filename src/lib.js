@@ -115,7 +115,7 @@ var program,
     validateCurlRequest: function(curlObj) {
     // must be a valid method
       var validMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'COPY', 'HEAD',
-          'OPTIONS', 'LINK', 'UNLINK', 'PURGE', 'LOCK', 'UNLOCK', 'PROPFIND'],
+          'OPTIONS', 'LINK', 'UNLINK', 'PURGE', 'LOCK', 'UNLOCK', 'PROPFIND', 'QUERY'],
         singleWordXMethod,
         singleWordMethodPrefix = '-X',
         reqMethod = _.toUpper(curlObj.request);
