@@ -237,6 +237,19 @@ describe('Curl converter should', function() {
     });
   });
 
+  it('parse a cURL command using the HTTP QUERY method', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl \'http://localhost:3000/api/v1/my-api\' -X \'QUERY\'' +
+        ' -H \'accept: application/json\' --data-raw \'{}\''
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output[0].data.method).to.equal('QUERY');
+      expect(result.output[0].data.url).to.equal('http://localhost:3000/api/v1/my-api');
+      done();
+    });
+  });
+
   it('throw an error for a cURL without URL defined correctly', function (done) {
     convert({
       type: 'string',
