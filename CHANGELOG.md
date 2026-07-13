@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [v1.8.6] - 2026-07-13
+
 ### Added
 
 -   Support importing cURL commands that use the HTTP QUERY method (RFC 9110-style safe, idempotent query method).
@@ -156,7 +158,9 @@ Newer releases follow the [Keep a Changelog](https://keepachangelog.com) format.
 -   Conforming to the internal Postman plugin interface
 -   Fixes for Github issues - 4770,3623,3135,4018,5737,5286, among others
 
-[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.5...HEAD
+[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.6...HEAD
+
+[v1.8.6]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.5...v1.8.6
 
 [v1.8.5]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.4...v1.8.5
 
