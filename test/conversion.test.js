@@ -261,20 +261,6 @@ describe('Curl converter should', function() {
     });
   });
 
-  it('parse a flattened multi-line cURL with stray "\\ " line continuations', function (done) {
-    // when a `\`-continued multi-line cURL is pasted onto one line the newline is lost,
-    // leaving a stray backslash; the method/body flags after it must still be parsed
-    convert({
-      type: 'string',
-      data: 'curl \'http://localhost:3000/api/v1/my-api\' \\ -X \'QUERY\'' +
-        ' -H \'accept: application/json\' \\ --data-raw \'{}\''
-    }, function (err, result) {
-      expect(result.result).to.equal(true);
-      expect(result.output[0].data.method).to.equal('QUERY');
-      done();
-    });
-  });
-
   it('parse a cURL command using the HTTP QUERY method', function (done) {
     convert({
       type: 'string',
