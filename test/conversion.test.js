@@ -225,14 +225,38 @@ describe('Curl converter should', function() {
     });
   });
 
-  it('throw an error when an invalid method is specificied', function (done) {
+  it('throw an error when a syntactically invalid method is specified', function (done) {
+    // a method containing a space is not a valid HTTP method token (RFC 7230), so it is
+    // still rejected even though arbitrary custom methods are otherwise accepted
     convert({
       type: 'string',
-      data: 'curl --request INVALIDMETHOD --url http://www.google.com'
+      data: 'curl --request \'BAD METHOD\' --url http://www.google.com'
     }, function (err, result) {
       expect(result.result).to.equal(false);
-      expect(result.reason).to.equal('The method INVALIDMETHOD is not supported.');
+      expect(result.reason).to.equal('The method BAD METHOD is not supported.');
       expect(result.error).to.have.property('message', result.reason);
+      done();
+    });
+  });
+
+  it('accept an arbitrary custom HTTP method', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl --request MKCOL --url http://www.google.com'
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output[0].data.method).to.equal('MKCOL');
+      done();
+    });
+  });
+
+  it('accept a custom method glued to the -X flag', function (done) {
+    convert({
+      type: 'string',
+      data: 'curl -XPROPPATCH http://www.google.com'
+    }, function (err, result) {
+      expect(result.result).to.equal(true);
+      expect(result.output[0].data.method).to.equal('PROPPATCH');
       done();
     });
   });

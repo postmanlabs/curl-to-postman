@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [v1.8.7] - 2026-07-16
+
+### Added
+
+-   Support importing cURL commands that use arbitrary custom HTTP methods (any valid RFC 7230 method token), instead of only a fixed allow-list.
+
 ## [v1.8.6] - 2026-07-13
 
 ### Added
@@ -158,7 +164,9 @@ Newer releases follow the [Keep a Changelog](https://keepachangelog.com) format.
 -   Conforming to the internal Postman plugin interface
 -   Fixes for Github issues - 4770,3623,3135,4018,5737,5286, among others
 
-[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.6...HEAD
+[Unreleased]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.7...HEAD
+
+[v1.8.7]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.6...v1.8.7
 
 [v1.8.6]: https://github.com/postmanlabs/curl-to-postman/compare/v1.8.5...v1.8.6
 

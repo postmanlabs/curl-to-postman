@@ -113,20 +113,26 @@ var program,
     },
 
     validateCurlRequest: function(curlObj) {
-    // must be a valid method
+    // known methods we have historically listed; any RFC 7230 method token beyond
+    // these is still accepted below so custom methods (e.g. MKCOL, BREW) can be imported
       var validMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'COPY', 'HEAD',
           'OPTIONS', 'LINK', 'UNLINK', 'PURGE', 'LOCK', 'UNLOCK', 'PROPFIND', 'QUERY'],
+        // RFC 7230 method = token = 1*tchar. Anything matching this is a syntactically
+        // valid HTTP method, so we allow custom methods instead of hard-coding a list.
+        httpMethodTokenRegex = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/,
         singleWordXMethod,
         singleWordMethodPrefix = '-X',
         reqMethod = _.toUpper(curlObj.request);
 
       if (validMethods.indexOf(reqMethod) === -1) {
 
-        // no valid method
-        // -XPOST might have been used
-        // try the POST part again
+        // no known method matched
+        // -XPOST (method glued to the flag) might have been used; try the POST part again.
+        // Only re-extract from the glued form (e.g. '-XPOST'); a bare '-X' carries no method
+        // and must not clobber a method that commander already parsed from a separate token.
         singleWordXMethod = _.find(curlObj.rawArgs, function (arg) {
-          return typeof arg === 'string' && arg.startsWith(singleWordMethodPrefix);
+          return typeof arg === 'string' && arg.startsWith(singleWordMethodPrefix) &&
+            arg.length > singleWordMethodPrefix.length;
         });
 
         if (singleWordXMethod) {
@@ -136,8 +142,8 @@ var program,
 
         reqMethod = _.toUpper(curlObj.request);
 
-        if (validMethods.indexOf(reqMethod) === -1) {
-        // the method is still not valid
+        if (validMethods.indexOf(reqMethod) === -1 && !httpMethodTokenRegex.test(reqMethod)) {
+        // neither a known method nor a syntactically valid custom method token
           throw new UserError(USER_ERRORS.METHOD_NOT_SUPPORTED`${curlObj.request}`);
         }
       }
