@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+-   Support importing cURL commands that use arbitrary custom HTTP methods (any valid RFC 7230 method token), instead of only a fixed allow-list.
+
+### Changed
+
+-   Leniently parse flattened multi-line cURL commands where a `\` line continuation was pasted onto a single line, leaving a stray backslash surrounded by whitespace.
+
 ## [v1.8.6] - 2026-07-13
 
 ### Added
