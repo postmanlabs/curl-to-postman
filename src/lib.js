@@ -419,15 +419,6 @@ var program,
     },
 
     sanitizeArgs: function(string) {
-      // Lenient handling of flattened multi-line cURLs: when a `\ ` line continuation
-      // is pasted onto a single line, the newline is lost but the backslash remains,
-      // leaving a stray backslash surrounded by whitespace (e.g. `... \ -X POST`).
-      // The shell would treat `\ ` as an escaped space and glue it to the next token,
-      // dropping the following flag. We strip a backslash that is flanked by whitespace
-      // (i.e. a standalone continuation artifact) so the following flag is parsed.
-      // An intentionally escaped space inside a word (e.g. `path\ with\ space`) has a
-      // non-whitespace char before the backslash and is left untouched.
-      string = string.replace(/(\s)\\(?=\s)/g, '$1 ');
       var argv = shellQuote.parse('node ' + string, function(key) {
           // this is done to prevent converting vars like $id in the curl input to ''
           return '$' + key;
