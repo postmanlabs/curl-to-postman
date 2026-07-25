@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "commander": "^2.20.3",
-    "lodash": "^4.17.21",
-    "shell-quote": "^1.8.2",
+    "lodash": "^4.18.1",
+    "shell-quote": "^1.9.0",
     "valid-url": "^1.0.9"
   },
   "devDependencies": {
