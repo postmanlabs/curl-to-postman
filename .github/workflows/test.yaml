@@ -8,6 +8,7 @@ on:
 jobs:
   Unit-Tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     strategy:
       matrix:
         node-version: [12.x, 16.x, 18.x]
