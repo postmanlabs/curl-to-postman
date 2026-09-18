@@ -124,4 +124,19 @@ describe('shell-quote should', function() {
     expect(result[0]).to.equal('\'"');
     done();
   });
+
+  it('keep ${...} literal inside bash ANSI-C quoted ($\'...\') strings', function(done) {
+    // https://github.com/postmanlabs/curl-to-postman/issues/104
+    // $'...' (ANSI-C quoting) never expands variables: '$' is a literal char.
+    // The leading '$' of the ANSI-C prefix survives parse() and is removed
+    // later by sanitizeArgs() in src/lib.js (that is how $'POST' becomes POST).
+    let string = '$\'{"value":"\${field}"}\'',
+      envResolver = (key) => { return '$' + key; };
+
+    expect(shellQuote.parse(string, envResolver)[0]).to.equal('${"value":"${field}"}');
+
+    // regular double quoted strings must keep resolving variables
+    expect(shellQuote.parse('"${field}"', envResolver)[0]).to.equal('$field');
+    done();
+  });
 });

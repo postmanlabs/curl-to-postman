@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
-const largeRequest = require('./large-request');
+const largeRequest = require('./large-request'),
+  issue104 = require('./fixtures/issue-104');
 
 var Converter = require('../src/lib'),
   convert = require('../src/convert'),
@@ -1721,6 +1722,30 @@ describe('Curl converter should', function() {
         expect(headerArr[2].value).to.equal('name=JohnDoe');
         done();
       });
+    });
+  });
+
+  it('preserve literal ${...} inside ANSI-C quoted --data-raw from Chrome cURL copy', function (done) {
+    // https://github.com/postmanlabs/curl-to-postman/issues/104
+    // Chrome DevTools "Copy as cURL (bash)" emits --data-raw $'...' (ANSI-C quoting)
+    // where '$' is literal: variables are never expanded and must survive import.
+    convert({ type: 'string', data: issue104.curlText }, function (err, result) {
+      expect(err).to.equal(null);
+      expect(result.result).to.equal(true);
+      expect(result.output[0].data.body.mode).to.equal('raw');
+      expect(result.output[0].data.body.raw).to.equal(issue104.expectedBody);
+      done();
+    });
+  });
+
+  it('preserve literal ${...} in a minimal ANSI-C quoted --data-raw payload', function (done) {
+    var curlText = 'curl -X POST \'https://example.com/hi\' ' +
+      '-H \'Content-Type: application/json\' --data-raw $\'{"a":"${field}"}\'';
+
+    convert({ type: 'string', data: curlText }, function (err, result) {
+      expect(err).to.equal(null);
+      expect(result.output[0].data.body.raw).to.equal('{"a":"${field}"}');
+      done();
     });
   });
 });

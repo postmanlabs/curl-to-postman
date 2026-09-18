@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+-   Fixed an issue where `$` inside bash ANSI-C quoted (`$'...'`) `--data-raw` payloads was treated as a shell variable, dropping the `{}` of literal `${...}` tokens (e.g. Chrome DevTools "Copy as cURL (bash)" imports).
+
 ## [v1.8.7] - 2026-07-16
 
 ### Added
