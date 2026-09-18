@@ -158,7 +158,12 @@ function parse(s, env, opts) {
               out += BS + c;
             }
           }
-          else if (c === DS) {
+          else if (c === DS && quote !== SQ) {
+            // Variables are never expanded inside bash ANSI-C quoted strings
+            // ($'...', which reach this branch with quote === SQ and a leading
+            // '$'), so '$' is a literal character there. Only regular double
+            // quoted strings resolve variables.
+            // https://github.com/postmanlabs/curl-to-postman/issues/104
             out += parseEnvVar();
           }
           else {
